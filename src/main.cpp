@@ -27,6 +27,13 @@ void ProcessInput(GLFWwindow* window)
 
 int main()
 {
+    std::string str1 = "Testing";
+    std::string str2 = std::move(str1);
+
+    // Well, we use str1 after a std::move(). Not that smart :)
+    // clang-tidy will find this!
+    std::cout << str1 << str2;
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

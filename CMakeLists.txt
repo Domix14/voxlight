@@ -8,6 +8,10 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_CLANG_TIDY clang-tidy --checks=-*,readability-* -p ${CMAKE_CURRENT_BINARY_DIR})
+
 set(sources
  ${SOURCE_DIR}/main.cpp
  ${SOURCE_DIR}/utils.cpp
@@ -17,6 +21,7 @@ set(sources
 
 add_executable(opengl-template ${sources} ${includes})
 target_include_directories(opengl-template PRIVATE ${SOURCE_DIR}/include)
+
 
 # Perform dependency linkage
 include(${CMAKE_DIR}/LinkGLFW.cmake)
@@ -44,3 +49,5 @@ set_target_properties(opengl-template PROPERTIES
 
 # Set project folders
 set_target_properties(opengl-template PROPERTIES FOLDER ${PROJECT_NAME})
+target_compile_options(opengl-template PUBLIC -Wall)
+
