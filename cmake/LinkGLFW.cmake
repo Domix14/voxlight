@@ -29,5 +29,31 @@ macro(LinkGLFW TARGET ACCESS)
     target_include_directories(${TARGET} ${ACCESS} ${glfw_SOURCE_DIR}/include)
     target_link_libraries(${TARGET} ${ACCESS} glfw)
 
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui/
+        GIT_TAG v1.89.7
+    )
+
+    FetchContent_GetProperties(imgui)
+    FetchContent_Populate(imgui)
+
+    add_library(imgui_lib
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
+
+    target_include_directories(imgui_lib PRIVATE ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+    target_link_libraries(imgui_lib PRIVATE glfw)
+    target_include_directories(${TARGET} ${ACCESS} ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+    target_link_libraries(${TARGET} ${ACCESS} imgui_lib)
+
+    add_dependencies(${TARGET} imgui_lib)
+
     add_dependencies(${TARGET} glfw)
 endmacro()

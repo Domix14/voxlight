@@ -249,7 +249,7 @@ void CPURenderer::processSplit(std::size_t start, std::size_t end, glm::vec3 pla
             auto d = planeLocation + u*camera->getRight() + v*camera->getUp();
             auto dir = glm::normalize(d - camera->getPosition());
             auto color = raycastOctree(camera->getPosition(), dir);
-            // auto color = raycast(camera->getPosition(), dir, voxelMap);
+            // // auto color = raycast(camera->getPosition(), dir, voxelMap);
 
             pixels[(x*screenHeight+y)*3] = static_cast<GLubyte>(color.x);
             pixels[(x*screenHeight+y)*3+1] = static_cast<GLubyte>(color.y);
