@@ -12,6 +12,7 @@ std::tuple<VoxelType, glm::vec3> VoxelMap::getVoxel(glm::vec3 pos) const
     std::uint32_t x = pos.x;
     std::uint32_t y = pos.y;
     std::uint32_t z = pos.z;
+    
 
     if (x < 0 || x >= mapSize || y < 0 || y >= mapSize || z < 0 || z >= mapSize)
     {

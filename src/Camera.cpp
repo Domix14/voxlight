@@ -19,24 +19,25 @@ void Camera::update(GLFWwindow* window) {
     direction = glm::normalize(rotMat * glm::vec4(direction, 0.0f));
 
     // Movement
+    float speed = 0.3f;
     int state = glfwGetKey(window, GLFW_KEY_W);
     if (state == GLFW_PRESS)
     {
-        position += direction * 0.6f;
+        position += direction * speed;
     }
     state = glfwGetKey(window, GLFW_KEY_S);
     if (state == GLFW_PRESS)
     {
-        position -= direction * 0.6f;
+        position -= direction * speed;
     }
     state = glfwGetKey(window, GLFW_KEY_A);
     if (state == GLFW_PRESS)
     {
-        position -= camRight * 0.6f;
+        position -= camRight * speed;
     }
     state = glfwGetKey(window, GLFW_KEY_D);
     if (state == GLFW_PRESS)
     {
-        position += camRight * 0.6f;
+        position += camRight * speed;
     }
 }

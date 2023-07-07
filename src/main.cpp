@@ -69,8 +69,8 @@ int main()
     
     glClearColor(0.0f, 0.0f, 0.1f, 0.0f);
 
-    camera.setPosition({20.f,10.f,20.f});
-    camera.setDirection(glm::normalize(glm::vec3(10.f,0,10.f) - camera.getPosition()));
+    camera.setPosition({5.f,5.f,5.f});
+    camera.setDirection(glm::normalize(glm::vec3(0.f,0.f,0.f) - camera.getPosition()));
     while (!glfwWindowShouldClose(window))
     {
         ProcessInput(window);

@@ -13,7 +13,7 @@ std::tuple<GLuint, ReturnCode> createShader(GLenum shaderType, fs::path shaderPa
         auto shader = glCreateShader(shaderType);
         const char* c_str = shaderCode.c_str();
         glShaderSource(shader, 1, &c_str, nullptr);
-        glCompileShader(shader);\
+        glCompileShader(shader);
 
         GLint success;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
