@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glad/gl.h>
 
 
 enum VoxelType : std::uint8_t {
@@ -14,18 +15,33 @@ enum VoxelType : std::uint8_t {
     Water = 4,
 };
 
+struct VoxelNode {
+    VoxelNode() {
+        for (int i = 0; i < 8; i++) {
+            children[i] = nullptr;
+            type = VoxelType::Stone;
+        }
+    }
+
+    VoxelNode* children[8];
+    VoxelType type;
+};
+
 class VoxelMap
-{
-    std::vector<VoxelType> m_voxels;
-    std::uint32_t mapSize;
+{ 
+    std::vector<GLubyte> voxelData;
+    std::size_t worldSize;
 
-    public:
-        VoxelMap();
+    void insert(VoxelNode* node, glm::vec3 pos, glm::vec3 origin, std::size_t blockSize, VoxelType type);
+public:
+    VoxelMap(std::size_t size);
 
-        std::tuple<VoxelType, glm::vec3> getVoxel(glm::vec3 pos) const;
+    void setVoxel(glm::vec3 pos, VoxelType type);
+    std::size_t getWorldSize() const { return worldSize; }
+    GLubyte* getVoxelData() { return voxelData.data(); }
 
-        void addSpehere(glm::vec3 center, float radius, VoxelType type);
-        void addPlane(glm::vec3 corner, float width, float length, VoxelType type);
+    void addSpehere(glm::vec3 center, float radius, VoxelType type);
+    void addPlane(glm::vec3 corner, float width, float length, VoxelType type);
 
 
 };

@@ -16,7 +16,6 @@ set(sources
  ${SOURCE_DIR}/main.cpp
  ${SOURCE_DIR}/utils.cpp
  ${SOURCE_DIR}/VoxelMap.cpp
- ${SOURCE_DIR}/CPURenderer.cpp
  ${SOURCE_DIR}/Camera.cpp)
 
 add_executable(opengl-template ${sources} ${includes})

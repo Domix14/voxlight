@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include "glm/gtc/matrix_transform.hpp"
 
-void Camera::update(GLFWwindow* window) {
+void Camera::update(GLFWwindow* window, double deltaTime) {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     double dx = xpos - curosorX;
@@ -19,25 +19,39 @@ void Camera::update(GLFWwindow* window) {
     direction = glm::normalize(rotMat * glm::vec4(direction, 0.0f));
 
     // Movement
-    float speed = 0.3f;
+    float horizontalSpeed = 10.f * deltaTime;
     int state = glfwGetKey(window, GLFW_KEY_W);
+    glm::vec3 horizontalDir = glm::normalize(glm::vec3(direction.x, 0, direction.z));
     if (state == GLFW_PRESS)
     {
-        position += direction * speed;
+        position += horizontalDir * horizontalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_S);
     if (state == GLFW_PRESS)
     {
-        position -= direction * speed;
+        position -= horizontalDir * horizontalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_A);
     if (state == GLFW_PRESS)
     {
-        position -= camRight * speed;
+        position -= camRight * horizontalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_D);
     if (state == GLFW_PRESS)
     {
-        position += camRight * speed;
+        position += camRight * horizontalSpeed;
     }
+
+    float verticalSpeed = 20.f * deltaTime;
+    state = glfwGetKey(window, GLFW_KEY_SPACE);
+    if (state == GLFW_PRESS)
+    {
+        position += camUp * verticalSpeed;
+    }
+    state = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+    if (state == GLFW_PRESS)
+    {
+        position -= camUp * verticalSpeed;
+    }
+
 }

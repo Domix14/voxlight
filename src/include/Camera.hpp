@@ -17,7 +17,7 @@ class Camera {
 
 public:
 
-    void update(class GLFWwindow* window);
+    void update(class GLFWwindow* window, double deltaTime);
     void setPosition(glm::vec3 pos) { position = pos; }
     void setDirection(glm::vec3 dir) { direction = glm::normalize(dir); }
     glm::vec3 getPosition() { return position; }

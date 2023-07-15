@@ -1,7 +1,100 @@
 #version 330 core
-in vec3 fragmentColor;
-out vec3 color;
+out vec3 outColor;
+
+uniform vec3 inCamPos;
+uniform vec3 inCamDir;
+uniform sampler3D worldTexture;
+
+const float sphereRadius = 15.0;
+const float camRadius = 2.0*sphereRadius;
+
+vec3 getVoxel(vec3 p) {
+    if(p.x < 0 || p.x > 128 || p.y < 0 || p.y > 128 || p.z < 0 || p.z > 128) {
+        return vec3(0,0,0);
+    }
+    vec3 uv = p / 128;
+    return texture(worldTexture, uv).xyz;
+}
+
+vec3 lighting(vec3 norm, vec3 pos, vec3 rd, vec3 col) {
+    vec3 lightDir = normalize(vec3(-1.0, 3.0, -1.0));
+    float diffuseAttn = max(dot(norm, lightDir), 0.0);
+    vec3 light = vec3(1.0,0.9,0.9);
+    
+    vec3 ambient = vec3(0.2, 0.2, 0.3);
+    
+    vec3 reflected = reflect(rd, norm);
+    float specularAttn = max(dot(reflected, lightDir), 0.0);
+    
+    return col*(diffuseAttn*light*1.0 + specularAttn*light*0.6 + ambient);
+}
+
+vec3 intersect(vec3 ro, vec3 rd) {
+    //Todo: find out why this is so slow
+    vec3 pos = floor(ro);
+    
+    vec3 step = sign(rd);
+    vec3 tDelta = step / rd;
+
+    
+    float tMaxX, tMaxY, tMaxZ;
+    
+    vec3 fr = fract(ro);
+    
+    tMaxX = tDelta.x * ((rd.x>0.0) ? (1.0 - fr.x) : fr.x);
+    tMaxY = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
+    tMaxZ = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
+
+    vec3 norm;
+    const int maxTrace = 100;
+    
+    for (int i = 0; i < maxTrace; i++) {
+        vec3 color = getVoxel(pos);
+        if (color.x != 0 || color.y != 0 || color.z != 0) {
+            return color;
+            //return lighting(norm, pos, rd, color);
+        }
+
+        if (tMaxX < tMaxY) {
+            if (tMaxZ < tMaxX) {
+                tMaxZ += tDelta.z;
+                pos.z += step.z;
+                norm = vec3(0, 0,-step.z);
+            } else {
+                tMaxX += tDelta.x;
+            	pos.x += step.x;
+                norm = vec3(-step.x, 0, 0);
+            }
+        } else {
+            if (tMaxZ < tMaxY) {
+                tMaxZ += tDelta.z;
+                pos.z += step.z;
+                norm = vec3(0, 0, -step.z);
+            } else {
+            	tMaxY += tDelta.y;
+            	pos.y += step.y;
+                norm = vec3(0, -step.y, 0);
+            }
+        }
+    }
+
+ 	return vec3(0,0,0);
+}
 
 void main(){
-  color = fragmentColor;
+  vec2 uv = vec2(gl_FragCoord.x/1920 - 0.5, gl_FragCoord.y/1080-0.5);
+  vec3 camPos = inCamPos;
+  vec3 lookAt = vec3(0,0,0);
+  vec3 camDir = inCamDir;
+  vec2 filmSize = vec2(1,1920/1080);
+  vec3 worldUp = vec3(0,1,0);
+  vec3 camRight = normalize(cross(camDir, worldUp));
+  vec3 camUp = cross(camRight, camDir);
+
+  vec3 filmCentre = camPos + camDir*0.3;
+  vec3 filmPos = filmCentre + uv.x*filmSize.x*camRight + uv.y*filmSize.y*camUp;
+  vec3 ro = camPos;
+  vec3 rd = normalize(filmPos - camPos);
+
+  outColor = intersect(ro, rd);
 }

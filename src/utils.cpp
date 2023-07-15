@@ -21,11 +21,11 @@ std::tuple<GLuint, ReturnCode> createShader(GLenum shaderType, fs::path shaderPa
             GLchar infoLog[512];
             glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
             std::cout << "ERROR::SHADER::" << shaderPath << "::COMPILATION_FAILED\n" << infoLog << std::endl;
-            return std::make_tuple(0, ReturnCode::FAILURE);
+            return {0, ReturnCode::FAILURE};
         }
-        return std::make_tuple(shader, ReturnCode::SUCCESS);
+        return {shader, ReturnCode::SUCCESS};
     }
     
     std::cout << "Inalid shader path\n";
-    return std::make_tuple(0, ReturnCode::FAILURE);
+    return {0, ReturnCode::FAILURE};
 }

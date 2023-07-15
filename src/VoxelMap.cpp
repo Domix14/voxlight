@@ -1,58 +1,63 @@
 #include <VoxelMap.hpp>
+#include <iostream>
 
-VoxelMap::VoxelMap()
-{
-    mapSize = 400;
-    m_voxels.resize(mapSize*mapSize*mapSize);
-    std::fill(m_voxels.begin(), m_voxels.end(), VoxelType::None);
+
+static std::size_t getIdx(glm::vec3 pos, std::size_t worldSize) {
+    return (pos.x + pos.y*worldSize + pos.z*worldSize*worldSize)*3;
 }
 
-std::tuple<VoxelType, glm::vec3> VoxelMap::getVoxel(glm::vec3 pos) const
-{
-    std::uint32_t x = pos.x;
-    std::uint32_t y = pos.y;
-    std::uint32_t z = pos.z;
-    
-
-    if (x < 0 || x >= mapSize || y < 0 || y >= mapSize || z < 0 || z >= mapSize)
+static glm::vec3 getColor(VoxelType type) {
+    switch (type)
     {
-        return {VoxelType::None, glm::vec3(0,0,0)};
+    case VoxelType::None:
+        return {0,0,0};
+    case VoxelType::Dirt:
+        return {0.5,0.5,0.5};
+    case VoxelType::Grass:
+        return {0,1,0};
+    case VoxelType::Stone:
+        return {0.5,0.5,0.5};
+    case VoxelType::Water:
+        return {0,0,1};
+    default:
+        return {0,0,0};
     }
+}
 
-    auto voxelType = m_voxels[x + y*mapSize + z*mapSize*mapSize];
-    switch(voxelType) {
-        case VoxelType::None:
-            return {VoxelType::None, glm::vec3(0,0,0)};
-        case VoxelType::Stone:
-            return {VoxelType::Stone, glm::vec3(128,128,128)};
-        case VoxelType::Grass:
-            return {VoxelType::Grass, glm::vec3(0,128,0)};
-        case VoxelType::Dirt:
-            return {VoxelType::Dirt, glm::vec3(139,69,19)};
-        case VoxelType::Water:
-            return {VoxelType::Water, glm::vec3(0,0,255)};
-        default:
-            return {VoxelType::None, glm::vec3(0,0,0)};
-    }
+VoxelMap::VoxelMap(std::size_t size) : worldSize(size)
+{
+    voxelData.resize(worldSize*worldSize*worldSize*3);
+    std::fill(voxelData.begin(), voxelData.end(), 0);
+}
+
+void VoxelMap::setVoxel(glm::vec3 pos, VoxelType type)
+{
+    auto id = getIdx(pos, worldSize);
+    auto color = getColor(type);
+    voxelData[id] = color.x * 255;
+    voxelData[id+1] = color.y * 255;
+    voxelData[id+2] = color.z * 255;
 }
 
 void VoxelMap::addSpehere(glm::vec3 center, float radius, VoxelType type)
 {
-    for (std::uint32_t x = 0; x < mapSize; x++)
+    for (std::uint32_t x = 0; x < worldSize; x++)
     {
-        for (std::uint32_t y = 0; y < mapSize; y++)
+        for (std::uint32_t y = 0; y < worldSize; y++)
         {
-            for (std::uint32_t z = 0; z < mapSize; z++)
+            for (std::uint32_t z = 0; z < worldSize; z++)
             {
                 glm::vec3 voxelPos = {x,y,z};
                 if (glm::distance(voxelPos, center) < radius)
                 {
-                    m_voxels[x + y*mapSize + z*mapSize*mapSize] = type;
+                    setVoxel(voxelPos, type);
                 }
             }
         }
     }
-} 
+}
+
+
 
 void VoxelMap::addPlane(glm::vec3 corner, float width, float length, VoxelType type)
 {
@@ -60,7 +65,7 @@ void VoxelMap::addPlane(glm::vec3 corner, float width, float length, VoxelType t
     {
         for (std::uint32_t z = corner.z; z < corner.z + length; z++)
         {
-            m_voxels[x + corner.y*mapSize + z*mapSize*mapSize] = type;
+            setVoxel({x,corner.y,z}, type);
         }
     }
 }
