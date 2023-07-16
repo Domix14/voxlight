@@ -4,15 +4,13 @@ out vec3 outColor;
 uniform vec3 inCamPos;
 uniform vec3 inCamDir;
 uniform sampler3D worldTexture;
+uniform float worldSize;
 
 const float sphereRadius = 15.0;
 const float camRadius = 2.0*sphereRadius;
 
 vec3 getVoxel(vec3 p) {
-    if(p.x < 0 || p.x > 128 || p.y < 0 || p.y > 128 || p.z < 0 || p.z > 128) {
-        return vec3(0,0,0);
-    }
-    vec3 uv = p / 128;
+    vec3 uv = (p+0.5) * 0.0078125f;
     return texture(worldTexture, uv).xyz;
 }
 
@@ -29,13 +27,67 @@ vec3 lighting(vec3 norm, vec3 pos, vec3 rd, vec3 col) {
     return col*(diffuseAttn*light*1.0 + specularAttn*light*0.6 + ambient);
 }
 
+bool raycastToTarget(vec3 ro, vec3 target) {
+    vec3 rd = normalize(target - ro);
+    vec3 pos = floor(ro);
+    vec3 step = sign(rd);
+    vec3 tDelta = step / rd;
+    
+    float tMaxX, tMaxY, tMaxZ;
+    
+    vec3 fr = fract(ro);
+    
+    tMaxX = tDelta.x * ((rd.x>0.0) ? (1.0 - fr.x) : fr.x);
+    tMaxY = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
+    tMaxZ = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
+
+    vec3 norm;
+    const int maxTrace = 50;
+
+    for (int i = 0; i < maxTrace; i++) {
+        if(i > 2) {
+            vec3 color = getVoxel(pos);
+            if (color.x != 0 || color.y != 0 || color.z != 0) {
+                return true;
+            }
+        }
+        
+        if(pos.x < 0 || pos.x >= worldSize || pos.y < 0 || pos.y >= 50 || pos.z < 0 || pos.z >= worldSize) {
+            return false;
+        }
+
+        if (tMaxX < tMaxY) {
+            if (tMaxZ < tMaxX) {
+                tMaxZ += tDelta.z;
+                pos.z += step.z;
+                norm = vec3(0, 0,-step.z);
+            } else {
+                tMaxX += tDelta.x;
+            	pos.x += step.x;
+                norm = vec3(-step.x, 0, 0);
+            }
+        } else {
+            if (tMaxZ < tMaxY) {
+                tMaxZ += tDelta.z;
+                pos.z += step.z;
+                norm = vec3(0, 0, -step.z);
+            } else {
+            	tMaxY += tDelta.y;
+            	pos.y += step.y;
+                norm = vec3(0, -step.y, 0);
+            }
+        }
+    }
+
+ 	return false;
+}
+
 vec3 intersect(vec3 ro, vec3 rd) {
-    //Todo: find out why this is so slow
+    vec3 sunPos = vec3(100, 100, 100);
     vec3 pos = floor(ro);
     
     vec3 step = sign(rd);
     vec3 tDelta = step / rd;
-
     
     float tMaxX, tMaxY, tMaxZ;
     
@@ -51,8 +103,14 @@ vec3 intersect(vec3 ro, vec3 rd) {
     for (int i = 0; i < maxTrace; i++) {
         vec3 color = getVoxel(pos);
         if (color.x != 0 || color.y != 0 || color.z != 0) {
+            bool lighting = raycastToTarget(pos, sunPos);
+            float lightIntensity = lighting ?  0.5f : 1.0f;
+            return color * lightIntensity;
             return color;
-            //return lighting(norm, pos, rd, color);
+        }
+        
+        if(pos.x < 0 || pos.x >= worldSize || pos.y < 0 || pos.y >= worldSize || pos.z < 0 || pos.z >= worldSize) {
+            return vec3(0,0,0);
         }
 
         if (tMaxX < tMaxY) {
@@ -98,3 +156,29 @@ void main(){
 
   outColor = intersect(ro, rd);
 }
+
+/*
+uniform vec3 invS;
+
+vec4 tree_lookup(
+uniform float N,
+vec3 M) // Lookup coordinates    
+{
+    vec4 I = vec4(0.0, 0.0, 0.0, 0.0);
+    vec3 MND = M;
+    for (float i=0; i<HRDWTREE_MAX_DEPTH; i++) { // fixed # of iterations
+        vec3 P;      // compute lookup coords. within current node
+        P = (MND + floor(0.5 + I.xyz * 255.0)) * invS;      // access indirection pool
+        if (I.w < 0.9)                   // already in a leaf?
+            I = texture(worldMap,P);// no, continue to next depth
+            #ifdef DYN_BRANCHING // early exit if hardware supports dynamic branching
+            if (I.w > 0.9)    // a leaf has been reached          
+                break;
+            #endif
+            if (I.w < 0.1) // empty cell
+                discard;      // compute pos within next depth grid
+            MND = MND * N;
+    }
+    return (I);
+}
+*/

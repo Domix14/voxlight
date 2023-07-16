@@ -55,11 +55,11 @@ int main()
 
     Camera camera;
 
-    voxelMap.addSpehere(glm::vec3(0,10.f,0), 15.f, VoxelType::Grass);
-    voxelMap.addSpehere(glm::vec3(40.f,40.f,40.f), 20.f, VoxelType::Water);
-    voxelMap.addPlane(glm::vec3(0.f, 0.f, 0.f), 60.f, 60.f, VoxelType::Dirt);
-    voxelMap.addPlane(glm::vec3(25.f, 1.f, 25.f), 50.f, 50.f, VoxelType::Water);
-    voxelMap.setVoxel({0,0,0}, VoxelType::Grass);
+    // voxelMap.addSpehere(glm::vec3(0,10.f,0), 15.f, VoxelType::Grass);
+    voxelMap.addSpehere(glm::vec3(30.f,11.f,30.f), 10.f, VoxelType::Water);
+    voxelMap.addPlane(glm::vec3(0.f, 0.f, 0.f), 60.f, 60.f, VoxelType::Grass);
+    // voxelMap.addPlane(glm::vec3(25.f, 1.f, 25.f), 50.f, 50.f, VoxelType::Water);
+    // voxelMap.setVoxel({0,0,0}, VoxelType::Grass);
 
     // Construct the window
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "OpenGL Template", nullptr, nullptr);
@@ -70,7 +70,7 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     if (!gladLoadGL(glfwGetProcAddress))
     {
@@ -107,7 +107,9 @@ int main()
 		 1.0f, -1.0f, 0.0f,
 		 -1.0f,  -1.0f, 0.0f,
 	};
-
+    int maxTextureSize;
+    glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &maxTextureSize);
+    std::cout << "Max texture size: " << maxTextureSize << std::endl;
 	GLuint vertexbuffer;
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -137,8 +139,9 @@ int main()
     GLuint camPosID = glGetUniformLocation(programID, "inCamPos");
     GLuint camDirID = glGetUniformLocation(programID, "inCamDir");
     GLuint TextureID  = glGetUniformLocation(programID, "worldTexture");
+    GLuint worldSizeID  = glGetUniformLocation(programID, "worldSize");
 
-    camera.setPosition({10.f,10.f,10.f});
+    camera.setPosition({30.f,10.f,30.f});
     camera.setDirection(glm::normalize(glm::vec3(0.f,0.f,0.f) - camera.getPosition()));
 
     double currentFrame = 0;;
@@ -159,19 +162,7 @@ int main()
 
         glfwPollEvents();
 
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ImGui::End();
-        }
-
-        // // Rendering
-        ImGui::Render();
+        
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
@@ -185,6 +176,7 @@ int main()
 
         glUniform3f(camPosID, pos.x, pos.y, pos.z);
         glUniform3f(camDirID, dir.x, dir.y, dir.z);
+        glUniform1f(worldSizeID, voxelMap.getWorldSize());
 
         // Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
@@ -207,6 +199,21 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 6); // 3 indices starting at 0 -> 1 triangle
 
 		glDisableVertexAttribArray(0);
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        {
+            ImGui::Begin("Camera position");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
+
+        // // Rendering
+        ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     
         glfwSwapBuffers(window);

@@ -58,7 +58,6 @@ void VoxelMap::addSpehere(glm::vec3 center, float radius, VoxelType type)
 }
 
 
-
 void VoxelMap::addPlane(glm::vec3 corner, float width, float length, VoxelType type)
 {
     for (std::uint32_t x = corner.x; x < corner.x + width; x++)
