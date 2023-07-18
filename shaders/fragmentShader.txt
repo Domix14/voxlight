@@ -5,6 +5,7 @@ uniform vec3 inCamPos;
 uniform vec3 inCamDir;
 uniform sampler3D worldTexture;
 uniform float worldSize;
+uniform vec3 sunPos;
 
 const float sphereRadius = 15.0;
 const float camRadius = 2.0*sphereRadius;
@@ -45,11 +46,9 @@ bool raycastToTarget(vec3 ro, vec3 target) {
     const int maxTrace = 50;
 
     for (int i = 0; i < maxTrace; i++) {
-        if(i > 2) {
-            vec3 color = getVoxel(pos);
-            if (color.x != 0 || color.y != 0 || color.z != 0) {
-                return true;
-            }
+        vec3 color = getVoxel(pos);
+        if (color.x != 0 || color.y != 0 || color.z != 0) {
+            return true;
         }
         
         if(pos.x < 0 || pos.x >= worldSize || pos.y < 0 || pos.y >= 50 || pos.z < 0 || pos.z >= worldSize) {
@@ -82,8 +81,8 @@ bool raycastToTarget(vec3 ro, vec3 target) {
  	return false;
 }
 
+
 vec3 intersect(vec3 ro, vec3 rd) {
-    vec3 sunPos = vec3(100, 100, 100);
     vec3 pos = floor(ro);
     
     vec3 step = sign(rd);
@@ -98,15 +97,25 @@ vec3 intersect(vec3 ro, vec3 rd) {
     tMaxZ = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
 
     vec3 norm;
-    const int maxTrace = 100;
+    const int maxTrace = 360;
     
     for (int i = 0; i < maxTrace; i++) {
         vec3 color = getVoxel(pos);
         if (color.x != 0 || color.y != 0 || color.z != 0) {
-            bool lighting = raycastToTarget(pos, sunPos);
+            vec3 offset = vec3(0, 0, 0);
+            if(norm.x != 0) {
+                offset = rd * (tMaxX - tDelta.x - 0.01);
+            } else if(norm.y != 0) {
+                offset = rd * (tMaxY - tDelta.y - 0.01);
+            } else if(norm.z != 0) {
+                offset = rd * (tMaxZ - tDelta.z - 0.01);
+            }
+            vec3 worldPos = ro + offset;
+            bool lighting = raycastToTarget(worldPos, sunPos);
             float lightIntensity = lighting ?  0.5f : 1.0f;
             return color * lightIntensity;
-            return color;
+            //return lighting ? vec3(1.f, 0.5, 0.5f) : color;
+            //return vec3(255,255,255)*value;
         }
         
         if(pos.x < 0 || pos.x >= worldSize || pos.y < 0 || pos.y >= worldSize || pos.z < 0 || pos.z >= worldSize) {

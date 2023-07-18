@@ -55,9 +55,9 @@ int main()
 
     Camera camera;
 
-    // voxelMap.addSpehere(glm::vec3(0,10.f,0), 15.f, VoxelType::Grass);
-    voxelMap.addSpehere(glm::vec3(30.f,11.f,30.f), 10.f, VoxelType::Water);
-    voxelMap.addPlane(glm::vec3(0.f, 0.f, 0.f), 60.f, 60.f, VoxelType::Grass);
+    voxelMap.addSpehere(glm::vec3(30,10.f,30), 10.f, VoxelType::Dirt);
+    voxelMap.addSpehere(glm::vec3(60.f,11.f,60.f), 10.f, VoxelType::Water);
+    voxelMap.addPlane(glm::vec3(0.f, 0.f, 0.f), 120.f, 120.f, VoxelType::Grass);
     // voxelMap.addPlane(glm::vec3(25.f, 1.f, 25.f), 50.f, 50.f, VoxelType::Water);
     // voxelMap.setVoxel({0,0,0}, VoxelType::Grass);
 
@@ -140,6 +140,7 @@ int main()
     GLuint camDirID = glGetUniformLocation(programID, "inCamDir");
     GLuint TextureID  = glGetUniformLocation(programID, "worldTexture");
     GLuint worldSizeID  = glGetUniformLocation(programID, "worldSize");
+    GLuint sunPosID  = glGetUniformLocation(programID, "sunPos");
 
     camera.setPosition({30.f,10.f,30.f});
     camera.setDirection(glm::normalize(glm::vec3(0.f,0.f,0.f) - camera.getPosition()));
@@ -147,12 +148,15 @@ int main()
     double currentFrame = 0;;
     double deltaTime = 0;
     double lastFrame = 0;
+    double sunRotation = 0;
     while (!glfwWindowShouldClose(window))
     {
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        sunRotation += deltaTime * 0.1f;
 
+        auto sunPosition = glm::vec3(glm::sin(sunRotation)*100.f, 70 + glm::sin(sunRotation)*50, glm::cos(sunRotation)*100.f);
         ProcessInput(window);
         camera.update(window, deltaTime);
 
@@ -176,6 +180,7 @@ int main()
 
         glUniform3f(camPosID, pos.x, pos.y, pos.z);
         glUniform3f(camDirID, dir.x, dir.y, dir.z);
+        glUniform3f(sunPosID, sunPosition.x, sunPosition.y, sunPosition.z);
         glUniform1f(worldSizeID, voxelMap.getWorldSize());
 
         // Bind our texture in Texture Unit 0
