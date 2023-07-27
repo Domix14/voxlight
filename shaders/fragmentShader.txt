@@ -1,86 +1,68 @@
 #version 330 core
 out vec3 outColor;
 
-uniform vec3 inCamPos;
-uniform vec3 inCamDir;
-uniform sampler3D worldTexture;
-uniform float worldSize;
+uniform vec3 minBox;
+uniform vec3 maxBox;
+uniform vec3 chunkSize;
+uniform sampler3D chunkTexture;
 uniform vec3 sunPos;
+uniform vec3 materials[2];
 
-const float sphereRadius = 15.0;
-const float camRadius = 2.0*sphereRadius;
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
 
-vec3 getVoxel(vec3 p) {
-    vec3 uv = (p+0.5) * 0.0078125f;
-    return texture(worldTexture, uv).xyz;
+const vec3 skyColor = vec3(0.529f, 0.8f,  0.92f);
+
+float raycastAABB(vec3 ro, vec3 rd, vec3 volMax, vec3 volMin) {
+    float t1 = (volMin.x - ro.x) / rd.x;
+    float t2 = (volMax.x - ro.x) / rd.x;
+    float t3 = (volMin.y - ro.y) / rd.y;
+    float t4 = (volMax.y - ro.y) / rd.y;
+    float t5 = (volMin.z - ro.z) / rd.z;
+    float t6 = (volMax.z - ro.z) / rd.z;
+
+    float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+    float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+
+    // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
+    if (tmax < 0) {
+        return -1;
+    }
+
+    // if tmin > tmax, ray doesn't intersect AABB
+    if (tmin > tmax) {
+        return -1;
+    }
+
+    if (tmin < 0f) {
+        return tmax;
+    }
+    return tmin;
 }
 
-vec3 lighting(vec3 norm, vec3 pos, vec3 rd, vec3 col) {
-    vec3 lightDir = normalize(vec3(-1.0, 3.0, -1.0));
-    float diffuseAttn = max(dot(norm, lightDir), 0.0);
-    vec3 light = vec3(1.0,0.9,0.9);
-    
-    vec3 ambient = vec3(0.2, 0.2, 0.3);
-    
-    vec3 reflected = reflect(rd, norm);
-    float specularAttn = max(dot(reflected, lightDir), 0.0);
-    
-    return col*(diffuseAttn*light*1.0 + specularAttn*light*0.6 + ambient);
+float getVoxel(vec3 p) {
+    vec3 uv = (p+0.5)/chunkSize;
+    return texture(chunkTexture, uv).r;
 }
 
 bool raycastToTarget(vec3 ro, vec3 target) {
     vec3 rd = normalize(target - ro);
-    vec3 pos = floor(ro);
-    vec3 step = sign(rd);
-    vec3 tDelta = step / rd;
-    
-    float tMaxX, tMaxY, tMaxZ;
-    
-    vec3 fr = fract(ro);
-    
-    tMaxX = tDelta.x * ((rd.x>0.0) ? (1.0 - fr.x) : fr.x);
-    tMaxY = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
-    tMaxZ = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
 
-    vec3 norm;
-    const int maxTrace = 50;
+    const int maxTrace = 0;
 
     for (int i = 0; i < maxTrace; i++) {
-        vec3 color = getVoxel(pos);
-        if (color.x != 0 || color.y != 0 || color.z != 0) {
+        float hit = getVoxel(floor(ro));
+        if (hit != 0) {
             return true;
         }
-        
-        if(pos.x < 0 || pos.x >= worldSize || pos.y < 0 || pos.y >= 50 || pos.z < 0 || pos.z >= worldSize) {
-            return false;
-        }
 
-        if (tMaxX < tMaxY) {
-            if (tMaxZ < tMaxX) {
-                tMaxZ += tDelta.z;
-                pos.z += step.z;
-                norm = vec3(0, 0,-step.z);
-            } else {
-                tMaxX += tDelta.x;
-            	pos.x += step.x;
-                norm = vec3(-step.x, 0, 0);
-            }
-        } else {
-            if (tMaxZ < tMaxY) {
-                tMaxZ += tDelta.z;
-                pos.z += step.z;
-                norm = vec3(0, 0, -step.z);
-            } else {
-            	tMaxY += tDelta.y;
-            	pos.y += step.y;
-                norm = vec3(0, -step.y, 0);
-            }
-        }
+        ro += rd;
+
     }
 
  	return false;
 }
-
 
 vec3 intersect(vec3 ro, vec3 rd) {
     vec3 pos = floor(ro);
@@ -97,11 +79,12 @@ vec3 intersect(vec3 ro, vec3 rd) {
     tMaxZ = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
 
     vec3 norm;
-    const int maxTrace = 360;
+    int maxTrace = 200;
     
     for (int i = 0; i < maxTrace; i++) {
-        vec3 color = getVoxel(pos);
-        if (color.x != 0 || color.y != 0 || color.z != 0) {
+        int hit = int(getVoxel(pos)*255);
+        if (hit != 0) {
+            return materials[hit-1];
             vec3 offset = vec3(0, 0, 0);
             if(norm.x != 0) {
                 offset = rd * (tMaxX - tDelta.x - 0.01);
@@ -113,57 +96,76 @@ vec3 intersect(vec3 ro, vec3 rd) {
             vec3 worldPos = ro + offset;
             bool lighting = raycastToTarget(worldPos, sunPos);
             float lightIntensity = lighting ?  0.5f : 1.0f;
+            vec3 color = materials[hit-1];
+            
+            
             return color * lightIntensity;
-            //return lighting ? vec3(1.f, 0.5, 0.5f) : color;
-            //return vec3(255,255,255)*value;
-        }
-        
-        if(pos.x < 0 || pos.x >= worldSize || pos.y < 0 || pos.y >= worldSize || pos.z < 0 || pos.z >= worldSize) {
-            return vec3(0,0,0);
         }
 
         if (tMaxX < tMaxY) {
             if (tMaxZ < tMaxX) {
                 tMaxZ += tDelta.z;
                 pos.z += step.z;
+                if(pos.z >= chunkSize.z || pos.z < 0) {
+                    discard;
+                    return skyColor;
+                }
                 norm = vec3(0, 0,-step.z);
             } else {
                 tMaxX += tDelta.x;
             	pos.x += step.x;
+                if(pos.x >= chunkSize.x || pos.x < 0) {
+                    discard;
+                    return skyColor;
+                }
                 norm = vec3(-step.x, 0, 0);
             }
         } else {
             if (tMaxZ < tMaxY) {
                 tMaxZ += tDelta.z;
                 pos.z += step.z;
+                if(pos.z >= chunkSize.z || pos.z < 0) {
+                    discard;
+                    return skyColor;
+                }
                 norm = vec3(0, 0, -step.z);
             } else {
             	tMaxY += tDelta.y;
             	pos.y += step.y;
+                if(pos.y >= chunkSize.y || pos.y < 0) {
+                    discard;
+                    return skyColor;
+                }
                 norm = vec3(0, -step.y, 0);
             }
         }
     }
 
- 	return vec3(0,0,0);
+    discard;
+ 	return skyColor;
 }
 
 void main(){
-  vec2 uv = vec2(gl_FragCoord.x/1920 - 0.5, gl_FragCoord.y/1080-0.5);
-  vec3 camPos = inCamPos;
-  vec3 lookAt = vec3(0,0,0);
-  vec3 camDir = inCamDir;
-  vec2 filmSize = vec2(1,1920/1080);
-  vec3 worldUp = vec3(0,1,0);
-  vec3 camRight = normalize(cross(camDir, worldUp));
-  vec3 camUp = cross(camRight, camDir);
+    vec2 coord = vec2(gl_FragCoord.x/1280, gl_FragCoord.y/720) * 2 - 1;
 
-  vec3 filmCentre = camPos + camDir*0.3;
-  vec3 filmPos = filmCentre + uv.x*filmSize.x*camRight + uv.y*filmSize.y*camUp;
-  vec3 ro = camPos;
-  vec3 rd = normalize(filmPos - camPos);
+    vec4 start = inverse(projection*view)*vec4(coord, -1.f, 1.f);
+    start /= start.w;
+    vec4 end = inverse(projection*view)*vec4(coord, 1.f, 1.f);
+    end /= end.w;
+    vec3 ro = start.xyz;
+    vec3 rd = normalize(end.xyz - start.xyz);
 
-  outColor = intersect(ro, rd);
+    if(ro.x >= minBox.x && ro.y > minBox.y && ro.z >= minBox.z &&
+     ro.x <= maxBox.x && ro.y <= maxBox.y && ro.z <= maxBox.z) {
+        ro -= minBox;
+        outColor = intersect(ro, rd);
+    } else {
+        float result = raycastAABB(ro, rd, minBox, maxBox);
+        if(result != -1) {
+            ro -= minBox;
+            outColor = intersect(ro + rd*(result-0.5), rd);
+        }
+    }
 }
 
 /*

@@ -1,9 +1,10 @@
 #include <VoxelMap.hpp>
 #include <iostream>
+#include "PerlinNoise.hpp"
 
 
 static std::size_t getIdx(glm::vec3 pos, std::size_t worldSize) {
-    return (pos.x + pos.y*worldSize + pos.z*worldSize*worldSize)*3;
+    return (pos.x + pos.y*worldSize + pos.z*worldSize*worldSize);
 }
 
 static glm::vec3 getColor(VoxelType type) {
@@ -24,19 +25,33 @@ static glm::vec3 getColor(VoxelType type) {
     }
 }
 
+void VoxelMap::generateRandom() {
+    siv::PerlinNoise perlin{ 1234 };
+    for (std::uint32_t x = 0; x < worldSize; x++)
+    {
+        for (std::uint32_t z = 0; z < worldSize; z++)
+        {
+            float height = perlin.octave2D_01(x, z, 4)*16;
+            for(std::size_t y = 0; y < height; y++) {
+                auto id = getIdx({x,y,z}, worldSize);
+                voxelData[id] = 1;
+            }
+           
+        }
+    }
+    //std::cout << perlin.octave3D(0.1, 0.1, 0.1, 4);
+}
+
 VoxelMap::VoxelMap(std::size_t size) : worldSize(size)
 {
-    voxelData.resize(worldSize*worldSize*worldSize*3);
+    voxelData.resize(worldSize*worldSize*worldSize);
     std::fill(voxelData.begin(), voxelData.end(), 0);
 }
 
 void VoxelMap::setVoxel(glm::vec3 pos, VoxelType type)
 {
     auto id = getIdx(pos, worldSize);
-    auto color = getColor(type);
-    voxelData[id] = color.x * 255;
-    voxelData[id+1] = color.y * 255;
-    voxelData[id+2] = color.z * 255;
+    voxelData[id] = 1;
 }
 
 void VoxelMap::addSpehere(glm::vec3 center, float radius, VoxelType type)

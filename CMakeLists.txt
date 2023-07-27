@@ -16,40 +16,41 @@ set(sources
  ${SOURCE_DIR}/main.cpp
  ${SOURCE_DIR}/utils.cpp
  ${SOURCE_DIR}/VoxelMap.cpp
- ${SOURCE_DIR}/Camera.cpp)
+ ${SOURCE_DIR}/Camera.cpp
+ ${SOURCE_DIR}/Chunk.cpp)
 
-add_executable(opengl-template ${sources} ${includes})
-target_include_directories(opengl-template PRIVATE ${SOURCE_DIR}/include)
+add_executable(doom3d ${sources} ${includes})
+target_include_directories(doom3d PRIVATE ${SOURCE_DIR}/include)
 
 
 # Perform dependency linkage
 include(${CMAKE_DIR}/LinkGLFW.cmake)
-LinkGLFW(opengl-template PRIVATE)
+LinkGLFW(doom3d PRIVATE)
 
 include(${CMAKE_DIR}/LinkGLAD.cmake)
-LinkGLAD(opengl-template PRIVATE)
+LinkGLAD(doom3d PRIVATE)
 
 include(${CMAKE_DIR}/LinkGLM.cmake)
-LinkGLM(opengl-template PRIVATE)
+LinkGLM(doom3d PRIVATE)
 
 # include(${CMAKE_DIR}/LinkIMGUI.cmake)
-# LinkIMGUI(opengl-template PRIVATE)
+# LinkIMGUI(doom3d PRIVATE)
 
 find_package(OpenGL REQUIRED)
 if (OpenGL_FOUND)
-    target_include_directories(opengl-template PRIVATE ${OPENGL_INCLDUE_DIRS})
-    target_link_libraries(opengl-template PRIVATE ${OPENGL_LIBRARIES})
+    target_include_directories(doom3d PRIVATE ${OPENGL_INCLDUE_DIRS})
+    target_link_libraries(doom3d PRIVATE ${OPENGL_LIBRARIES})
 else()
     message(FATAL_ERROR "OpenGL was not found on the system")
 endif()
 
 # Enable C++17
-set_target_properties(opengl-template PROPERTIES
+set_target_properties(doom3d PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO)
 
 # Set project folders
-set_target_properties(opengl-template PROPERTIES FOLDER ${PROJECT_NAME})
-target_compile_options(opengl-template PUBLIC -Wall)
+set_target_properties(doom3d PROPERTIES FOLDER ${PROJECT_NAME})
+target_compile_options(doom3d PUBLIC -Wall)
 

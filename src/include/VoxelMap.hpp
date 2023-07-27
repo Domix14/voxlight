@@ -36,6 +36,7 @@ class VoxelMap
 public:
     VoxelMap(std::size_t size);
 
+    void generateRandom();
     void setVoxel(glm::vec3 pos, VoxelType type);
     std::size_t getWorldSize() const { return worldSize; }
     GLubyte* getVoxelData() { return voxelData.data(); }
