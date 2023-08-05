@@ -1,18 +1,33 @@
 #version 330 core
-out vec3 outColor;
+out vec4 outColor;
 
 uniform vec3 minBox;
 uniform vec3 maxBox;
 uniform vec3 chunkSize;
 uniform sampler3D chunkTexture;
+uniform sampler3D worldTexture;
+uniform sampler2D paletteTexture;
 uniform vec3 sunPos;
 uniform vec3 materials[2];
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+uniform mat4 rotationMatrix;
 
-const vec3 skyColor = vec3(0.529f, 0.8f,  0.92f);
+const vec4 skyColor = vec4(0.529f, 0.8f,  0.92f, 1.f);
+
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+uint isOccupied(ivec3 pos) {
+    vec3 pos0 = pos >> 1;
+    ivec3 bitPos = pos & 1;
+    vec3 uv = pos0/256.f;
+    uint value = uint(texture(worldTexture, uv).r*255);
+    return value & (1U << (bitPos.x + bitPos.z*2 + bitPos.y*4));
+}
 
 float raycastAABB(vec3 ro, vec3 rd, vec3 volMax, vec3 volMin) {
     float t1 = (volMin.x - ro.x) / rd.x;
@@ -48,23 +63,60 @@ float getVoxel(vec3 p) {
 
 bool raycastToTarget(vec3 ro, vec3 target) {
     vec3 rd = normalize(target - ro);
+    vec3 pos = floor(ro);
+    vec3 step = sign(rd);
+    vec3 tDelta = step / rd;
+    
+    float tMaxX, tMaxY, tMaxZ;
+    
+    vec3 fr = fract(ro);
+    
+    tMaxX = tDelta.x * ((rd.x>0.0) ? (1.0 - fr.x) : fr.x);
+    tMaxY = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
+    tMaxZ = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
 
-    const int maxTrace = 0;
+    const int maxTrace = 100;
 
     for (int i = 0; i < maxTrace; i++) {
-        float hit = getVoxel(floor(ro));
-        if (hit != 0) {
+        if (isOccupied(ivec3(pos)) != 0U) {
             return true;
         }
 
-        ro += rd;
-
+        if (tMaxX < tMaxY) {
+            if (tMaxZ < tMaxX) {
+                tMaxZ += tDelta.z;
+                pos.z += step.z;
+                if(pos.z >= 256 || pos.z < 0) {
+                    return false;
+                }
+            } else {
+                tMaxX += tDelta.x;
+            	pos.x += step.x;
+                if(pos.x >= 256|| pos.x < 0) {
+                    return false;
+                }
+            }
+        } else {
+            if (tMaxZ < tMaxY) {
+                tMaxZ += tDelta.z;
+                pos.z += step.z;
+                if(pos.z >= 256 || pos.z < 0) {
+                    return false;
+                }
+            } else {
+            	tMaxY += tDelta.y;
+            	pos.y += step.y;
+                if(pos.y >= 256 || pos.y < 0) {
+                    return false;
+                }
+            }
+        }
     }
 
  	return false;
 }
 
-vec3 intersect(vec3 ro, vec3 rd) {
+vec4 intersect(vec3 ro, vec3 rd) {
     vec3 pos = floor(ro);
     
     vec3 step = sign(rd);
@@ -81,22 +133,27 @@ vec3 intersect(vec3 ro, vec3 rd) {
     vec3 norm;
     int maxTrace = 200;
     
+    vec3 randomOffset = vec3(rand(gl_FragCoord.xy), rand(gl_FragCoord.xy*2), rand(gl_FragCoord.xy*6))*2-1;
+    randomOffset *= 20;
     for (int i = 0; i < maxTrace; i++) {
-        int hit = int(getVoxel(pos)*255);
-        if (hit != 0) {
-            return materials[hit-1];
+        float hit = getVoxel(pos)*255;
+        if (hit >= 1) {
+            vec2 uv = vec2((hit-0.5)/256.f, 0.5f);
+            vec4 color = texture(paletteTexture, uv);
+            
+
             vec3 offset = vec3(0, 0, 0);
             if(norm.x != 0) {
-                offset = rd * (tMaxX - tDelta.x - 0.01);
+                offset = rd * (tMaxX - tDelta.x - 0.1);
             } else if(norm.y != 0) {
-                offset = rd * (tMaxY - tDelta.y - 0.01);
+                offset = rd * (tMaxY - tDelta.y - 0.1);
             } else if(norm.z != 0) {
-                offset = rd * (tMaxZ - tDelta.z - 0.01);
+                offset = rd * (tMaxZ - tDelta.z - 0.1);
             }
-            vec3 worldPos = ro + offset;
-            bool lighting = raycastToTarget(worldPos, sunPos);
+            vec3 worldPos = ro + offset+minBox;
+            bool lighting = raycastToTarget(worldPos, sunPos+randomOffset);
             float lightIntensity = lighting ?  0.5f : 1.0f;
-            vec3 color = materials[hit-1];
+            
             
             
             return color * lightIntensity;
@@ -148,9 +205,9 @@ vec3 intersect(vec3 ro, vec3 rd) {
 void main(){
     vec2 coord = vec2(gl_FragCoord.x/1280, gl_FragCoord.y/720) * 2 - 1;
 
-    vec4 start = inverse(projection*view)*vec4(coord, -1.f, 1.f);
+    vec4 start = rotationMatrix*inverse(projection*view*model)*vec4(coord, -1.f, 1.f);
     start /= start.w;
-    vec4 end = inverse(projection*view)*vec4(coord, 1.f, 1.f);
+    vec4 end = rotationMatrix*inverse(projection*view*model)*vec4(coord, 1.f, 1.f);
     end /= end.w;
     vec3 ro = start.xyz;
     vec3 rd = normalize(end.xyz - start.xyz);

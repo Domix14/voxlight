@@ -17,7 +17,7 @@ macro(LinkGLAD TARGET ACCESS)
         add_subdirectory(${glad_SOURCE_DIR}/cmake ${glad_BINARY_DIR} EXCLUDE_FROM_ALL)
 
         # Set the target's folders
-        glad_add_library(glad SHARED API gl:compatibility=3.3)
+        glad_add_library(glad SHARED API gl:compatibility=4.5)
         # glad_add_library(glad REPRODUCIBLE MX API gl:core=3.3)
         # set_target_properties(glad_gl_core_33 PROPERTIES FOLDER ${PROJECT_NAME}/thirdparty)
         # set_target_properties(glad_gl_core_33-generate-files PROPERTIES FOLDER ${PROJECT_NAME}/thirdparty)

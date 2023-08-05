@@ -17,7 +17,9 @@ set(sources
  ${SOURCE_DIR}/utils.cpp
  ${SOURCE_DIR}/VoxelMap.cpp
  ${SOURCE_DIR}/Camera.cpp
- ${SOURCE_DIR}/Chunk.cpp)
+ ${SOURCE_DIR}/Chunk.cpp
+ ${SOURCE_DIR}/Engine.cpp
+ ${SOURCE_DIR}/VoxelSystem.cpp)
 
 add_executable(doom3d ${sources} ${includes})
 target_include_directories(doom3d PRIVATE ${SOURCE_DIR}/include)
@@ -32,6 +34,10 @@ LinkGLAD(doom3d PRIVATE)
 
 include(${CMAKE_DIR}/LinkGLM.cmake)
 LinkGLM(doom3d PRIVATE)
+
+
+include(${CMAKE_DIR}/LinkSTB.cmake)
+LinkSTB(doom3d PRIVATE)
 
 # include(${CMAKE_DIR}/LinkIMGUI.cmake)
 # LinkIMGUI(doom3d PRIVATE)

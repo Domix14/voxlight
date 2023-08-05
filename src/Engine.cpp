@@ -1,0 +1,206 @@
+#include "Engine.hpp"
+
+#include <iostream>
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
+#include "utils.hpp"
+#include <VoxelMap.hpp>
+#include <PerlinNoise.hpp>
+#include <Chunk.hpp>
+#include <Camera.hpp>
+#include <VoxelSystem.hpp>
+
+#include <imgui.h>
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+#include <vector>
+#include <cstdint>
+#include <cmath>
+
+constexpr std::uint32_t WINDOW_WIDTH = 1280;
+constexpr std::uint32_t WINDOW_HEIGHT = 720;
+
+// cube vertices with size 1 and origin in 0, 0, 0
+
+void ProcessInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+
+Engine::Engine() : entityCount(0), voxelSystem(nullptr) {
+    voxelSystem = new VoxelSystem(this);
+    
+}
+
+std::uint32_t Engine::createEntity() {
+    auto entity = entityCount++;
+    voxelComponents.emplace_back();
+    return entity;
+}
+
+std::uint32_t Engine::createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, std::vector<std::uint8_t> const& voxelData) {
+    auto entity = createEntity();
+    voxelComponents[entity].position = pos;
+    voxelComponents[entity].rotation = rot;
+    voxelComponents[entity].size = size;
+    voxelComponents[entity].setVoxelData(voxelData);
+    voxelSystem->addEntity(entity);
+    return entity;
+}
+
+void Engine::run() {
+    glfwInit();
+    const char* glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+
+    std::vector<GLubyte> data;
+    Camera camera;
+
+    std::vector<Chunk> chunks;
+
+    // Construct the window
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Doom3D", nullptr, nullptr);
+    if (!window)
+    {
+        std::cout << "Failed to create the GLFW window\n";
+        glfwTerminate();
+    }
+
+    glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
+    if (!gladLoadGL(glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD\n";
+        return;
+    }
+    
+    // Handle view port dimensions
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
+    {
+        glViewport(0, 0, width, height);
+    });
+    
+    glClearColor(0.529f, 0.8f,  0.92f, 0.f);
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // Our state
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+
+    voxelSystem->initialise();
+    auto voxelData = loadVox("test.vox");
+    auto knightData = loadVox("knight.vox");
+    auto planeData = loadVox("plane.vox");
+    std::size_t chunkSize = 64;
+    std::size_t chunksCount = 2;
+    siv::PerlinNoise perlin{ 4321 };
+    // for(std::size_t i = 0;i < chunksCount;++i) {
+    //     for(std::size_t j = 0;j < chunksCount;++j) {
+    //         std::vector<GLubyte> data(chunkSize*chunkSize*chunkSize);
+    //         for(std::size_t x = 0;x < chunkSize;++x) {
+    //             for(std::size_t z = 0; z < chunkSize;++z) {
+    //                 std::size_t xvalue = i*chunkSize + x;
+    //                 std::size_t zvalue = j*chunkSize + z;
+    //                 std::size_t height = perlin.octave2D_01(xvalue*0.01, zvalue*0.01, 4)*chunkSize;
+    //                 // height = chunkSize;
+    //                 for(std::size_t y = 0; y < height;++y) {
+    //                     data[x + y*chunkSize + z*chunkSize*chunkSize] = (i%2)+1;
+    //                 }
+    //             }
+    //         }
+    //         createVoxelEntity(glm::vec3(i*chunkSize, 0, j*chunkSize), glm::vec3(glm::radians(i*0.f)), glm::vec3(chunkSize), data);
+    //     }
+    // }
+    createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData);
+    for(int i = 10; i >= 0;--i){
+        createVoxelEntity(glm::vec3(i*16, 2, i*16), glm::vec3(glm::radians(0.f)), glm::vec3(32), knightData);
+    }
+    
+    voxelSystem->createWorldVoxelTexture();
+
+    // GLint texture_units;
+    // glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
+    // std::cout << "Max texture units: " << texture_units << std::endl;
+
+    camera.setPosition({0, 16, 0});
+    camera.setDirection(glm::normalize(glm::vec3(32,16,32) - camera.getPosition()));
+
+    double currentFrame = 0;
+    double deltaTime = 0;
+    double lastFrame = 0;
+
+
+
+    // auto lightTexture = createVoxelTexture(voxelData, glm::vec3(chunkSize));
+
+    
+    // createVoxelEntity(glm::vec3(0,0,0), glm::vec3(0), glm::vec3(16), voxelData);
+
+
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+    while (!glfwWindowShouldClose(window))
+    {
+        currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+
+
+        ProcessInput(window);
+        // camera.update(window, deltaTime);
+
+        glfwPollEvents();
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        voxelSystem->update(deltaTime, camera);
+		// Draw the triangle !
+		// glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
+
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        {
+            ImGui::SetNextWindowPos(ImVec2(0,0));
+            ImGui::SetNextWindowSize(ImVec2(200, 50));
+            ImGui::Begin("Camera position");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
+
+        // // Rendering
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
+        glfwSwapBuffers(window);
+    }
+
+    glfwTerminate();
+}

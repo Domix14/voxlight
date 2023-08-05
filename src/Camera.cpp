@@ -19,7 +19,7 @@ void Camera::update(GLFWwindow* window, double deltaTime) {
     direction = glm::normalize(rotMat * glm::vec4(direction, 0.0f));
 
     // Movement
-    float horizontalSpeed = 15.f * deltaTime;
+    float horizontalSpeed = 30.f * deltaTime;
     int state = glfwGetKey(window, GLFW_KEY_W);
     glm::vec3 horizontalDir = glm::normalize(glm::vec3(direction.x, 0, direction.z));
     if (state == GLFW_PRESS)
