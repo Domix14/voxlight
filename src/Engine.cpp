@@ -132,7 +132,7 @@ void Engine::run() {
     //     }
     // }
     createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData);
-    for(int i = 10; i >= 0;--i){
+    for(int i = 0; i < 256;++i){
         createVoxelEntity(glm::vec3(i*16, 2, i*16), glm::vec3(glm::radians(0.f)), glm::vec3(32), knightData);
     }
     
@@ -170,7 +170,7 @@ void Engine::run() {
 
 
         ProcessInput(window);
-        // camera.update(window, deltaTime);
+        camera.update(window, deltaTime);
 
         glfwPollEvents();
         

@@ -49,7 +49,7 @@ void raycastAABB(vec3 ro, vec3 rd, vec3 volMax, vec3 volMin, out float minDist, 
 
 float getVoxel(vec3 p) {
     vec3 uv = (p+0.5)/chunkSize;
-    return texture(chunkTexture, uv).r;
+    return textureLod(chunkTexture, uv, 0.0f).r;
 }
 
 bool raycastToTarget(vec3 ro, vec3 target) {
@@ -126,7 +126,7 @@ float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) 
         float hit = getVoxel(pos)*255;
         if(hit != 0) {
             vec2 uv = vec2((hit-0.5)/256.f, 0.5f);
-            color = texture(paletteTexture, uv);
+            color = textureLod(paletteTexture, uv, 0.0f);
             return d;
         }
 
@@ -176,11 +176,15 @@ void main(){
     float minDist;
     float maxDist;
 
+    float uNear = 0.001f;
+    float uFar = 2500.0;
     raycastAABB(ro, rd, minBox, maxBox, minDist, maxDist);
-
+    float d1 = minDist / length(end.xyz - start.xyz);
+    float d2 = (1.0 / (d1+0.001) - 1.0 / uNear) / (1.0 / uFar - 1.0 / uNear);
     float dd  = texture(depthTexture, vec2(gl_FragCoord.x/1280, gl_FragCoord.y/720)).r;
-    if(dd < 0.1) {
-        discard;
+    
+    if(d2 > dd) {
+        //discard;
     }
 
     ro -= minBox;
@@ -191,10 +195,9 @@ void main(){
     }
 
     float linearDepth = (minDist+d) / length(end.xyz - start.xyz);
-    float uNear = 0.01;
-    float uFar = 300.0;
-    float depth = (1.0 / (linearDepth+0.001) - 1.0 / uNear) / (1.0 / uFar - 1.0 / uNear);
-    gl_FragDepth = depth;
+
+    float depth = (1.0f / (linearDepth+0.001f) - 1.0f / uNear) / (1.0f / uFar - 1.0f / uNear);
+    //gl_FragDepth = depth;
 
     outColor = color; //vec4(vec3(depth), 1.f);
 }

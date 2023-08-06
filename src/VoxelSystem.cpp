@@ -176,8 +176,8 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glm::mat4 projection = glm::perspective(
         glm::radians(90.f), // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
         4.0f / 3.0f,        // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
-        0.01f,               // Near clipping plane. Keep as big as possible, or you'll get precision issues.
-        300.0f             // Far clipping plane. Keep as little as possible.
+        0.001f,               // Near clipping plane. Keep as big as possible, or you'll get precision issues.
+        2500.0f             // Far clipping plane. Keep as little as possible.
     );
 
     glm::mat4 view = glm::lookAt(
@@ -218,14 +218,14 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     );
 
     auto& voxelComponents = engine->voxelComponents;
-    // std::sort(entities.begin(), entities.end(), [&voxelComponents, &camera](std::uint32_t a, std::uint32_t b)
-    //           {
-    //             auto closestPointA = glm::clamp(camera.getPosition(), voxelComponents[a].position, voxelComponents[a].position + voxelComponents[a].size);
-    //             auto closestPointB = glm::clamp(camera.getPosition(), voxelComponents[b].position, voxelComponents[b].position + voxelComponents[b].size);
-    //             auto aDist = glm::distance(closestPointA, camera.getPosition());
-    //             auto bDist = glm::distance(closestPointB, camera.getPosition());
-    //             return aDist > bDist;
-    //          });
+    std::sort(entities.begin(), entities.end(), [&voxelComponents, &camera](std::uint32_t a, std::uint32_t b)
+              {
+                auto closestPointA = glm::clamp(camera.getPosition(), voxelComponents[a].position, voxelComponents[a].position + voxelComponents[a].size);
+                auto closestPointB = glm::clamp(camera.getPosition(), voxelComponents[b].position, voxelComponents[b].position + voxelComponents[b].size);
+                auto aDist = glm::distance(closestPointA, camera.getPosition());
+                auto bDist = glm::distance(closestPointB, camera.getPosition());
+                return aDist > bDist;
+             });
     glUniform1i(glGetUniformLocation(voxelProgram, "worldTexture"), 0);
     glUniform1i(glGetUniformLocation(voxelProgram, "chunkTexture"), 1);
     glUniform1i(glGetUniformLocation(voxelProgram, "paletteTexture"), 2);
@@ -262,7 +262,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glBindTexture(GL_TEXTURE_2D, depthTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
-        // glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
+        //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
 
         glTextureBarrier();
     }
@@ -286,7 +286,7 @@ void VoxelSystem::addEntity(std::uint32_t entity)
                 auto voxel = entityCompontent.voxelData[x + y * size.x + z * size.x * size.y];
                 if(voxel != 0) {
                     auto voxelPosition = entityCompontent.position + glm::vec3(x, y, z);
-                    setVoxel(voxelPosition);
+                    //setVoxel(voxelPosition);
                 }
             }
         }
