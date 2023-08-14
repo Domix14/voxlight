@@ -32,6 +32,7 @@ private:
     GLuint depthFb;
     GLuint depthTexture;
     GLuint colorTexture;
+    GLuint normalTexture;
 };
 
 #endif // VOXEL_SYSTEM_HPP

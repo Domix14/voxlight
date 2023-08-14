@@ -1,7 +1,8 @@
 #version 450 core
 #extension GL_ARB_texture_barrier : enable
 
-out vec4 outColor;
+layout (location = 0) out vec4 outColor;
+layout (location = 1) out vec3 outNormal;
 
 uniform vec3 minBox;
 uniform vec3 maxBox;
@@ -16,10 +17,7 @@ layout(binding=1) uniform sampler3D chunkTexture;
 layout(binding=2) uniform sampler2D paletteTexture;
 layout(binding=3) uniform sampler2D depthTexture;
 
-
-
 const vec4 skyColor = vec4(0.529f, 0.8f,  0.92f, 1.f);
-
 
 
 float rand(vec2 co){
@@ -49,7 +47,7 @@ void raycastAABB(vec3 ro, vec3 rd, vec3 volMax, vec3 volMin, out float minDist, 
 
 float getVoxel(vec3 p) {
     vec3 uv = (p+0.5)/chunkSize;
-    return textureLod(chunkTexture, uv, 0.0f).r;
+    return textureLod(chunkTexture, uv, 0).r;
 }
 
 bool raycastToTarget(vec3 ro, vec3 target) {
@@ -176,15 +174,15 @@ void main(){
     float minDist;
     float maxDist;
 
-    float uNear = 0.001f;
-    float uFar = 2500.0;
+    float uNear = 0.1f;
+    float uFar = 1000.0;
     raycastAABB(ro, rd, minBox, maxBox, minDist, maxDist);
     float d1 = minDist / length(end.xyz - start.xyz);
-    float d2 = (1.0 / (d1+0.001) - 1.0 / uNear) / (1.0 / uFar - 1.0 / uNear);
+    float d2 = (1.0 / (d1+0.1) - 1.0 / uNear) / (1.0 / uFar - 1.0 / uNear);
     float dd  = texture(depthTexture, vec2(gl_FragCoord.x/1280, gl_FragCoord.y/720)).r;
     
     if(d2 > dd) {
-        //discard;
+        discard;
     }
 
     ro -= minBox;
@@ -196,10 +194,11 @@ void main(){
 
     float linearDepth = (minDist+d) / length(end.xyz - start.xyz);
 
-    float depth = (1.0f / (linearDepth+0.001f) - 1.0f / uNear) / (1.0f / uFar - 1.0f / uNear);
-    //gl_FragDepth = depth;
+    float depth = (1.0f / (linearDepth+0.1f) - 1.0f / uNear) / (1.0f / uFar - 1.0f / uNear);
+    gl_FragDepth = depth;
 
     outColor = color; //vec4(vec3(depth), 1.f);
+    outNormal = norm;
 }
 
 /*

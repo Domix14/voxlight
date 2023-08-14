@@ -32,7 +32,7 @@ std::tuple<GLuint, ReturnCode> createShader(GLenum shaderType, fs::path shaderPa
     return {0, ReturnCode::FAILURE};
 }
 
-std::vector<std::uint8_t> loadVox(std::filesystem::path path) {
+VoxelContainer loadVox(std::filesystem::path path) {
     auto readTag = [](std::istreambuf_iterator<char>& iterator) {
         std::string tag;
         for(std::size_t i = 0; i < 4; i++) {
@@ -51,10 +51,7 @@ std::vector<std::uint8_t> loadVox(std::filesystem::path path) {
         return static_cast<std::int32_t>(data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24);
     };
 
-    std::vector<std::uint8_t> data;
-    std::uint8_t xsize;
-    std::uint8_t ysize;
-    std::uint8_t zsize;
+    VoxelContainer container;
     if(fs::exists(path) && path.extension() == ".vox") {
         std::ifstream file(path, std::ios::in | std::ios::binary);
         auto iterator = std::istreambuf_iterator<char>(file);
@@ -68,10 +65,15 @@ std::vector<std::uint8_t> loadVox(std::filesystem::path path) {
             readInt(iterator); // Child chunks
 
             if(tag == "SIZE") {
-                xsize = readInt(iterator);
-                zsize = readInt(iterator);
-                ysize = readInt(iterator);
-                data.resize(xsize * ysize * zsize);
+                container.size.x = readInt(iterator);
+                container.size.z = readInt(iterator);
+                container.size.y = readInt(iterator);
+                
+                assert(xsize % 4 == 0);
+                assert(ysize % 4 == 0);
+                assert(zsize % 4 == 0);
+
+                container.data.resize(container.size.x * container.size.y * container.size.z);
             } else if(tag == "XYZI") {
                 // assert(data.size() == contentSize / 4);
                 auto voxelCount = readInt(iterator);
@@ -84,26 +86,28 @@ std::vector<std::uint8_t> loadVox(std::filesystem::path path) {
                     std::advance(iterator, 1);
                     std::uint8_t colorIndex = *iterator;
                     std::advance(iterator, 1);
-                    data[x + y * xsize + z * xsize * ysize] = colorIndex;
+                    container.data[x + y * container.size.x + z * container.size.x * container.size.y] = colorIndex;
                 }
             } else {
                 std::advance(iterator, contentSize);
             }
         }
     }
-    return data;
+    return container;
 }
 
 GLuint createVoxelTexture(std::vector<GLubyte> const& data, glm::vec3 size) {
     GLuint texname;
     glGenTextures(1, &texname);
     glBindTexture(GL_TEXTURE_3D, texname);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    //glSamplerParameterf(texname,GL_TEXTURE_MAX_LOD,0);
+
     glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, 
                 GL_UNSIGNED_BYTE, data.data());
     return texname;

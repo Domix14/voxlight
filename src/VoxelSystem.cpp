@@ -133,7 +133,15 @@ void VoxelSystem::initialise()
 
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 720, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glGenTextures(1, &normalTexture);
+    glBindTexture(GL_TEXTURE_2D, normalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, 1280, 720, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -144,6 +152,7 @@ void VoxelSystem::initialise()
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
 
     GLint no_of_extensions = 0;
     glGetIntegerv(GL_NUM_EXTENSIONS, &no_of_extensions);
@@ -166,6 +175,8 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_ALWAYS); 
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
+    GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(3, attachments);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(voxelProgram);
@@ -175,9 +186,9 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
 
     glm::mat4 projection = glm::perspective(
         glm::radians(90.f), // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
-        4.0f / 3.0f,        // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
-        0.001f,               // Near clipping plane. Keep as big as possible, or you'll get precision issues.
-        2500.0f             // Far clipping plane. Keep as little as possible.
+        16.0f / 9.0f,        // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
+        0.1f,               // Near clipping plane. Keep as big as possible, or you'll get precision issues.
+        1000.0f             // Far clipping plane. Keep as little as possible.
     );
 
     glm::mat4 view = glm::lookAt(
@@ -224,7 +235,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
                 auto closestPointB = glm::clamp(camera.getPosition(), voxelComponents[b].position, voxelComponents[b].position + voxelComponents[b].size);
                 auto aDist = glm::distance(closestPointA, camera.getPosition());
                 auto bDist = glm::distance(closestPointB, camera.getPosition());
-                return aDist > bDist;
+                return aDist < bDist;
              });
     glUniform1i(glGetUniformLocation(voxelProgram, "worldTexture"), 0);
     glUniform1i(glGetUniformLocation(voxelProgram, "chunkTexture"), 1);
@@ -260,6 +271,9 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, normalTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
         //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle

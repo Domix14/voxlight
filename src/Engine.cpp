@@ -71,7 +71,7 @@ void Engine::run() {
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     if (!gladLoadGL(glfwGetProcAddress))
     {
@@ -108,12 +108,8 @@ void Engine::run() {
 
 
     voxelSystem->initialise();
-    auto voxelData = loadVox("test.vox");
     auto knightData = loadVox("knight.vox");
     auto planeData = loadVox("plane.vox");
-    std::size_t chunkSize = 64;
-    std::size_t chunksCount = 2;
-    siv::PerlinNoise perlin{ 4321 };
     // for(std::size_t i = 0;i < chunksCount;++i) {
     //     for(std::size_t j = 0;j < chunksCount;++j) {
     //         std::vector<GLubyte> data(chunkSize*chunkSize*chunkSize);
@@ -131,9 +127,9 @@ void Engine::run() {
     //         createVoxelEntity(glm::vec3(i*chunkSize, 0, j*chunkSize), glm::vec3(glm::radians(i*0.f)), glm::vec3(chunkSize), data);
     //     }
     // }
-    createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData);
-    for(int i = 0; i < 256;++i){
-        createVoxelEntity(glm::vec3(i*16, 2, i*16), glm::vec3(glm::radians(0.f)), glm::vec3(32), knightData);
+    // createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData.data);
+    for(int i = 0; i < 64;++i){
+        createVoxelEntity(glm::vec3(i*16, 2, i*16), glm::vec3(glm::radians(0.f)), knightData.size, knightData.data);
     }
     
     voxelSystem->createWorldVoxelTexture();
