@@ -208,13 +208,12 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         0.5,
         0.5,
     };
-    GLuint camPosID = glGetUniformLocation(voxelProgram, "inCamPos");
-    GLuint camDirID = glGetUniformLocation(voxelProgram, "inCamDir");
-    GLuint sunPosID = glGetUniformLocation(voxelProgram, "sunPos");
+    GLuint modelMatrixID = glGetUniformLocation(voxelProgram, "uModelMatrix");
+    GLuint viewProjectionMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
+    GLuint viewProjectionInvMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionInvMatrix");
+    GLuint camPosID = glGetUniformLocation(voxelProgram, "uCameraPos");
     GLuint materialsID = glGetUniformLocation(voxelProgram, "materials");
     glUniform3f(camPosID, pos.x, pos.y, pos.z);
-    glUniform3f(camDirID, dir.x, dir.y, dir.z);
-    glUniform3f(sunPosID, sunPosition.x, sunPosition.y, sunPosition.z);
     glUniform3fv(materialsID, 6, materials);
 
     glEnableVertexAttribArray(0);
@@ -241,24 +240,28 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glUniform1i(glGetUniformLocation(voxelProgram, "chunkTexture"), 1);
     glUniform1i(glGetUniformLocation(voxelProgram, "paletteTexture"), 2);
     glUniform1i(glGetUniformLocation(voxelProgram, "depthTexture"), 3);
+    auto viewProjection = projection * view;
+    auto viewProjectionInv = glm::inverse(viewProjection);
+    glUniformMatrix4fv(viewProjectionMatrixID, 1, GL_FALSE, &viewProjection[0][0]);
+    glUniformMatrix4fv(viewProjectionInvMatrixID, 1, GL_FALSE, &viewProjectionInv[0][0]);
 
     for (auto entity : entities)
     {
         auto &voxelComponent = voxelComponents[entity];
         auto size = voxelComponent.size;
-        auto scale = glm::scale(glm::mat4(1.0f), size);
         auto rot = glm::toMat4(voxelComponent.rotation);
         auto trans = glm::translate(glm::mat4(1.f), voxelComponent.position);
-        auto model = trans * rot * scale;
-        auto mvp = projection * view * model;
-        auto worldMatrix = trans*scale*glm::inverse(mvp);
-        glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "mvp"), 1, GL_FALSE, &mvp[0][0]);
-        glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "worldMatrix"), 1, GL_FALSE, &worldMatrix[0][0]);
-        auto minBox = voxelComponent.position;
-        auto maxBox = voxelComponent.position + voxelComponent.size;
+        auto model = trans * rot;
+        glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &model[0][0]);
+        auto minBox = glm::vec3(0, 0, 0);
+        auto maxBox = minBox + voxelComponent.size;
         glUniform3f(glGetUniformLocation(voxelProgram, "minBox"), minBox.x, minBox.y, minBox.z);
         glUniform3f(glGetUniformLocation(voxelProgram, "maxBox"), maxBox.x, maxBox.y, maxBox.z);
-        glUniform3f(glGetUniformLocation(voxelProgram, "chunkSize"), size.x, size.y, size.z);
+        glUniform3f(glGetUniformLocation(voxelProgram, "uChunkSize"), size.x, size.y, size.z);
+
+        float voxSize = 1.f;
+        glUniform1f(glGetUniformLocation(voxelProgram, "uVoxSize"), voxSize);
+
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, worldTexture);

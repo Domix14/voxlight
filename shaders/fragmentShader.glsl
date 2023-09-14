@@ -6,19 +6,35 @@ layout (location = 1) out vec3 outNormal;
 
 uniform vec3 minBox;
 uniform vec3 maxBox;
-uniform vec3 chunkSize;
+uniform vec3 uChunkSize;
 uniform vec3 sunPos;
 uniform vec3 materials[2];
-uniform mat4 mvp;
 uniform mat4 worldMatrix;
+
+uniform vec3 uCameraPos;
+uniform mat4 uModelMatrix;
+uniform mat4 uViewProjectionMatrix;
+uniform mat4 uViewProjectionInvMatrix;
+uniform float uVoxSize;
 
 layout(binding=0) uniform sampler3D worldTexture;
 layout(binding=1) uniform sampler3D chunkTexture;
 layout(binding=2) uniform sampler2D paletteTexture;
 layout(binding=3) uniform sampler2D depthTexture;
 
+in vec3 vWorldPos;
+in vec4 vHPos;
+in vec3 vLocalCameraPos;
+in vec3 vLocalPos;
+
 const vec4 skyColor = vec4(0.529f, 0.8f,  0.92f, 1.f);
 
+vec3 computeFarVec(vec2 texCoord)
+{
+	vec4 aa = vec4(texCoord*2.0 - vec2(1.0), 1.0f, 1.0f);
+	aa = uViewProjectionInvMatrix * aa;
+	return aa.xyz / aa.w - uCameraPos;
+}
 
 float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
@@ -46,7 +62,7 @@ void raycastAABB(vec3 ro, vec3 rd, vec3 volMax, vec3 volMin, out float minDist, 
 }
 
 float getVoxel(vec3 p) {
-    vec3 uv = (p+0.5)/chunkSize;
+    vec3 uv = (p+0.5)/uChunkSize;
     return textureLod(chunkTexture, uv, 0).r;
 }
 
@@ -105,22 +121,24 @@ bool raycastToTarget(vec3 ro, vec3 target) {
  	return false;
 }
 
-float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) {
-    vec3 pos = floor(ro);
-    
+float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) {    
     vec3 step = sign(rd);
-    vec3 tDelta = step / rd;
+    vec3 tDelta = step * uVoxSize / rd;
     
     vec3 tMax;
     
-    vec3 fr = fract(ro);
+    vec3 fr = fract(ro) * uVoxSize;
     
     tMax.x = tDelta.x * ((rd.x>0.0) ? (1.0 - fr.x) : fr.x);
     tMax.y = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
     tMax.z = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
+    tMax *= uVoxSize;
+    
 
     float d = 0;
+    vec3 pos = floor(ro);
     while(d < maxDist) {
+        //vec3 pos = floor((ro + rd*d)/uVoxSize);
         float hit = getVoxel(pos)*255;
         if(hit != 0) {
             vec2 uv = vec2((hit-0.5)/256.f, 0.5f);
@@ -158,71 +176,40 @@ float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) 
 }
 
 void main(){
-    vec2 coord = vec2(gl_FragCoord.x/1280, gl_FragCoord.y/720) * 2 - 1;
-    vec4 start = worldMatrix*vec4(coord, -1.f, 1.f);
-    
-    start /= start.w;
-    vec4 end = worldMatrix*vec4(coord, 1.f, 1.f);
-    
-    end /= end.w;
-    vec3 ro = start.xyz;
-    vec3 rd = normalize(end.xyz - start.xyz);
+
+    vec3 localPos = vLocalCameraPos;
+	vec3 localDir = (vLocalPos - vLocalCameraPos);
+	float maxDist2 = length(localDir);
+	localDir /= maxDist2;
+    float minDist;
+    float maxDist;
+    raycastAABB(localPos, localDir, minBox, uChunkSize*uVoxSize, minDist, maxDist);
+
+    vec2 tc = (vHPos.xy/vHPos.w)*0.5 + vec2(0.5);
+    vec3 fv = computeFarVec(tc);
+	float depth = texture(depthTexture, tc).r;
+	float currentMinDepth = length(fv*depth);
+
+    if (minDist > currentMinDepth)
+		discard;
+
 
     vec4 color;
     vec3 norm;
     float d;
-    float minDist;
-    float maxDist;
-
-    float uNear = 0.1f;
-    float uFar = 1000.0;
-    raycastAABB(ro, rd, minBox, maxBox, minDist, maxDist);
-    float d1 = minDist / length(end.xyz - start.xyz);
-    float d2 = (1.0 / (d1+0.1) - 1.0 / uNear) / (1.0 / uFar - 1.0 / uNear);
-    float dd  = texture(depthTexture, vec2(gl_FragCoord.x/1280, gl_FragCoord.y/720)).r;
-    
-    if(d2 > dd) {
-        discard;
-    }
-
-    ro -= minBox;
-    d = intersect(ro + rd*(minDist-0.001), rd, maxDist-minDist, color, norm);
+    d = intersect(localPos + localDir*(minDist-0.001), localDir, maxDist-minDist, color, norm);
 
     if(d == (maxDist-minDist)) {
         discard;
     }
 
-    float linearDepth = (minDist+d) / length(end.xyz - start.xyz);
+    float uNear = 0.1f;
+    float uFar = 1000.0;
+    vec4 worldPos4 = uModelMatrix*vec4(localPos, 1.0);
+    float linearDepth = (uViewProjectionMatrix * worldPos4).w;
+    float currentDepth = (1.0f / (linearDepth+0.1f) - 1.0f / uNear) / (1.0f / uFar - 1.0f / uNear);
+    gl_FragDepth = currentDepth;
 
-    float depth = (1.0f / (linearDepth+0.1f) - 1.0f / uNear) / (1.0f / uFar - 1.0f / uNear);
-    gl_FragDepth = depth;
-
-    outColor = color; //vec4(vec3(depth), 1.f);
+    outColor = color;
     outNormal = norm;
 }
-
-/*
-uniform vec3 invS;
-
-vec4 tree_lookup(
-uniform float N,
-vec3 M) // Lookup coordinates    
-{
-    vec4 I = vec4(0.0, 0.0, 0.0, 0.0);
-    vec3 MND = M;
-    for (float i=0; i<HRDWTREE_MAX_DEPTH; i++) { // fixed # of iterations
-        vec3 P;      // compute lookup coords. within current node
-        P = (MND + floor(0.5 + I.xyz * 255.0)) * invS;      // access indirection pool
-        if (I.w < 0.9)                   // already in a leaf?
-            I = texture(worldMap,P);// no, continue to next depth
-            #ifdef DYN_BRANCHING // early exit if hardware supports dynamic branching
-            if (I.w > 0.9)    // a leaf has been reached          
-                break;
-            #endif
-            if (I.w < 0.1) // empty cell
-                discard;      // compute pos within next depth grid
-            MND = MND * N;
-    }
-    return (I);
-}
-*/

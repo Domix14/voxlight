@@ -60,3 +60,4 @@ set_target_properties(doom3d PROPERTIES
 set_target_properties(doom3d PROPERTIES FOLDER ${PROJECT_NAME})
 target_compile_options(doom3d PUBLIC -Wall)
 
+
