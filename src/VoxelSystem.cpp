@@ -147,7 +147,6 @@ void VoxelSystem::initialise()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-
     glGenFramebuffers(1, &depthFb);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
@@ -176,7 +175,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glDepthFunc(GL_ALWAYS); 
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
     GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(3, attachments);
+    glDrawBuffers(2, attachments);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(voxelProgram);
@@ -197,24 +196,12 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glm::vec3(0, 1, 0)    // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
     );
 
-    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "view"), 1, GL_FALSE, &view[0][0]);
-
-    float materials[] = {
-        0,
-        1,
-        0,
-        0.5,
-        0.5,
-        0.5,
-    };
     GLuint modelMatrixID = glGetUniformLocation(voxelProgram, "uModelMatrix");
     GLuint viewProjectionMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
     GLuint viewProjectionInvMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionInvMatrix");
     GLuint camPosID = glGetUniformLocation(voxelProgram, "uCameraPos");
     GLuint materialsID = glGetUniformLocation(voxelProgram, "materials");
     glUniform3f(camPosID, pos.x, pos.y, pos.z);
-    glUniform3fv(materialsID, 6, materials);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -236,10 +223,9 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
                 auto bDist = glm::distance(closestPointB, camera.getPosition());
                 return aDist < bDist;
              });
-    glUniform1i(glGetUniformLocation(voxelProgram, "worldTexture"), 0);
-    glUniform1i(glGetUniformLocation(voxelProgram, "chunkTexture"), 1);
-    glUniform1i(glGetUniformLocation(voxelProgram, "paletteTexture"), 2);
-    glUniform1i(glGetUniformLocation(voxelProgram, "depthTexture"), 3);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uChunkTexture"), 0);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uPaletteTexture"), 1);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uDepthTexture"), 2);
     auto viewProjection = projection * view;
     auto viewProjectionInv = glm::inverse(viewProjection);
     glUniformMatrix4fv(viewProjectionMatrixID, 1, GL_FALSE, &viewProjection[0][0]);
@@ -253,35 +239,27 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         auto trans = glm::translate(glm::mat4(1.f), voxelComponent.position);
         auto model = trans * rot;
         glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &model[0][0]);
-        auto minBox = glm::vec3(0, 0, 0);
-        auto maxBox = minBox + voxelComponent.size;
-        glUniform3f(glGetUniformLocation(voxelProgram, "minBox"), minBox.x, minBox.y, minBox.z);
-        glUniform3f(glGetUniformLocation(voxelProgram, "maxBox"), maxBox.x, maxBox.y, maxBox.z);
         glUniform3f(glGetUniformLocation(voxelProgram, "uChunkSize"), size.x, size.y, size.z);
 
         float voxSize = 1.f;
         glUniform1f(glGetUniformLocation(voxelProgram, "uVoxSize"), voxSize);
 
-
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_3D, worldTexture);
-
-        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_3D, voxelComponent.voxelTexture);
 
-        glActiveTexture(GL_TEXTURE2);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, paletteTexture);
 
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
 
-        glActiveTexture(GL_TEXTURE4);
+        glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, normalTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
         //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
 
-        glTextureBarrier();
+        // glTextureBarrier();
     }
     glBindFramebuffer(GL_READ_FRAMEBUFFER, depthFb);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

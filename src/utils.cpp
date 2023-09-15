@@ -106,9 +106,9 @@ GLuint createVoxelTexture(std::vector<GLubyte> const& data, glm::vec3 size) {
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    //glSamplerParameterf(texname,GL_TEXTURE_MAX_LOD,0);
+    glSamplerParameterf(texname,GL_TEXTURE_MAX_LOD,0);
 
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, 
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R16UI, size.x, size.y, size.z, 0, GL_RED_INTEGER, 
                 GL_UNSIGNED_BYTE, data.data());
     return texname;
 }

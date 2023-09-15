@@ -54,7 +54,7 @@ void Engine::run() {
     glfwInit();
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
     std::vector<GLubyte> data;
@@ -128,7 +128,7 @@ void Engine::run() {
     //     }
     // }
     // createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData.data);
-    for(int i = 0; i < 64;++i){
+    for(int i = 0; i < 16;++i){
         createVoxelEntity(glm::vec3(i*16, 2, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, knightData.data);
     }
     
