@@ -128,8 +128,8 @@ void Engine::run() {
     //     }
     // }
     // createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData.data);
-    for(int i = 0; i < 16;++i){
-        createVoxelEntity(glm::vec3(i*16, 2, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, knightData.data);
+    for(int i = 0; i < 5;++i){
+        createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, knightData.data);
     }
     
     voxelSystem->createWorldVoxelTexture();
@@ -138,7 +138,7 @@ void Engine::run() {
     // glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
     // std::cout << "Max texture units: " << texture_units << std::endl;
 
-    camera.setPosition({0, 16, 0});
+    camera.setPosition({32, 16, -16});
     camera.setDirection(glm::normalize(glm::vec3(32,16,32) - camera.getPosition()));
 
     double currentFrame = 0;
