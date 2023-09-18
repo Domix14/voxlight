@@ -125,7 +125,7 @@ void VoxelSystem::initialise()
 
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 1280, 720, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -133,7 +133,7 @@ void VoxelSystem::initialise()
 
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -141,7 +141,7 @@ void VoxelSystem::initialise()
 
     glGenTextures(1, &normalTexture);
     glBindTexture(GL_TEXTURE_2D, normalTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, 1280, 720, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -186,7 +186,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
 
     glm::mat4 projection = glm::perspective(
         glm::radians(90.f), // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
-        16.0f / 9.0f,        // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
+        16.0f / 9.0f,        // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == WINDOW_WIDTH/960, sounds familiar ?
         0.1f,               // Near clipping plane. Keep as big as possible, or you'll get precision issues.
         1000.0f             // Far clipping plane. Keep as little as possible.
     );
@@ -196,9 +196,6 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         pos + (dir * 1000.f), // where you want to look at, in world space
         glm::vec3(0, 1, 0)    // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
     );
-
-    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "view"), 1, GL_FALSE, &view[0][0]);
 
     float materials[] = {
         0,
@@ -211,12 +208,6 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     GLuint modelMatrixID = glGetUniformLocation(voxelProgram, "uModelMatrix");
     GLuint viewProjectionMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
     GLuint viewProjectionInvMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionInvMatrix");
-    GLuint camPosID = glGetUniformLocation(voxelProgram, "uCameraPos");
-    GLuint camDirID = glGetUniformLocation(voxelProgram, "uCameraDir");
-    GLuint materialsID = glGetUniformLocation(voxelProgram, "materials");
-    glUniform3f(camPosID, pos.x, pos.y, pos.z);
-    glUniform3f(camDirID, dir.x, dir.y, dir.z);
-    glUniform3fv(materialsID, 6, materials);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -238,24 +229,23 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
                 auto bDist = glm::distance(closestPointB, camera.getPosition());
                 return aDist < bDist;
              });
-    glUniform1i(glGetUniformLocation(voxelProgram, "uWorldTexture"), 0);
-    glUniform1i(glGetUniformLocation(voxelProgram, "uChunkTexture"), 1);
-    glUniform1i(glGetUniformLocation(voxelProgram, "uPaletteTexture"), 2);
-    glUniform1i(glGetUniformLocation(voxelProgram, "uDepthTexture"), 3);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uChunkTexture"), 0);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uPaletteTexture"), 1);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uDepthTexture"), 2);
     auto viewProjection = projection * view;
     auto viewProjectionInv = glm::inverse(viewProjection);
     glUniformMatrix4fv(viewProjectionMatrixID, 1, GL_FALSE, &viewProjection[0][0]);
     glUniformMatrix4fv(viewProjectionInvMatrixID, 1, GL_FALSE, &viewProjectionInv[0][0]);
+    glUniform2f(glGetUniformLocation(voxelProgram, "invResolution"), 1.f/WINDOW_WIDTH, 1.f/WINDOW_HEIGHT);
 
     float counter = 1;
     for (auto entity : entities)
     {
-        float voxSize = 1/counter;
         auto &voxelComponent = voxelComponents[entity];
         auto size = voxelComponent.size;
         auto rot = glm::toMat4(voxelComponent.rotation);
         auto trans = glm::translate(glm::mat4(1.f), voxelComponent.position);
-        auto scale = glm::scale(glm::mat4(1.f), voxelComponent.size*voxSize);
+        auto scale = glm::scale(glm::mat4(1.f), voxelComponent.size*voxelComponent.voxelSize);
         auto model = trans * rot * scale;
         glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &model[0][0]);
         auto minBox = voxelComponent.position;
@@ -263,31 +253,23 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glUniform3f(glGetUniformLocation(voxelProgram, "uMinBox"), minBox.x, minBox.y, minBox.z);
         glUniform3f(glGetUniformLocation(voxelProgram, "uMaxBox"), maxBox.x, maxBox.y, maxBox.z);
         glUniform3f(glGetUniformLocation(voxelProgram, "uChunkSize"), size.x, size.y, size.z);
+        glUniform1f(glGetUniformLocation(voxelProgram, "uVoxSize"), voxelComponent.voxelSize);
 
         auto voxScale = glm::scale(glm::mat4(1.f), size);
         auto mvp = projection * view * model;
         auto worldMatrix = trans*voxScale*glm::inverse(mvp);
-        glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "uWorldMatrix"), 1, GL_FALSE, &worldMatrix[0][0]);
-
-        counter *= 2;
+        glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "uMagicMatrix"), 1, GL_FALSE, &worldMatrix[0][0]);
         
-        glUniform1f(glGetUniformLocation(voxelProgram, "uVoxSize"), voxSize);
-
+        
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_3D, worldTexture);
-
-        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_3D, voxelComponent.voxelTexture);
 
-        glActiveTexture(GL_TEXTURE2);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, paletteTexture);
 
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
-
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, normalTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
         //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
@@ -296,8 +278,8 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     }
     glBindFramebuffer(GL_READ_FRAMEBUFFER, depthFb);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, 1280, 720,
-                      0, 0, 1280, 720,
+    glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+                      0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
                       GL_COLOR_BUFFER_BIT,
                       GL_LINEAR);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);

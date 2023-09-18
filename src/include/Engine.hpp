@@ -11,6 +11,15 @@
 
 constexpr std::uint32_t NO_TEXTURE = std::numeric_limits<GLuint>::max();
 
+constexpr std::uint32_t WINDOW_WIDTH = 1920;
+constexpr std::uint32_t WINDOW_HEIGHT = 1080;
+
+constexpr float VOXEL_SIZE_10CM = 0.1f;
+constexpr float VOXEL_SIZE_12CM = 0.125f;
+constexpr float VOXEL_SIZE_25CM = 0.25f;
+constexpr float VOXEL_SIZE_50CM = 0.5f;
+constexpr float VOXEL_SIZE_100CM = 1.f;
+
 struct TransformComponent {
     glm::vec3 position;
     glm::vec3 scale;
@@ -21,10 +30,12 @@ struct VoxelComponent {
     glm::vec3 position;
     glm::quat rotation;
     glm::vec3 size;
+    float voxelSize;
+    
     std::vector<std::uint8_t> voxelData;
     
     VoxelComponent() 
-    : voxelTexture(NO_TEXTURE), position(0.f), rotation(glm::vec3(0.f)), size(0.f) {}
+    : voxelTexture(NO_TEXTURE), position(0.f), rotation(glm::vec3(0.f)), size(0.f), voxelSize(VOXEL_SIZE_100CM) {}
 
     void setVoxelData(std::vector<std::uint8_t> const& data) {
         assert(data.size() == (size.x * size.y * size.z));
@@ -34,6 +45,7 @@ struct VoxelComponent {
             voxelTexture = NO_TEXTURE;
         }
         voxelTexture = createVoxelTexture(voxelData, size);
+        voxelSize = voxelSize;
     }
 };
 
@@ -54,7 +66,7 @@ public:
     class VoxelSystem* voxelSystem;
 
     std::uint32_t createEntity();
-    std::uint32_t createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, std::vector<std::uint8_t> const& voxelData);
+    std::uint32_t createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, float voxSize, std::vector<std::uint8_t> const& voxelData);
 };
 
 // class VoxelSystem {

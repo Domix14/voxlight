@@ -18,8 +18,7 @@
 #include <cstdint>
 #include <cmath>
 
-constexpr std::uint32_t WINDOW_WIDTH = 1280;
-constexpr std::uint32_t WINDOW_HEIGHT = 720;
+
 
 // cube vertices with size 1 and origin in 0, 0, 0
 
@@ -40,11 +39,12 @@ std::uint32_t Engine::createEntity() {
     return entity;
 }
 
-std::uint32_t Engine::createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, std::vector<std::uint8_t> const& voxelData) {
+std::uint32_t Engine::createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, float voxSize, std::vector<std::uint8_t> const& voxelData) {
     auto entity = createEntity();
     voxelComponents[entity].position = pos;
     voxelComponents[entity].rotation = rot;
     voxelComponents[entity].size = size;
+    voxelComponents[entity].voxelSize = voxSize;
     voxelComponents[entity].setVoxelData(voxelData);
     voxelSystem->addEntity(entity);
     return entity;
@@ -63,7 +63,7 @@ void Engine::run() {
     std::vector<Chunk> chunks;
 
     // Construct the window
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Doom3D", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelEngine", nullptr, nullptr);
     if (!window)
     {
         std::cout << "Failed to create the GLFW window\n";
@@ -128,9 +128,15 @@ void Engine::run() {
     //     }
     // }
     // createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData.data);
-    for(int i = 0; i < 5;++i){
-        createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, knightData.data);
-    }
+
+    int i = 0;
+    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_100CM, knightData.data);
+    i++;
+    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_50CM, knightData.data);
+    i++;
+    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_25CM, knightData.data);
+    i++;
+    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_12CM, knightData.data);
     
     voxelSystem->createWorldVoxelTexture();
 

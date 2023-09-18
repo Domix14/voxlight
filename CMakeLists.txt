@@ -21,43 +21,43 @@ set(sources
  ${SOURCE_DIR}/Engine.cpp
  ${SOURCE_DIR}/VoxelSystem.cpp)
 
-add_executable(doom3d ${sources} ${includes})
-target_include_directories(doom3d PRIVATE ${SOURCE_DIR}/include)
+add_executable(VoxelEngine ${sources} ${includes})
+target_include_directories(VoxelEngine PRIVATE ${SOURCE_DIR}/include)
 
 
 # Perform dependency linkage
 include(${CMAKE_DIR}/LinkGLFW.cmake)
-LinkGLFW(doom3d PRIVATE)
+LinkGLFW(VoxelEngine PRIVATE)
 
 include(${CMAKE_DIR}/LinkGLAD.cmake)
-LinkGLAD(doom3d PRIVATE)
+LinkGLAD(VoxelEngine PRIVATE)
 
 include(${CMAKE_DIR}/LinkGLM.cmake)
-LinkGLM(doom3d PRIVATE)
+LinkGLM(VoxelEngine PRIVATE)
 
 
 include(${CMAKE_DIR}/LinkSTB.cmake)
-LinkSTB(doom3d PRIVATE)
+LinkSTB(VoxelEngine PRIVATE)
 
 # include(${CMAKE_DIR}/LinkIMGUI.cmake)
-# LinkIMGUI(doom3d PRIVATE)
+# LinkIMGUI(VoxelEngine PRIVATE)
 
 find_package(OpenGL REQUIRED)
 if (OpenGL_FOUND)
-    target_include_directories(doom3d PRIVATE ${OPENGL_INCLDUE_DIRS})
-    target_link_libraries(doom3d PRIVATE ${OPENGL_LIBRARIES})
+    target_include_directories(VoxelEngine PRIVATE ${OPENGL_INCLDUE_DIRS})
+    target_link_libraries(VoxelEngine PRIVATE ${OPENGL_LIBRARIES})
 else()
     message(FATAL_ERROR "OpenGL was not found on the system")
 endif()
 
 # Enable C++17
-set_target_properties(doom3d PROPERTIES
+set_target_properties(VoxelEngine PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO)
 
 # Set project folders
-set_target_properties(doom3d PROPERTIES FOLDER ${PROJECT_NAME})
-target_compile_options(doom3d PUBLIC -Wall)
+set_target_properties(VoxelEngine PROPERTIES FOLDER ${PROJECT_NAME})
+target_compile_options(VoxelEngine PUBLIC -Wall)
 
 
