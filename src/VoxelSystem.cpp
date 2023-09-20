@@ -74,9 +74,13 @@ VoxelSystem::VoxelSystem(Engine* engine) : engine(engine), sunRotation(0)
 }
 
 void VoxelSystem::setVoxel(glm::ivec3 pos) {
+    assert(pos.x >= 0 && pos.x < 2*MAP_SIZE);
+    assert(pos.y >= 0 && pos.y < 2*MAP_SIZE);
+    assert(pos.z >= 0 && pos.z < 2*MAP_SIZE);
+
     auto pos0 = pos >> 1;
     auto bitPos = pos & 0x01;
-    //std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;
+    // std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;
     //std::cout << pos0.x << " " << pos0.y << " " << pos0.z << std::endl;
     //std::cout <<  static_cast<uint32_t>(mapData[pos0.x + pos0.y * MAP_SIZE + pos0.z * MAP_SIZE * MAP_SIZE]) << std::endl;
     mapData[pos0.x + pos0.y * MAP_SIZE + pos0.z * MAP_SIZE * MAP_SIZE] |= static_cast<std::uint8_t>(1 << (bitPos.x + bitPos.z * 2 + bitPos.y * 4));
@@ -197,14 +201,6 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glm::vec3(0, 1, 0)    // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
     );
 
-    float materials[] = {
-        0,
-        1,
-        0,
-        0.5,
-        0.5,
-        0.5,
-    };
     GLuint modelMatrixID = glGetUniformLocation(voxelProgram, "uModelMatrix");
     GLuint viewProjectionMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
     GLuint viewProjectionInvMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionInvMatrix");
@@ -232,13 +228,14 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glUniform1i(glGetUniformLocation(voxelProgram, "uChunkTexture"), 0);
     glUniform1i(glGetUniformLocation(voxelProgram, "uPaletteTexture"), 1);
     glUniform1i(glGetUniformLocation(voxelProgram, "uDepthTexture"), 2);
+    glUniform1i(glGetUniformLocation(voxelProgram, "uWorldTexture"), 3);
+
     auto viewProjection = projection * view;
     auto viewProjectionInv = glm::inverse(viewProjection);
     glUniformMatrix4fv(viewProjectionMatrixID, 1, GL_FALSE, &viewProjection[0][0]);
     glUniformMatrix4fv(viewProjectionInvMatrixID, 1, GL_FALSE, &viewProjectionInv[0][0]);
     glUniform2f(glGetUniformLocation(voxelProgram, "invResolution"), 1.f/WINDOW_WIDTH, 1.f/WINDOW_HEIGHT);
 
-    float counter = 1;
     for (auto entity : entities)
     {
         auto &voxelComponent = voxelComponents[entity];
@@ -254,6 +251,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glUniform3f(glGetUniformLocation(voxelProgram, "uMaxBox"), maxBox.x, maxBox.y, maxBox.z);
         glUniform3f(glGetUniformLocation(voxelProgram, "uChunkSize"), size.x, size.y, size.z);
         glUniform1f(glGetUniformLocation(voxelProgram, "uVoxSize"), voxelComponent.voxelSize);
+        glUniform3f(glGetUniformLocation(voxelProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
 
         auto voxScale = glm::scale(glm::mat4(1.f), size);
         auto mvp = projection * view * model;
@@ -270,6 +268,9 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_3D, worldTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
         //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
@@ -289,14 +290,16 @@ void VoxelSystem::addEntity(std::uint32_t entity)
 {
     entities.push_back(entity);
     auto& entityCompontent = engine->voxelComponents[entity];
+    std::uint32_t scale = static_cast<std::uint32_t>(entityCompontent.voxelSize/VOXEL_SIZE_12CM);
+    glm::ivec3 entityVoxelPos = entityCompontent.position / VOXEL_SIZE_12CM;
     for(std::size_t x = 0;x < entityCompontent.size.x;++x) {
         for(std::size_t y = 0;y < entityCompontent.size.y;++y) {
             for(std::size_t z = 0;z < entityCompontent.size.z;++z) {
                 auto size = entityCompontent.size;
                 auto voxel = entityCompontent.voxelData[x + y * size.x + z * size.x * size.y];
-                if(voxel != 0) {
-                    auto voxelPosition = entityCompontent.position + glm::vec3(x, y, z);
-                    //setVoxel(voxelPosition);
+                for(int res = 0;res < scale && voxel != 0;++res) {
+                    auto voxelPosition = entityVoxelPos + glm::ivec3(x, y, z)*(res+1);
+                    setVoxel(voxelPosition);
                 }
             }
         }

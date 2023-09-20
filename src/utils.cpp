@@ -69,9 +69,9 @@ VoxelContainer loadVox(std::filesystem::path path) {
                 container.size.z = readInt(iterator);
                 container.size.y = readInt(iterator);
                 
-                assert(xsize % 4 == 0);
-                assert(ysize % 4 == 0);
-                assert(zsize % 4 == 0);
+                // assert(container.size.x % 4 == 0);
+                // assert(container.size.z % 4 == 0);
+                // assert(container.size.y % 4 == 0);
 
                 container.data.resize(container.size.x * container.size.y * container.size.z);
             } else if(tag == "XYZI") {
@@ -100,8 +100,8 @@ GLuint createVoxelTexture(std::vector<GLubyte> const& data, glm::vec3 size) {
     GLuint texname;
     glGenTextures(1, &texname);
     glBindTexture(GL_TEXTURE_3D, texname);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

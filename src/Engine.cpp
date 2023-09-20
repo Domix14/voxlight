@@ -110,6 +110,7 @@ void Engine::run() {
     voxelSystem->initialise();
     auto knightData = loadVox("knight.vox");
     auto planeData = loadVox("plane.vox");
+    auto cube = loadVox("cube.vox");
     // for(std::size_t i = 0;i < chunksCount;++i) {
     //     for(std::size_t j = 0;j < chunksCount;++j) {
     //         std::vector<GLubyte> data(chunkSize*chunkSize*chunkSize);
@@ -127,16 +128,17 @@ void Engine::run() {
     //         createVoxelEntity(glm::vec3(i*chunkSize, 0, j*chunkSize), glm::vec3(glm::radians(i*0.f)), glm::vec3(chunkSize), data);
     //     }
     // }
-    // createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), glm::vec3(64, 1, 64), planeData.data);
+    createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), planeData.size, VOXEL_SIZE_12CM, planeData.data);
 
-    int i = 0;
-    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_100CM, knightData.data);
-    i++;
-    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_50CM, knightData.data);
-    i++;
-    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_25CM, knightData.data);
-    i++;
-    createVoxelEntity(glm::vec3(i*16, 10, i*16), glm::vec3(glm::radians(i*5.f)), knightData.size, VOXEL_SIZE_12CM, knightData.data);
+    int i = 1;
+    createVoxelEntity(glm::vec3(i*2, 0.125, i*2), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_12CM, knightData.data);
+    createVoxelEntity(glm::vec3(5, 5, 5), glm::vec3(glm::radians(i*0.f)), cube.size, VOXEL_SIZE_12CM, cube.data);
+    // i++;
+    // createVoxelEntity(glm::vec3(i*16, 1, i*16), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_50CM, knightData.data);
+    // i++;
+    // createVoxelEntity(glm::vec3(i*16, 1, i*16), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_25CM, knightData.data);
+    // i++;
+    // createVoxelEntity(glm::vec3(i*16, 1, i*16), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_12CM, knightData.data);
     
     voxelSystem->createWorldVoxelTexture();
 
