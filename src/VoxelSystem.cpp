@@ -66,7 +66,14 @@ static const GLfloat cubeBufferData[] = {
     1.0f, 1.0f, 1.0f  // Vertex 7
 };
 
-
+static const GLfloat quadBufferData[] = {
+    -1.f, -1.f, 0.f,
+    1.f, 1.f, 0.f,
+    1.f, -1.f, 0.f,
+    -1.f, 1.f, 0.f,
+    1.f, 1.f, 0.f,
+    -1.f, -1.f, 0.f
+};
 
 VoxelSystem::VoxelSystem(Engine* engine) : engine(engine), sunRotation(0)
 {
@@ -101,9 +108,20 @@ void VoxelSystem::initialise()
     glAttachShader(voxelProgram, fragmentShader);
     glLinkProgram(voxelProgram);
 
+    sunlightProgram = glCreateProgram();
+    auto [sunlightVertexShader, sunlightVertexShaderStatus] = createShader(GL_VERTEX_SHADER, "../shaders/lightingVertexShader.glsl");
+    auto [sunlightFragmentShader, sunlightFragmentShaderStatus] = createShader(GL_FRAGMENT_SHADER, "../shaders/lightingFragmentShader.glsl");
+    glAttachShader(sunlightProgram, sunlightVertexShader);
+    glAttachShader(sunlightProgram, sunlightFragmentShader);
+    glLinkProgram(sunlightProgram);
+    
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeBufferData), cubeBufferData, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &quadVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadBufferData), quadBufferData, GL_STATIC_DRAW);
 
     glGenTextures(1, &paletteTexture);
     glBindTexture(GL_TEXTURE_2D, paletteTexture);
@@ -180,7 +198,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glDepthFunc(GL_ALWAYS); 
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
     GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(3, attachments);
+    glDrawBuffers(2, attachments);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(voxelProgram);
@@ -258,7 +276,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         auto worldMatrix = trans*voxScale*glm::inverse(mvp);
         glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "uMagicMatrix"), 1, GL_FALSE, &worldMatrix[0][0]);
         
-        
+    
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, voxelComponent.voxelTexture);
@@ -272,34 +290,83 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_3D, worldTexture);
 
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_3D, normalTexture);
+
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
         //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
 
         glTextureBarrier();
     }
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, depthFb);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-                      0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-                      GL_COLOR_BUFFER_BIT,
-                      GL_LINEAR);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUseProgram(sunlightProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, worldTexture);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, colorTexture);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, normalTexture);
+
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uWorldTexture"), 0);
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uAlbedoTexture"), 1);
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uDepthTexture"), 2);
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
+
+    auto mm = glm::scale(glm::mat4(1.f), glm::vec3(1/0.125))*viewProjectionInv;
+    glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f/WINDOW_WIDTH, 1.f/WINDOW_HEIGHT);
+    glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"), 1, GL_FALSE, &mm[0][0]);
+    glUniform3f(glGetUniformLocation(sunlightProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+    glVertexAttribPointer(
+        0,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        3,        // size
+        GL_FLOAT, // type
+        GL_FALSE, // normalized?
+        0,        // stride
+        (void *)0 // array buffer offset
+    );
+    glDrawArrays(GL_TRIANGLES, 0, 6); // 3 indices starting at 0 -> 1 triangle
+
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, depthFb);
+    // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    // glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+    //                   0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+    //                   GL_COLOR_BUFFER_BIT,
+    //                   GL_LINEAR);
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 void VoxelSystem::addEntity(std::uint32_t entity)
 {
     entities.push_back(entity);
     auto& entityCompontent = engine->voxelComponents[entity];
-    std::uint32_t scale = static_cast<std::uint32_t>(entityCompontent.voxelSize/VOXEL_SIZE_12CM);
+    int scale = static_cast<int>(entityCompontent.voxelSize/VOXEL_SIZE_12CM);
     glm::ivec3 entityVoxelPos = entityCompontent.position / VOXEL_SIZE_12CM;
     for(std::size_t x = 0;x < entityCompontent.size.x;++x) {
         for(std::size_t y = 0;y < entityCompontent.size.y;++y) {
             for(std::size_t z = 0;z < entityCompontent.size.z;++z) {
                 auto size = entityCompontent.size;
                 auto voxel = entityCompontent.voxelData[x + y * size.x + z * size.x * size.y];
-                for(int res = 0;res < scale && voxel != 0;++res) {
-                    auto voxelPosition = entityVoxelPos + glm::ivec3(x, y, z)*(res+1);
-                    setVoxel(voxelPosition);
+                if(voxel == 0) {
+                    continue;
+                }
+                for(std::size_t sx = 0;sx < scale;++sx) {
+                    for(std::size_t sy = 0;sy < scale;++sy) {
+                        for(std::size_t sz = 0;sz < scale;++sz) {
+                            auto voxelPosition = entityVoxelPos + glm::ivec3(x, y, z)*scale + glm::ivec3(sx, sy, sz);
+                            setVoxel(voxelPosition);
+                        }
+                    }
                 }
             }
         }

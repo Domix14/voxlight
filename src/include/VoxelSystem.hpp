@@ -22,7 +22,9 @@ public:
 private:
     class Engine* engine;
     GLuint voxelProgram;
+    GLuint sunlightProgram;
     GLuint vertexBuffer;
+    GLuint quadVertexBuffer;
     std::vector<std::uint32_t> entities;
     GLuint worldTexture;
     GLuint paletteTexture;

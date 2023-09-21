@@ -199,23 +199,23 @@ void main(){
         discard;
     }
 
-    float linearDepth = (minDist + d)/depthLength;
+    float linearDepth = (minDist + d-0.1)/depthLength;
 
     // float uNear = 0.1f;
     // float uFar = 1000.0;
     // float currentDepth = (1.0f / (linearDepth+0.1f) - 1.0f / uNear) / (1.0f / uFar - 1.0f / uNear);
     
-    vec3 hitPos = (rayStart + camDir*(minDist+d-0.01)) + uMinBox*8;
+    // vec3 hitPos = (rayStart + camDir*(minDist+d-0.01)) + uMinBox*8;
 
 
-    vec3 sunPos = vec3(1000,1000,1000);
-    bool hit = raycastToTarget(hitPos, uSunPos);
-    if(hit) {
-        color.rgb *= 0.5;
-    }
+    // vec3 sunPos = vec3(1000,1000,1000);
+    // bool hit = raycastToTarget(hitPos, uSunPos);
+    // if(hit) {
+    //     color.rgb *= 0.5;
+    // }
 
     gl_FragDepth = linearDepth;
 
     outColor = color;
-    outNormal = hitPos;
+    outNormal = norm;
 }
