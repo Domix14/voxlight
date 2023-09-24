@@ -11,8 +11,8 @@
 
 constexpr std::uint32_t NO_TEXTURE = std::numeric_limits<GLuint>::max();
 
-constexpr std::uint32_t WINDOW_WIDTH = 1920;
-constexpr std::uint32_t WINDOW_HEIGHT = 1080;
+constexpr std::uint32_t WINDOW_WIDTH = 1280;
+constexpr std::uint32_t WINDOW_HEIGHT = 720;
 
 constexpr float VOXEL_SIZE_10CM = 0.1f;
 constexpr float VOXEL_SIZE_12CM = 0.125f;

@@ -3,6 +3,7 @@
 
 layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec3 outNormal;
+layout (location = 2) out vec4 outDepth;
 
 uniform vec2 invResolution;
 uniform vec3 uMinBox;
@@ -128,7 +129,7 @@ float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) 
     float d = 0;
     vec3 pos = floor(ro);
     uint counter = 0;
-    while(d < maxDist && counter < 100) {
+    while(d < maxDist && counter < 200) {
         counter++;
         
         //vec3 pos = floor((ro + rd*d)/uVoxSize);
@@ -185,9 +186,9 @@ void main(){
 	float depth = texture(uDepthTexture, coord).r;
 	float currentMinDepth = depthLength*depth;
 
-    if (minDist > currentMinDepth)
-		discard;
-
+    if (minDist > currentMinDepth) {
+        discard;
+    }
 
     vec4 color;
     vec3 norm;
@@ -199,7 +200,7 @@ void main(){
         discard;
     }
 
-    float linearDepth = (minDist + d-0.1)/depthLength;
+    float linearDepth = (minDist + d)/depthLength;
 
     // float uNear = 0.1f;
     // float uFar = 1000.0;
@@ -214,8 +215,9 @@ void main(){
     //     color.rgb *= 0.5;
     // }
 
-    gl_FragDepth = linearDepth;
+    // gl_FragDepth = linearDepth;
 
-    outColor = color;
+    outColor = vec4(color.rgb, 1);
     outNormal = norm;
+    outDepth = vec4(linearDepth, 0, 0, 0);
 }

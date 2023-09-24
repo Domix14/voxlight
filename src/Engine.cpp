@@ -128,11 +128,11 @@ void Engine::run() {
     //         createVoxelEntity(glm::vec3(i*chunkSize, 0, j*chunkSize), glm::vec3(glm::radians(i*0.f)), glm::vec3(chunkSize), data);
     //     }
     // }
-    createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), planeData.size, VOXEL_SIZE_100CM, planeData.data);
+    createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), planeData.size, VOXEL_SIZE_12CM, planeData.data);
 
     int i = 1;
-    createVoxelEntity(glm::vec3(32,1,32), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_100CM, knightData.data);
-    createVoxelEntity(glm::vec3(1, 5, 1), glm::vec3(glm::radians(i*0.f)), cube.size, VOXEL_SIZE_12CM, cube.data);
+    createVoxelEntity(glm::vec3(5,0.125,5), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_12CM, knightData.data);
+    // createVoxelEntity(glm::vec3(1, 5, 1), glm::vec3(glm::radians(i*0.f)), cube.size, VOXEL_SIZE_12CM, cube.data);
     // i++;
     // createVoxelEntity(glm::vec3(i*16, 1, i*16), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_50CM, knightData.data);
     // i++;

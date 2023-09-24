@@ -35,7 +35,7 @@ bool raycastToTarget(vec3 ro, vec3 target) {
     tMax.y = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
     tMax.z = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
 
-    const int maxTrace = 100;
+    const int maxTrace = 200;
 
     for (int i = 0; i < maxTrace; i++) {
         if (isOccupied(ivec3(pos)) != 0U) {
@@ -103,18 +103,15 @@ void main(){
     vec2 screenCoord = coord * 2 - 1;
     vec3 fv = computeFarVec(screenCoord);
     vec3 camPos = computeNearVec(screenCoord);
+    vec3 rayDir = normalize(fv - camPos);
 
     vec3 norm = texture(uNormalTexture, coord).xyz;
-    vec3 rayDir = normalize(fv - camPos);
+
+
+
     float d = length(fv - camPos);
-    vec3 target = camPos + rayDir*(depth*d);
-    vec3 dir = normalize(uSunPos - target);
-    float dotProduct = dot(norm, dir);
-    if(dotProduct == 0.f) {
-        // outColor.rgb *= 0.5;
-        outColor.rgb = vec3(1.f, 0.f, 0.f);
-        return;
-    }
+    vec3 target = camPos + rayDir*(depth*d-0.09);
+
 
     vec3 sunPos = vec3(1000,1000,1000);
     bool hit = raycastToTarget(target, uSunPos);
@@ -122,5 +119,5 @@ void main(){
     if(hit) {
         outColor.rgb *= 0.5;
     }
-    // outColor = vec4(target, 1.0f);
+    // outColor = vec4(vec3(floor(target)/10), 1.0f);
 }

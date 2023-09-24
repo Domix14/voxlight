@@ -145,13 +145,22 @@ void VoxelSystem::initialise()
     }
     stbi_image_free(data);
 
-    glGenTextures(1, &depthTexture);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glGenFramebuffers(1, &depthFb);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
+
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+    // glGenTextures(1, &depthTexture);
+    // glBindTexture(GL_TEXTURE_2D, depthTexture);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WINDOW_WIDTH, WINDOW_WIDTH, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
@@ -169,12 +178,25 @@ void VoxelSystem::initialise()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    
+    // GLuint depthTexture2;
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
 
-    glGenFramebuffers(1, &depthFb);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, depthTexture, 0);
+
+     // finally check if framebuffer is complete
+     auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete! " << status << std::endl;
 
     GLint no_of_extensions = 0;
     glGetIntegerv(GL_NUM_EXTENSIONS, &no_of_extensions);
@@ -191,15 +213,31 @@ void VoxelSystem::initialise()
 
 void VoxelSystem::update(float deltaTime, Camera &camera)
 {
-    sunRotation += deltaTime * 0.1f;
+    sunRotation += deltaTime * 0.5f;
     auto sunPosition = glm::vec3(glm::sin(sunRotation)*10000000, 10000000, glm::cos(sunRotation)*10000000);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_ALWAYS); 
+    glClear(GL_COLOR_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
-    GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(2, attachments);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GLenum attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
+
+    // glEnable(GL_DEPTH_TEST);
+    // glDepthFunc(GL_ALWAYS); 
+    // glDepthMask(GL_TRUE);
+    
+    // glClearColor(1,1,1,1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    float depth = 1.0f;
+    glClearTexImage(depthTexture, 0, GL_RGB, GL_FLOAT, &depth);
+    // glClear(GL_DEPTH_BUFFER_BIT);
+    // glClearTexImage(depthTexture, 0, GL_R, GL_FLOAT, 0);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Framebuffer not complete! " << status << std::endl;
+    }
+
+
 
     glUseProgram(voxelProgram);
 
@@ -210,7 +248,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glm::radians(90.f), // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
         16.0f / 9.0f,        // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == WINDOW_WIDTH/960, sounds familiar ?
         0.1f,               // Near clipping plane. Keep as big as possible, or you'll get precision issues.
-        1000.0f             // Far clipping plane. Keep as little as possible.
+        500.0f             // Far clipping plane. Keep as little as possible.
     );
 
     glm::mat4 view = glm::lookAt(
@@ -254,6 +292,19 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glUniformMatrix4fv(viewProjectionInvMatrixID, 1, GL_FALSE, &viewProjectionInv[0][0]);
     glUniform2f(glGetUniformLocation(voxelProgram, "invResolution"), 1.f/WINDOW_WIDTH, 1.f/WINDOW_HEIGHT);
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, paletteTexture);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_3D, worldTexture);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_3D, normalTexture);
+
+    
     for (auto entity : entities)
     {
         auto &voxelComponent = voxelComponents[entity];
@@ -281,17 +332,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, voxelComponent.voxelTexture);
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, paletteTexture);
 
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, depthTexture);
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_3D, worldTexture);
-
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_3D, normalTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
         //glDrawArrays(GL_LINES, 0, 36); // 3 indices starting at 0 -> 1 triangle
@@ -320,7 +361,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera)
     glUniform1i(glGetUniformLocation(sunlightProgram, "uDepthTexture"), 2);
     glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
 
-    auto mm = glm::scale(glm::mat4(1.f), glm::vec3(1/0.125))*viewProjectionInv;
+    auto mm = glm::scale(glm::mat4(1.f), glm::vec3(8))*viewProjectionInv;
     glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f/WINDOW_WIDTH, 1.f/WINDOW_HEIGHT);
     glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"), 1, GL_FALSE, &mm[0][0]);
     glUniform3f(glGetUniformLocation(sunlightProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
