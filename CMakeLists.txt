@@ -60,4 +60,15 @@ set_target_properties(VoxelEngine PROPERTIES
 set_target_properties(VoxelEngine PROPERTIES FOLDER ${PROJECT_NAME})
 target_compile_options(VoxelEngine PUBLIC -Wall)
 
+add_custom_command(
+    COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py" "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${CMAKE_CURRENT_SOURCE_DIR}/src/include/generated"
+    OUTPUT  "{CMAKE_CURRENT_SOURCE_DIR}/src/include/generated/shaders/shaders.hpp"
+    COMMENT "Generating shader header files."
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+    VERBATIM
+)
+add_library(generatedLib "{CMAKE_CURRENT_SOURCE_DIR}/src/include/generated/shaders/shaders.hpp")
+set_target_properties(generatedLib PROPERTIES LINKER_LANGUAGE CXX)
+add_dependencies(VoxelEngine generatedLib)
+
 
