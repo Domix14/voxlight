@@ -19,7 +19,8 @@ set(sources
  ${SOURCE_DIR}/Camera.cpp
  ${SOURCE_DIR}/Chunk.cpp
  ${SOURCE_DIR}/Engine.cpp
- ${SOURCE_DIR}/VoxelSystem.cpp)
+ ${SOURCE_DIR}/VoxelSystem.cpp
+ ${SOURCE_DIR}/VoxelObject.cpp)
 
 add_executable(VoxelEngine ${sources} ${includes})
 target_include_directories(VoxelEngine PRIVATE ${SOURCE_DIR}/include)

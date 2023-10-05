@@ -2,23 +2,15 @@
 #define ENGINE_HPP
 
 #include <cstdint>
-#include <vector>
 #include <glm/glm.hpp>
-#include <utils.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-
-constexpr std::uint32_t NO_TEXTURE = std::numeric_limits<GLuint>::max();
+#include <utils.hpp>
+#include <vector>
 
 constexpr std::uint32_t WINDOW_WIDTH = 1280;
 constexpr std::uint32_t WINDOW_HEIGHT = 720;
-
-constexpr float VOXEL_SIZE_10CM = 0.1f;
-constexpr float VOXEL_SIZE_12CM = 0.125f;
-constexpr float VOXEL_SIZE_25CM = 0.25f;
-constexpr float VOXEL_SIZE_50CM = 0.5f;
-constexpr float VOXEL_SIZE_100CM = 1.f;
 
 struct TransformComponent {
     glm::vec3 position;
@@ -31,16 +23,16 @@ struct VoxelComponent {
     glm::quat rotation;
     glm::vec3 size;
     float voxelSize;
-    
+
     std::vector<std::uint8_t> voxelData;
-    
-    VoxelComponent() 
-    : voxelTexture(NO_TEXTURE), position(0.f), rotation(glm::vec3(0.f)), size(0.f), voxelSize(VOXEL_SIZE_100CM) {}
+
+    VoxelComponent()
+        : voxelTexture(NO_TEXTURE), position(0.f), rotation(glm::vec3(0.f)), size(0.f), voxelSize(VOXEL_SIZE_100CM) {}
 
     void setVoxelData(std::vector<std::uint8_t> const& data) {
         assert(data.size() == (size.x * size.y * size.z));
         voxelData = data;
-        if(voxelTexture != NO_TEXTURE) {
+        if (voxelTexture != NO_TEXTURE) {
             glDeleteTextures(1, &voxelTexture);
             voxelTexture = NO_TEXTURE;
         }
@@ -49,13 +41,10 @@ struct VoxelComponent {
     }
 };
 
-enum class ComponentType : std::uint32_t {
-    TRANSFORM,
-    VOXEL
-};
+enum class ComponentType : std::uint32_t { TRANSFORM, VOXEL };
 
 class Engine {
-public:
+   public:
     Engine();
     void run();
 
@@ -66,7 +55,8 @@ public:
     class VoxelSystem* voxelSystem;
 
     std::uint32_t createEntity();
-    std::uint32_t createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, float voxSize, std::vector<std::uint8_t> const& voxelData);
+    std::uint32_t createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, float voxSize,
+                                    std::vector<std::uint8_t> const& voxelData);
 };
 
 // class VoxelSystem {
@@ -88,7 +78,6 @@ public:
 //             glUniform3f(glGetUniformLocation(programID, "maxBox"), maxBox.x, maxBox.y, maxBox.z);
 //             glUniform3f(glGetUniformLocation(programID, "chunkSize"), size.x, size.y, size.z);
 
-            
 //             glBindTexture(GL_TEXTURE_3D, engine->voxelComponents[entity].voxelTexture);
 //             glUniform1i(glGetUniformLocation(programID, "chunkTexture"), 0);
 //             glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -100,6 +89,4 @@ public:
 //     }
 // };
 
-
-
-#endif // ENGINE_HPP
+#endif  // ENGINE_HPP
