@@ -4,11 +4,11 @@
 #include <glad/gl.h>
 #include <imgui.h>
 
-#include <Camera.hpp>
 #include <Chunk.hpp>
+#include <ICamera.hpp>
 #include <PerlinNoise.hpp>
 #include <VoxelMap.hpp>
-#include <VoxelSystem.hpp>
+#include <VoxelWorld.hpp>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
@@ -24,25 +24,7 @@ void ProcessInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
 }
 
-Engine::Engine() : entityCount(0), voxelSystem(nullptr) { voxelSystem = new VoxelSystem(this); }
-
-std::uint32_t Engine::createEntity() {
-    auto entity = entityCount++;
-    voxelComponents.emplace_back();
-    return entity;
-}
-
-std::uint32_t Engine::createVoxelEntity(glm::vec3 pos, glm::vec3 rot, glm::vec3 size, float voxSize,
-                                        std::vector<std::uint8_t> const& voxelData) {
-    auto entity = createEntity();
-    voxelComponents[entity].position = pos;
-    voxelComponents[entity].rotation = rot;
-    voxelComponents[entity].size = size;
-    voxelComponents[entity].voxelSize = voxSize;
-    voxelComponents[entity].setVoxelData(voxelData);
-    voxelSystem->addEntity(entity);
-    return entity;
-}
+Engine::Engine() : voxelWorld(nullptr) {}
 
 void Engine::run() {
     glfwInit();
@@ -50,11 +32,6 @@ void Engine::run() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-
-    std::vector<GLubyte> data;
-    Camera camera;
-
-    std::vector<Chunk> chunks;
 
     // Construct the window
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelEngine", nullptr, nullptr);
@@ -97,61 +74,28 @@ void Engine::run() {
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    voxelSystem->initialise();
+    voxelWorld = new VoxelWorld(this);
+    voxelWorld->init();
+
     auto knightData = loadVox("knight.vox");
     auto planeData = loadVox("plane.vox");
     auto cube = loadVox("cube.vox");
-    // for(std::size_t i = 0;i < chunksCount;++i) {
-    //     for(std::size_t j = 0;j < chunksCount;++j) {
-    //         std::vector<GLubyte> data(chunkSize*chunkSize*chunkSize);
-    //         for(std::size_t x = 0;x < chunkSize;++x) {
-    //             for(std::size_t z = 0; z < chunkSize;++z) {
-    //                 std::size_t xvalue = i*chunkSize + x;
-    //                 std::size_t zvalue = j*chunkSize + z;
-    //                 std::size_t height = perlin.octave2D_01(xvalue*0.01, zvalue*0.01, 4)*chunkSize;
-    //                 // height = chunkSize;
-    //                 for(std::size_t y = 0; y < height;++y) {
-    //                     data[x + y*chunkSize + z*chunkSize*chunkSize] = (i%2)+1;
-    //                 }
-    //             }
-    //         }
-    //         createVoxelEntity(glm::vec3(i*chunkSize, 0, j*chunkSize), glm::vec3(glm::radians(i*0.f)),
-    //         glm::vec3(chunkSize), data);
-    //     }
-    // }
-    // createVoxelEntity(glm::vec3(0, 0, 0), glm::vec3(glm::radians(0.f)), planeData.size, VOXEL_SIZE_12CM,
-    //                   planeData.data);
 
-    // int i = 1;
-    // createVoxelEntity(glm::vec3(5, 0.125, 5), glm::vec3(glm::radians(i * 0.f)), knightData.size, VOXEL_SIZE_12CM,
-    //                   knightData.data);
-    // createVoxelEntity(glm::vec3(1, 5, 1), glm::vec3(glm::radians(i*0.f)), cube.size, VOXEL_SIZE_12CM, cube.data);
-    // i++;
-    // createVoxelEntity(glm::vec3(i*16, 1, i*16), glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_50CM,
-    // knightData.data); i++; createVoxelEntity(glm::vec3(i*16, 1, i*16), glm::vec3(glm::radians(i*0.f)),
-    // knightData.size, VOXEL_SIZE_25CM, knightData.data); i++; createVoxelEntity(glm::vec3(i*16, 1, i*16),
-    // glm::vec3(glm::radians(i*0.f)), knightData.size, VOXEL_SIZE_12CM, knightData.data);
-
-    auto knight = voxelSystem->createVoxelObject();
+    auto knight = voxelWorld->spawnVoxelObject();
     knight->setData(knightData.data, knightData.size);
     knight->setPosition({1, 1, 1});
 
-    voxelSystem->createWorldVoxelTexture();
+    auto knight2 = voxelWorld->spawnVoxelObject();
+    knight2->setData(knightData.data, knightData.size);
+    knight2->setPosition({2, 2, 2});
 
-    // GLint texture_units;
-    // glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
-    // std::cout << "Max texture units: " << texture_units << std::endl;
-
-    camera.setPosition({-2, -2, -2});
-    camera.setDirection(glm::normalize(glm::vec3(1, 1, 1) - camera.getPosition()));
+    auto knight3 = voxelWorld->spawnVoxelObject();
+    knight3->setData(knightData.data, knightData.size);
+    knight3->setPosition({3, 3, 3});
 
     double currentFrame = 0;
     double deltaTime = 0;
     double lastFrame = 0;
-
-    // auto lightTexture = createVoxelTexture(voxelData, glm::vec3(chunkSize));
-
-    // createVoxelEntity(glm::vec3(0,0,0), glm::vec3(0), glm::vec3(16), voxelData);
 
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -164,15 +108,16 @@ void Engine::run() {
         lastFrame = currentFrame;
 
         ProcessInput(window);
-        camera.update(window, deltaTime);
+
+        camera->update(window, deltaTime);
+        return;
+        voxelWorld->update(deltaTime);
 
         glfwPollEvents();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        voxelSystem->update(deltaTime, camera);
-        // Draw the triangle !
-        // glDrawArrays(GL_TRIANGLES, 0, 36); // 3 indices starting at 0 -> 1 triangle
+        voxelWorld->render(camera->getViewProjectionMatrix());
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -197,3 +142,5 @@ void Engine::run() {
 
     glfwTerminate();
 }
+
+void Engine::setCamera(ICamera* newCamera) { camera = newCamera; }

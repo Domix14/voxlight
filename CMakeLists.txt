@@ -19,7 +19,7 @@ set(sources
  ${SOURCE_DIR}/Camera.cpp
  ${SOURCE_DIR}/Chunk.cpp
  ${SOURCE_DIR}/Engine.cpp
- ${SOURCE_DIR}/VoxelSystem.cpp
+ ${SOURCE_DIR}/VoxelWorld.cpp
  ${SOURCE_DIR}/VoxelObject.cpp)
 
 add_executable(VoxelEngine ${sources} ${includes})
@@ -59,7 +59,7 @@ set_target_properties(VoxelEngine PROPERTIES
 
 # Set project folders
 set_target_properties(VoxelEngine PROPERTIES FOLDER ${PROJECT_NAME})
-target_compile_options(VoxelEngine PUBLIC -Wall)
+target_compile_options(VoxelEngine PUBLIC -Wall -Wextra -Wuninitialized -O3)
 
 add_custom_command(
     COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py" "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${CMAKE_CURRENT_SOURCE_DIR}/src/include/generated"

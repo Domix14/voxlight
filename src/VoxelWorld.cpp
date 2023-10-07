@@ -1,20 +1,12 @@
 #include <Engine.hpp>
-#include <VoxelSystem.hpp>
-#include <algorithm>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <utils.hpp>
-
-#include "generated/shaders.hpp"
-
-#define STB_IMAGE_IMPLEMENTATION
+#include <VoxelWorld.hpp>
+#include <generated/Shaders.hpp>
+#include <iostream>
 #include <set>
 #include <string>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-// cube vertices with size 1 and origin in 0, 0, 0
 
 static const GLfloat cubeBufferData[] = {
     0.0f, 0.0f, 0.0f,  // Vertex 0
@@ -69,30 +61,9 @@ static const GLfloat cubeBufferData[] = {
 static const GLfloat quadBufferData[] = {-1.f, -1.f, 0.f, 1.f, 1.f, 0.f, 1.f,  -1.f, 0.f,
                                          -1.f, 1.f,  0.f, 1.f, 1.f, 0.f, -1.f, -1.f, 0.f};
 
-VoxelSystem::VoxelSystem(Engine *engine) : engine(engine), sunRotation(0) {
-    mapData = std::vector<std::uint8_t>(MAP_SIZE * MAP_SIZE * MAP_SIZE, 0);
-}
+VoxelWorld::VoxelWorld(Engine *engine) : engine(engine), worldTexture(NO_TEXTURE) {}
 
-void VoxelSystem::setVoxel(glm::ivec3 pos) {
-    assert(pos.x >= 0 && pos.x < 2 * MAP_SIZE);
-    assert(pos.y >= 0 && pos.y < 2 * MAP_SIZE);
-    assert(pos.z >= 0 && pos.z < 2 * MAP_SIZE);
-
-    auto pos0 = pos >> 1;
-    auto bitPos = pos & 0x01;
-    // std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;
-    // std::cout << pos0.x << " " << pos0.y << " " << pos0.z << std::endl;
-    // std::cout <<  static_cast<uint32_t>(mapData[pos0.x + pos0.y * MAP_SIZE +
-    // pos0.z * MAP_SIZE * MAP_SIZE]) << std::endl;
-    mapData[pos0.x + pos0.y * MAP_SIZE + pos0.z * MAP_SIZE * MAP_SIZE] |=
-        static_cast<std::uint8_t>(1 << (bitPos.x + bitPos.z * 2 + bitPos.y * 4));
-    // std::cout <<  static_cast<uint32_t>(mapData[pos0.x + pos0.y * MAP_SIZE +
-    // pos0.z * MAP_SIZE * MAP_SIZE]) << "\n" << std::endl;
-}
-
-void VoxelSystem::createWorldVoxelTexture() { worldTexture = createVoxelTexture(mapData, glm::vec3(MAP_SIZE)); }
-
-void VoxelSystem::initialise() {
+void VoxelWorld::init() {
     // Create OpenGL program
     voxelProgram = glCreateProgram();
     auto [vertexShader, vertexShaderStatus] = createShader(GL_VERTEX_SHADER, VOXEL_VERTEX_SHADER_SRC);
@@ -199,54 +170,25 @@ void VoxelSystem::initialise() {
     if (texture_storage) {
         std::cout << "WE HAVE IT!!!\n";
     }
+
+    camera.setPosition(glm::vec3(0, 0, 0));
+    camera.setDirection(glm::vec3(1, 1, 1));
+    engine->setCamera(&camera);
 }
 
-void VoxelSystem::update(float deltaTime, Camera &camera) {
-    sunRotation += deltaTime * 0.5f;
-    auto sunPosition = glm::vec3(glm::sin(sunRotation) * 10000000, 10000000, glm::cos(sunRotation) * 10000000);
+void VoxelWorld::update(float deltaTime) {}
 
+void VoxelWorld::render(glm::mat4 const &viewProjectionMatrix) {
     glClear(GL_COLOR_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFb);
     GLenum attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     glDrawBuffers(3, attachments);
 
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_ALWAYS);
-    // glDepthMask(GL_TRUE);
-
-    // glClearColor(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT);
     float depth = 1.0f;
     glClearTexImage(depthTexture, 0, GL_RGB, GL_FLOAT, &depth);
-    // glClear(GL_DEPTH_BUFFER_BIT);
-    // glClearTexImage(depthTexture, 0, GL_R, GL_FLOAT, 0);
-
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "Framebuffer not complete! " << status << std::endl;
-    }
 
     glUseProgram(voxelProgram);
-
-    auto pos = camera.getPosition();
-    auto dir = camera.getDirection();
-
-    glm::mat4 projection = glm::perspective(glm::radians(90.f),  // The vertical Field of View, in radians: the amount
-                                                                 // of "zoom". Think "camera lens". Usually between 90°
-                                                                 // (extra wide) and 30° (quite zoomed in)
-                                            16.0f / 9.0f,  // Aspect Ratio. Depends on the size of your window. Notice
-                                                           // that 4/3 == 800/600 == WINDOW_WIDTH/960, sounds familiar ?
-                                            0.1f,   // Near clipping plane. Keep as big as possible, or you'll get
-                                                    // precision issues.
-                                            500.0f  // Far clipping plane. Keep as little as possible.
-    );
-
-    glm::mat4 view = glm::lookAt(pos,                   // the position of your camera, in world space
-                                 pos + (dir * 1000.f),  // where you want to look at, in world space
-                                 glm::vec3(0, 1,
-                                           0)  // probably glm::vec3(0,1,0), but (0,-1,0) would make you
-                                               // looking upside-down, which can be great too
-    );
 
     GLuint viewProjectionMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
     GLuint viewProjectionInvMatrixID = glGetUniformLocation(voxelProgram, "uViewProjectionInvMatrix");
@@ -262,27 +204,17 @@ void VoxelSystem::update(float deltaTime, Camera &camera) {
                           (void *)0  // array buffer offset
     );
 
-    auto &voxelComponents = engine->voxelComponents;
-    // std::sort(entities.begin(), entities.end(), [&voxelComponents, &camera](std::uint32_t a, std::uint32_t b) {
-    //     auto closestPointA = glm::clamp(camera.getPosition(), voxelComponents[a].position,
-    //                                     voxelComponents[a].position + voxelComponents[a].size);
-    //     auto closestPointB = glm::clamp(camera.getPosition(), voxelComponents[b].position,
-    //                                     voxelComponents[b].position + voxelComponents[b].size);
-    //     auto aDist = glm::distance(closestPointA, camera.getPosition());
-    //     auto bDist = glm::distance(closestPointB, camera.getPosition());
-    //     return aDist < bDist;
-    // });
     glUniform1i(glGetUniformLocation(voxelProgram, "uChunkTexture"), 0);
     glUniform1i(glGetUniformLocation(voxelProgram, "uPaletteTexture"), 1);
     glUniform1i(glGetUniformLocation(voxelProgram, "uDepthTexture"), 2);
     glUniform1i(glGetUniformLocation(voxelProgram, "uWorldTexture"), 3);
 
-    auto viewProjection = projection * view;
+    auto viewProjection = viewProjectionMatrix;
     auto viewProjectionInv = glm::inverse(viewProjection);
     glUniformMatrix4fv(viewProjectionMatrixID, 1, GL_FALSE, &viewProjection[0][0]);
     glUniformMatrix4fv(viewProjectionInvMatrixID, 1, GL_FALSE, &viewProjectionInv[0][0]);
     glUniform2f(glGetUniformLocation(voxelProgram, "invResolution"), 1.f / WINDOW_WIDTH, 1.f / WINDOW_HEIGHT);
-    glUniform3f(glGetUniformLocation(voxelProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
+    // glUniform3f(glGetUniformLocation(voxelProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, paletteTexture);
@@ -325,7 +257,7 @@ void VoxelSystem::update(float deltaTime, Camera &camera) {
     auto mm = glm::scale(glm::mat4(1.f), glm::vec3(8)) * viewProjectionInv;
     glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f / WINDOW_WIDTH, 1.f / WINDOW_HEIGHT);
     glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"), 1, GL_FALSE, &mm[0][0]);
-    glUniform3f(glGetUniformLocation(sunlightProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
+    // glUniform3f(glGetUniformLocation(sunlightProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
@@ -338,43 +270,9 @@ void VoxelSystem::update(float deltaTime, Camera &camera) {
                           (void *)0  // array buffer offset
     );
     glDrawArrays(GL_TRIANGLES, 0, 6);  // 3 indices starting at 0 -> 1 triangle
-
-    // glBindFramebuffer(GL_READ_FRAMEBUFFER, depthFb);
-    // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    // glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-    //                   0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
-    //                   GL_COLOR_BUFFER_BIT,
-    //                   GL_LINEAR);
-    // glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
-VoxelObject *VoxelSystem::createVoxelObject() {
-    voxelObjects.push_back(VoxelObject());
+VoxelObject *VoxelWorld::spawnVoxelObject() {
+    voxelObjects.emplace_back();
     return &voxelObjects.back();
-}
-
-void VoxelSystem::addEntity(std::uint32_t entity) {
-    entities.push_back(entity);
-    auto &entityCompontent = engine->voxelComponents[entity];
-    int scale = static_cast<int>(entityCompontent.voxelSize / VOXEL_SIZE_12CM);
-    glm::ivec3 entityVoxelPos = entityCompontent.position / VOXEL_SIZE_12CM;
-    for (std::size_t x = 0; x < entityCompontent.size.x; ++x) {
-        for (std::size_t y = 0; y < entityCompontent.size.y; ++y) {
-            for (std::size_t z = 0; z < entityCompontent.size.z; ++z) {
-                auto size = entityCompontent.size;
-                auto voxel = entityCompontent.voxelData[x + y * size.x + z * size.x * size.y];
-                if (voxel == 0) {
-                    continue;
-                }
-                for (std::size_t sx = 0; sx < scale; ++sx) {
-                    for (std::size_t sy = 0; sy < scale; ++sy) {
-                        for (std::size_t sz = 0; sz < scale; ++sz) {
-                            auto voxelPosition = entityVoxelPos + glm::ivec3(x, y, z) * scale + glm::ivec3(sx, sy, sz);
-                            setVoxel(voxelPosition);
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
