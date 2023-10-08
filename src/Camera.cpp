@@ -29,7 +29,6 @@ void Camera::update(GLFWwindow* window, double deltaTime) {
     glm::mat4 rotMat(1.0f);
     rotMat = glm::rotate(rotMat, (float)-dx / 100.f, camUp);
     rotMat = glm::rotate(rotMat, (float)-dy / 100.0f, camRight);
-    std::cout << dx << " " << dy << std::endl;
     direction = glm::normalize(rotMat * glm::vec4(direction, 0.0f));
 
     // Movement

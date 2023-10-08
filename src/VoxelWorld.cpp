@@ -114,21 +114,13 @@ void VoxelWorld::init() {
     unsigned int rboDepth;
     glGenRenderbuffers(1, &rboDepth);
     glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
+    auto [windowWidth, windowHeight] = getEngine()->getWindowSize();
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, windowWidth, windowHeight);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-
-    // glGenTextures(1, &depthTexture);
-    // glBindTexture(GL_TEXTURE_2D, depthTexture);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WINDOW_WIDTH,
-    // WINDOW_WIDTH, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0, GL_RGBA, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -136,7 +128,7 @@ void VoxelWorld::init() {
 
     glGenTextures(1, &normalTexture);
     glBindTexture(GL_TEXTURE_2D, normalTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, windowWidth, windowHeight, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -145,7 +137,7 @@ void VoxelWorld::init() {
     // GLuint depthTexture2;
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, windowWidth, windowHeight, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -213,7 +205,9 @@ void VoxelWorld::render(glm::mat4 const &viewProjectionMatrix) {
     auto viewProjectionInv = glm::inverse(viewProjection);
     glUniformMatrix4fv(viewProjectionMatrixID, 1, GL_FALSE, &viewProjection[0][0]);
     glUniformMatrix4fv(viewProjectionInvMatrixID, 1, GL_FALSE, &viewProjectionInv[0][0]);
-    glUniform2f(glGetUniformLocation(voxelProgram, "invResolution"), 1.f / WINDOW_WIDTH, 1.f / WINDOW_HEIGHT);
+
+    auto [windowWidth, windowHeight] = getEngine()->getWindowSize();
+    glUniform2f(glGetUniformLocation(voxelProgram, "invResolution"), 1.f / windowWidth, 1.f / windowHeight);
     // glUniform3f(glGetUniformLocation(voxelProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
 
     glActiveTexture(GL_TEXTURE1);
@@ -255,7 +249,7 @@ void VoxelWorld::render(glm::mat4 const &viewProjectionMatrix) {
     glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
 
     auto mm = glm::scale(glm::mat4(1.f), glm::vec3(8)) * viewProjectionInv;
-    glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f / WINDOW_WIDTH, 1.f / WINDOW_HEIGHT);
+    glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f / windowWidth, 1.f / windowHeight);
     glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"), 1, GL_FALSE, &mm[0][0]);
     // glUniform3f(glGetUniformLocation(sunlightProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
 
@@ -276,3 +270,5 @@ VoxelObject *VoxelWorld::spawnVoxelObject() {
     voxelObjects.emplace_back();
     return &voxelObjects.back();
 }
+
+Engine *VoxelWorld::getEngine() const { return engine; }

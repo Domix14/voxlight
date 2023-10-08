@@ -7,7 +7,6 @@
 #include <Chunk.hpp>
 #include <ICamera.hpp>
 #include <PerlinNoise.hpp>
-#include <VoxelMap.hpp>
 #include <VoxelWorld.hpp>
 #include <cmath>
 #include <cstdint>
@@ -24,34 +23,32 @@ void ProcessInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
 }
 
-Engine::Engine() : voxelWorld(nullptr) {}
-
-void Engine::run() {
+Engine::Engine() : voxelWorld(nullptr), camera(nullptr), windowWidth(1280), windowHeight(720) {
     glfwInit();
-    const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
-    // Construct the window
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelEngine", nullptr, nullptr);
+    window = glfwCreateWindow(windowWidth, windowHeight, "VoxelEngine", nullptr, nullptr);
     if (!window) {
         std::cout << "Failed to create the GLFW window\n";
         glfwTerminate();
     }
 
     glfwMakeContextCurrent(window);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD\n";
         return;
     }
 
-    // Handle view port dimensions
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glfwSetFramebufferSizeCallback(window,
-                                   [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); });
+    glViewport(0, 0, windowWidth, windowHeight);
+    glfwSetWindowUserPointer(window, this);
+    auto framebufferSizeCallback = [](GLFWwindow* window, int width, int height) {
+        glViewport(0, 0, width, height);
+        static_cast<Engine*>(glfwGetWindowUserPointer(window))->setWindowSize(width, height);
+    };
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
     glClearColor(0.529f, 0.8f, 0.92f, 0.f);
 
@@ -59,21 +56,15 @@ void Engine::run() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
-
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    // ImGui::StyleColorsLight();
-
-    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
+    const char* glsl_version = "#version 130";
     ImGui_ImplOpenGL3_Init(glsl_version);
+}
 
-    // Our state
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+void Engine::run() {
     voxelWorld = new VoxelWorld(this);
     voxelWorld->init();
 
@@ -97,11 +88,6 @@ void Engine::run() {
     double deltaTime = 0;
     double lastFrame = 0;
 
-    int display_w, display_h;
-    glfwGetFramebufferSize(window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w,
-                 clear_color.w);
     while (!glfwWindowShouldClose(window)) {
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -110,12 +96,11 @@ void Engine::run() {
         ProcessInput(window);
 
         camera->update(window, deltaTime);
-        return;
         voxelWorld->update(deltaTime);
 
         glfwPollEvents();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         voxelWorld->render(camera->getViewProjectionMatrix());
 
@@ -129,6 +114,7 @@ void Engine::run() {
             ImGui::SetNextWindowPos(ImVec2(0, 0));
             ImGui::SetNextWindowSize(ImVec2(200, 50));
             ImGui::Begin("Camera position");  // Create a window called "Hello, world!" and append into it.
+            ImGuiIO& io = ImGui::GetIO();
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
@@ -144,3 +130,11 @@ void Engine::run() {
 }
 
 void Engine::setCamera(ICamera* newCamera) { camera = newCamera; }
+
+void Engine::setWindowSize(std::uint32_t width, std::uint32_t height) {
+    windowWidth = width;
+    windowHeight = height;
+    glViewport(0, 0, width, height);
+}
+
+std::pair<std::uint32_t, std::uint32_t> Engine::getWindowSize() const { return {windowWidth, windowHeight}; }

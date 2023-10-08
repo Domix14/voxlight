@@ -10,15 +10,14 @@
 #include <vector>
 
 class ICamera;
-
-constexpr std::uint32_t WINDOW_WIDTH = 1280;
-constexpr std::uint32_t WINDOW_HEIGHT = 720;
+class GLFWwindow;
 
 class VoxelWorld;
 
 class Engine {
    public:
     Engine();
+
     void run();
 
     std::uint32_t createEntity();
@@ -26,10 +25,17 @@ class Engine {
                                     std::vector<std::uint8_t> const& voxelData);
 
     void setCamera(ICamera* camera);
+    void setWindowSize(std::uint32_t width, std::uint32_t height);
+
+    std::pair<std::uint32_t, std::uint32_t> getWindowSize() const;
 
    private:
+    GLFWwindow* window;
     VoxelWorld* voxelWorld;
     ICamera* camera;
+
+    std::uint32_t windowWidth;
+    std::uint32_t windowHeight;
 };
 
 #endif  // ENGINE_HPP

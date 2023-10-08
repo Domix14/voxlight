@@ -12,6 +12,11 @@ macro(LinkSTB TARGET ACCESS)
     if (NOT stb_POPULATED)
         FetchContent_Populate(stb)
     endif()
+    
+    add_library(stb INTERFACE)
+    target_include_directories(stb INTERFACE ${stb_SOURCE_DIR})
+    target_compile_options(stb INTERFACE -Wno-unused-but-set-variable -Wno-sign-compare)
 
-    target_include_directories(${TARGET} ${ACCESS} ${stb_SOURCE_DIR})
+    target_link_libraries(${TARGET} ${ACCESS} stb)
+    # target_include_directories(${TARGET} ${ACCESS} ${stb_SOURCE_DIR})
 endmacro()

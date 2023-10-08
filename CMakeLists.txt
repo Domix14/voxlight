@@ -13,7 +13,6 @@ set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # set(CMAKE_CXX_CLANG_TIDY clang-tidy --checks=-*,readability-* -p ${CMAKE_CURRENT_BINARY_DIR})
 
 set(sources
- ${SOURCE_DIR}/main.cpp
  ${SOURCE_DIR}/utils.cpp
  ${SOURCE_DIR}/VoxelMap.cpp
  ${SOURCE_DIR}/Camera.cpp
@@ -22,23 +21,23 @@ set(sources
  ${SOURCE_DIR}/VoxelWorld.cpp
  ${SOURCE_DIR}/VoxelObject.cpp)
 
-add_executable(VoxelEngine ${sources} ${includes})
-target_include_directories(VoxelEngine PRIVATE ${SOURCE_DIR}/include)
+add_library(VoxelEngine ${sources} ${includes})
+target_include_directories(VoxelEngine PUBLIC ${SOURCE_DIR}/include)
 
 
 # Perform dependency linkage
 include(${CMAKE_DIR}/LinkGLFW.cmake)
-LinkGLFW(VoxelEngine PRIVATE)
+LinkGLFW(VoxelEngine PUBLIC)
 
 include(${CMAKE_DIR}/LinkGLAD.cmake)
-LinkGLAD(VoxelEngine PRIVATE)
+LinkGLAD(VoxelEngine PUBLIC)
 
 include(${CMAKE_DIR}/LinkGLM.cmake)
-LinkGLM(VoxelEngine PRIVATE)
+LinkGLM(VoxelEngine PUBLIC)
 
 
 include(${CMAKE_DIR}/LinkSTB.cmake)
-LinkSTB(VoxelEngine PRIVATE)
+LinkSTB(VoxelEngine PUBLIC)
 
 # include(${CMAKE_DIR}/LinkIMGUI.cmake)
 # LinkIMGUI(VoxelEngine PRIVATE)
@@ -51,7 +50,7 @@ else()
     message(FATAL_ERROR "OpenGL was not found on the system")
 endif()
 
-# Enable C++17
+# Enable C++20
 set_target_properties(VoxelEngine PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
@@ -59,17 +58,17 @@ set_target_properties(VoxelEngine PROPERTIES
 
 # Set project folders
 set_target_properties(VoxelEngine PROPERTIES FOLDER ${PROJECT_NAME})
-target_compile_options(VoxelEngine PUBLIC -Wall -Wextra -Wuninitialized -O3)
+target_compile_options(VoxelEngine PRIVATE -Wall -Wextra)
 
 add_custom_command(
     COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py" "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${CMAKE_CURRENT_SOURCE_DIR}/src/include/generated"
     OUTPUT  "{CMAKE_CURRENT_SOURCE_DIR}/src/include/generated/shaders/shaders.hpp"
     COMMENT "Generating shader header files."
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders
-    VERBATIM
 )
 add_library(generatedLib "{CMAKE_CURRENT_SOURCE_DIR}/src/include/generated/shaders/shaders.hpp")
 set_target_properties(generatedLib PROPERTIES LINKER_LANGUAGE CXX)
 add_dependencies(VoxelEngine generatedLib)
 
+add_subdirectory(examples/test)
 
