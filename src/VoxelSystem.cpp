@@ -130,6 +130,11 @@ void VoxelSystem::initialise() {
     unsigned char *data = stbi_load("./palette.png", &width, &height, &nrChannels, 0);
     std::cout << width << " " << height << " " << nrChannels << std::endl;
     if (data) {
+        std::cout << "AAAAAAAAAAA" << std::endl;
+        for (int i = 0; i < width * height; ++i) {
+            std::cout << std::hex(data[i]) << ", ";
+        }
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {

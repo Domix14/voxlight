@@ -28,9 +28,8 @@ if not os.path.isdir(output_dir):
 
 
 
-with open(f"{output_dir}/Shaders.hpp", "w") as f:
-    f.write("#ifndef SHADERS_HPP\n")
-    f.write("#define SHADERS_HPP\n\n")
+with open(f"{output_dir}/shaders.hpp", "w") as f:
+    f.write("#pragma once\n")
 
     for dir_name in os.listdir(shader_dir):
         if not os.path.isdir(os.path.join(shader_dir, dir_name)):
@@ -49,5 +48,3 @@ with open(f"{output_dir}/Shaders.hpp", "w") as f:
             with open(file_path, "r") as sf:
                 shader_data = sf.read()
                 f.write(f"const char* {dir_name.upper()}_{shader_name.upper()}_SRC = R\"({shader_data})\";\n\n")
-
-    f.write("#endif // SHADERS_HPP\n")

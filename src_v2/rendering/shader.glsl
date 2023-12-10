@@ -12,8 +12,6 @@ uniform vec3 uChunkSize;
 uniform mat4 uMagicMatrix;
 
 layout(binding=0) uniform sampler3D uChunkTexture;
-// layout(binding=1) uniform sampler2D uPaletteTexture;
-// layout(binding=2) uniform sampler2D uDepthTexture;
 
 vec3 computeFarVec(vec2 texCoord)
 {
@@ -125,10 +123,6 @@ void main(){
     vec3 rayStart = camPos - uMinBox;
     d = intersect(rayStart + camDir*(minDist-0.001), camDir, maxDist-minDist, color, norm);
 
-    if(d == (maxDist-minDist)) {
-        outColor = vec4(0, 0, 0, 1);
-    } else {
-        outColor = vec4(color.rgb, 1);
-    }
-
+    outColor = vec4(color.rgb, 1);
+    outNormal = norm;
 }

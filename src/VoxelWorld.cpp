@@ -101,6 +101,10 @@ void VoxelWorld::init() {
     unsigned char *data = stbi_load("./palette.png", &width, &height, &nrChannels, 0);
     std::cout << width << " " << height << " " << nrChannels << std::endl;
     if (data) {
+        for (int i = 0; i < width * height * nrChannels; ++i) {
+            // if (i % 4 == 3) continue;
+            std::cout << "0x" << std::hex << (int)data[i] << ", ";
+        }
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
