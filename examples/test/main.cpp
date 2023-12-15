@@ -18,8 +18,22 @@ int main() {
             spdlog::error("Failed to set voxel");
         }
     }
-
     engine.getSystem<WorldSystem>()->createVoxelEntity(voxelData, glm::vec3(0.0f, 0.0f, 0.0f));
+
+    for (int i = 0; i < 64; i++) {
+        if (!voxelData.setVoxel(i, 0, 0, static_cast<std::uint8_t>(60))) {
+            spdlog::error("Failed to set voxel");
+        }
+    }
+    engine.getSystem<WorldSystem>()->createVoxelEntity(voxelData, glm::vec3(0.0f, 0.0f, 10.0f));
+
+    for (int i = 0; i < 64; i++) {
+        if (!voxelData.setVoxel(i, 0, 0, static_cast<std::uint8_t>(70))) {
+            spdlog::error("Failed to set voxel");
+        }
+    }
+    engine.getSystem<WorldSystem>()->createVoxelEntity(voxelData, glm::vec3(0.0f, 0.0f, 20.0f));
+
     engine.run();
     return 0;
 }

@@ -12,7 +12,8 @@ class ControllerSystem : public System {
     void update(float deltaTime);
     void deinit();
 
-    glm::mat4 getViewProjectionMatrix();
+    glm::mat4 getViewProjectionMatrix() const;
+    glm::vec3 getCameraPosition() const;
 
    private:
     GLFWwindow* window;

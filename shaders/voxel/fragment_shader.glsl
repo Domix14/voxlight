@@ -126,9 +126,8 @@ void main(){
     d = intersect(rayStart + camDir*(minDist-0.001), camDir, maxDist-minDist, color, norm);
 
     if(d == (maxDist-minDist)) {
-        outColor = vec4(0, 0, 0, 1);
-    } else {
-        outColor = vec4(color.rgb, 1);
+        discard;
     }
+    outColor = vec4(color.rgb, 1);
     outNormal = norm;
 }

@@ -7,6 +7,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <entt/entt.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -80,21 +81,6 @@ static void frameBufferCheck() {
         spdlog::error("Framebuffer is not complete");
     }
 }
-
-// static GLuint createVoxelTexture(std::vector<GLubyte> const& data, glm::vec3 size) {
-//     GLuint texname;
-//     glGenTextures(1, &texname);
-//     glBindTexture(GL_TEXTURE_3D, texname);
-//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-//     glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, GL_UNSIGNED_BYTE, data.data());
-//     return texname;
-// }
 
 static std::tuple<GLuint, int> loadShader(GLenum shaderType, std::string_view shaderCode) {
     auto shader = glCreateShader(shaderType);
@@ -231,12 +217,33 @@ void RenderSystem::update(float) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto view = getEngine()->getRegistry().view<TransformComponent, VoxelComponent>();
+
+    auto sortFunc = [](auto const& a, auto const& b) { return a.second.position.z < b.second.position.z; };
+
+    auto cameraPos = getEngine()->getSystem<ControllerSystem>()->getCameraPosition();
     for (auto [entity, transform, voxelData] : view.each()) {
         glm::vec3 size = transform.scale;
         glm::vec3 minBox = transform.position;
         glm::vec3 maxBox = minBox + size;
 
-        auto viewProjectionMatrix = getEngine()->getSystem<ControllerSystem>()->getViewProjectionMatrix();
+        auto rotatedCameraPos = cameraPos;  // TODO: rotate camera
+        auto closestPoint = glm::vec3(glm::clamp(rotatedCameraPos.x, minBox.x, maxBox.x),
+                                      glm::clamp(rotatedCameraPos.y, minBox.y, maxBox.y),
+                                      glm::clamp(rotatedCameraPos.z, minBox.z, maxBox.z));
+        voxelData.distance = glm::distance(rotatedCameraPos, closestPoint);
+    }
+
+    getEngine()->getRegistry().sort<VoxelComponent>(
+        [](auto const& a, auto const& b) { return a.distance > b.distance; });
+
+    auto viewSorted = getEngine()->getRegistry().view<const VoxelComponent, const TransformComponent>();
+    viewSorted.use<VoxelComponent>();
+    auto viewProjectionMatrix = getEngine()->getSystem<ControllerSystem>()->getViewProjectionMatrix();
+    for (auto [entity, voxelData, transform] : viewSorted.each()) {
+        glm::vec3 size = transform.scale;
+        glm::vec3 minBox = transform.position;
+        glm::vec3 maxBox = minBox + size;
+
         auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
         auto translateMatrix = glm::translate(glm::mat4(1.f), minBox);
         auto scaleMatrix = glm::scale(glm::mat4(1.f), size);
@@ -265,7 +272,6 @@ void RenderSystem::update(float) {
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);

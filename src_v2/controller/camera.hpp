@@ -7,6 +7,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 class Camera {
+   public:
     double cursorX;
     double cursorY;
 
@@ -15,7 +16,6 @@ class Camera {
     glm::vec3 camRight;
     glm::vec3 camUp;
 
-   public:
     Camera() {
         cursorX = 0;
         cursorY = 0;
@@ -25,7 +25,7 @@ class Camera {
         camUp = glm::vec3(0, 1, 0);
     };
 
-    glm::mat4 getViewProjectionMatrix() {
+    glm::mat4 getViewProjectionMatrix() const {
         glm::mat4 projection = glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f);
         glm::mat4 view = glm::lookAt(position, position + (direction * 1000.f), glm::vec3(0, 1, 0));
         return projection * view;
