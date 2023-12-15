@@ -14,12 +14,12 @@ int main() {
     VoxelData<std::uint8_t> voxelData;
     voxelData.resize(8, 8, 8);
     for (int i = 0; i < 64; i++) {
-        if (!voxelData.setVoxel(i, 0, 0, static_cast<std::uint8_t>(255))) {
+        if (!voxelData.setVoxel(i, 0, 0, static_cast<std::uint8_t>(50))) {
             spdlog::error("Failed to set voxel");
         }
     }
 
-    engine.getSystem<WorldSystem>()->createVoxelObject(voxelData, glm::vec3(5.0f, 0.0f, 0.0f));
+    engine.getSystem<WorldSystem>()->createVoxelEntity(voxelData, glm::vec3(0.0f, 0.0f, 0.0f));
     engine.run();
     return 0;
 }

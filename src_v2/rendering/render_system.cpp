@@ -209,9 +209,6 @@ void RenderSystem::init() {
     // Create palette texture
     glGenTextures(1, &paletteTexture);
     glBindTexture(GL_TEXTURE_2D, paletteTexture);
-    // set the texture wrapping/filtering options (on the currently bound
-    // texture object) glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-    // GL_REPEAT); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load and generate the texture
@@ -241,25 +238,27 @@ void RenderSystem::update(float) {
 
         auto viewProjectionMatrix = getEngine()->getSystem<ControllerSystem>()->getViewProjectionMatrix();
         auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
-        auto modelMatrix = glm::translate(glm::mat4(1.f), minBox);
+        auto translateMatrix = glm::translate(glm::mat4(1.f), minBox);
         auto scaleMatrix = glm::scale(glm::mat4(1.f), size);
-        modelMatrix = modelMatrix * scaleMatrix;
+        auto rotationMatrix = glm::toMat4(transform.rotation);
+        auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
         auto mvp = viewProjectionMatrix * modelMatrix;
+        auto magicMatrix = translateMatrix * scaleMatrix * glm::inverse(mvp);
         glUniformMatrix4fv(voxelUniform.modelMatrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
         glUniformMatrix4fv(voxelUniform.viewProjectionMatrix, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
         glUniform2f(voxelUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
         glUniform3f(voxelUniform.minBox, minBox.x, minBox.y, minBox.z);
         glUniform3f(voxelUniform.maxBox, maxBox.x, maxBox.y, maxBox.z);
         glUniform3f(voxelUniform.chunkSize, size.x, size.y, size.z);
-        glUniformMatrix4fv(voxelUniform.magicMatrix, 1, GL_FALSE, glm::value_ptr(invViewProjectionMatrix));
+        glUniformMatrix4fv(voxelUniform.magicMatrix, 1, GL_FALSE, glm::value_ptr(magicMatrix));
 
         glUniform1i(voxelUniform.chunkTexture, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, voxelData.textureId);
 
-        // glUniform1i(voxelUniform.paletteTexture, 1);
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, paletteTexture);
+        glUniform1i(voxelUniform.paletteTexture, 1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, paletteTexture);
 
         glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
         glEnableVertexAttribArray(0);
@@ -289,10 +288,5 @@ unsigned int RenderSystem::createVoxelTexture(VoxelData<std::uint8_t> const& dat
 
     glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, data.getWidth(), data.getHeight(), data.getDepth(), 0, GL_RED,
                  GL_UNSIGNED_BYTE, data.getData());
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        spdlog::error("Error: {}", err);
-    }
-
     return texname;
 }

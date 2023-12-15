@@ -12,8 +12,8 @@ uniform vec3 uChunkSize;
 uniform mat4 uMagicMatrix;
 
 layout(binding=0) uniform sampler3D uChunkTexture;
-// layout(binding=1) uniform sampler2D uPaletteTexture;
-// layout(binding=2) uniform sampler2D uDepthTexture;
+layout(binding=1) uniform sampler2D uPaletteTexture;
+layout(binding=2) uniform sampler2D uDepthTexture;
 
 vec3 computeFarVec(vec2 texCoord)
 {
@@ -70,8 +70,8 @@ float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) 
         float hit = getVoxel(pos)*255;
         if(hit != 0) {
             vec2 uv = vec2((hit-0.5)/256.f, 0.5f);
-            // color = textureLod(uPaletteTexture, uv, 0.0f);
-            color = vec4(1, 1, 0, 1);
+            color = textureLod(uPaletteTexture, uv, 0.0f);
+            // color = vec4(1, 1, 0, 1);
 
             return d;
         }
@@ -130,5 +130,5 @@ void main(){
     } else {
         outColor = vec4(color.rgb, 1);
     }
-
+    outNormal = norm;
 }

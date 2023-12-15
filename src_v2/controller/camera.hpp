@@ -23,7 +23,7 @@ class Camera {
         direction = glm::vec3(0, 0, -1);
         camRight = glm::vec3(1, 0, 0);
         camUp = glm::vec3(0, 1, 0);
-        };
+    };
 
     glm::mat4 getViewProjectionMatrix() {
         glm::mat4 projection = glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f);
@@ -40,8 +40,8 @@ class Camera {
         double dy = ypos - cursorY;
         cursorX = xpos;
         cursorY = ypos;
-        camRight = glm::normalize(glm::cross(direction, {0, 1, 0}));
-        camUp = glm::normalize(glm::cross(camRight, direction));
+        camRight = glm::normalize(glm::cross(direction, camUp));
+        //  camUp = glm::normalize(glm::cross(camRight, direction));
 
         glm::mat4 rotMat(1.0f);
         rotMat = glm::rotate(rotMat, (float)-dx / 100.f, camUp);

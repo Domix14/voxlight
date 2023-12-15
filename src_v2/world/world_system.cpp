@@ -15,10 +15,10 @@ void WorldSystem::update(float) {}
 
 void WorldSystem::deinit() {}
 
-int WorldSystem::createVoxelObject(VoxelData<std::uint8_t> const& data, glm::vec3 position) {
+int WorldSystem::createVoxelEntity(VoxelData<std::uint8_t> const& data, glm::vec3 position, glm::quat rotation) {
     auto texId = getEngine()->getSystem<RenderSystem>()->createVoxelTexture(data);
     auto voxelEntity = getEngine()->getRegistry().create();
     getEngine()->getRegistry().emplace<VoxelComponent>(voxelEntity, texId);
     getEngine()->getRegistry().emplace<TransformComponent>(
-        voxelEntity, position, glm::vec3(data.getWidth(), data.getHeight(), data.getDepth()));
+        voxelEntity, position, glm::vec3(data.getWidth(), data.getHeight(), data.getDepth()), rotation);
 }

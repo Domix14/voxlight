@@ -46,7 +46,6 @@ VoxelData<T>::~VoxelData() {}
 template <typename T>
 bool VoxelData<T>::setVoxel(int x, int y, int z, T value) {
     auto index = getIndex(x, y, z);
-    std::cout << "Index: " << index << "\n";
     if (index < data.size()) {
         data.at(getIndex(x, y, z)) = value;
         return true;
