@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -14,6 +15,6 @@ class WorldSystem : public System {
     void update(float deltaTime);
     void deinit();
 
-    int createVoxelEntity(VoxelData<std::uint8_t> const& data, glm::vec3 position,
-                          glm::quat rotation = {1.f, 0.f, 0.f, 0.f});
+    std::uint32_t createVoxelEntity(VoxelData<std::uint8_t> const& data, glm::vec3 position,
+                                    glm::quat rotation = {1.f, 0.f, 0.f, 0.f});
 };

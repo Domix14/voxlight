@@ -52,6 +52,7 @@ macro(LinkGLFW TARGET ACCESS)
     target_link_libraries(imgui_lib PRIVATE glfw)
     target_include_directories(${TARGET} ${ACCESS} ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_link_libraries(${TARGET} ${ACCESS} imgui_lib)
+    target_compile_options(${TARGET} ${ACCESS} -Wno-volatile)
 
     add_dependencies(${TARGET} imgui_lib)
 
