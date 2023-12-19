@@ -40,24 +40,14 @@ void VoxelEngine::init() {
     // Initialize GLFW window
     window = initGLFW();
 
-    // Register internal systems
-    renderSystem = registerInternalSystem<RenderSystem>();
-    controllerSystem = registerInternalSystem<ControllerSystem>();
-    worldSystem = registerInternalSystem<WorldSystem>();
+    controllerSystem.init();
+    renderSystem.init();
+    worldSystem.init();
 
-    // Initialize systems
-    for (auto& system : systems) {
-        system->init();
-    }
     initialized = true;
 }
 
 void VoxelEngine::deinit() {
-    // Deinitialize systems
-    for (auto& system : systems) {
-        system->deinit();
-    }
-
     // Deinitialize GLFW
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -74,12 +64,9 @@ void VoxelEngine::run() {
     float deltaTime = 0.f;
     while (running && !glfwWindowShouldClose(window)) {
         auto currentTime = std::chrono::system_clock::now();
-        for (auto& system : applicationSystems) {
-            system->update(deltaTime);
-        }
-        worldSystem->update(deltaTime);
-        controllerSystem->update(deltaTime);
-        renderSystem->update(deltaTime);
+        worldSystem.update(deltaTime);
+        controllerSystem.update(deltaTime);
+        renderSystem.update(deltaTime);
         deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
     }

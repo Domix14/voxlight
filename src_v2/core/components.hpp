@@ -11,5 +11,6 @@ struct TransformComponent {
 
 struct VoxelComponent {
     unsigned int textureId;
+    bool needsUpdate;
     float distance;
 };

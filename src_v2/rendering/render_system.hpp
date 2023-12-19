@@ -1,6 +1,9 @@
 #pragma once
 
-#include "core/voxel_data.hpp"
+#include <cstdint>
+#include <glm/glm.hpp>
+#include <vector>
+
 #include "system.hpp"
 
 class GLFWwindow;
@@ -27,7 +30,10 @@ class RenderSystem : public System {
     void update(float deltaTime);
     void deinit();
 
-    unsigned int createVoxelTexture(VoxelData<std::uint8_t> const& data);
+    unsigned int createVoxelTexture(std::vector<std::uint8_t> const& data, glm::ivec3 size);
+
+    void createWorldTexture(std::vector<std::uint8_t> const& data, glm::ivec3 size);
+    void updateWorldTexture(std::vector<std::uint8_t> const& data, glm::ivec3 size, glm::ivec3 offset);
 
    private:
     GLFWwindow* window;
@@ -45,6 +51,10 @@ class RenderSystem : public System {
 
     // framebuffer
     unsigned int mainFramebuffer;
+
+    // voxel world
+    unsigned int worldVoxelTexture;
+    glm::ivec3 worldVoxelTextureSize;
 
     // opengl textures
     unsigned int colorTexture;

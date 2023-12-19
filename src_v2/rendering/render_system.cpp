@@ -218,27 +218,9 @@ void RenderSystem::update(float) {
 
     auto view = getEngine()->getRegistry().view<TransformComponent, VoxelComponent>();
 
-    auto sortFunc = [](auto const& a, auto const& b) { return a.second.position.z < b.second.position.z; };
-
-    auto cameraPos = getEngine()->getSystem<ControllerSystem>()->getCameraPosition();
-    for (auto [entity, transform, voxelData] : view.each()) {
-        glm::vec3 size = transform.scale;
-        glm::vec3 minBox = transform.position;
-        glm::vec3 maxBox = minBox + size;
-
-        auto rotatedCameraPos = cameraPos;  // TODO: rotate camera
-        auto closestPoint = glm::vec3(glm::clamp(rotatedCameraPos.x, minBox.x, maxBox.x),
-                                      glm::clamp(rotatedCameraPos.y, minBox.y, maxBox.y),
-                                      glm::clamp(rotatedCameraPos.z, minBox.z, maxBox.z));
-        voxelData.distance = glm::distance(rotatedCameraPos, closestPoint);
-    }
-
-    getEngine()->getRegistry().sort<VoxelComponent>(
-        [](auto const& a, auto const& b) { return a.distance > b.distance; });
-
     auto viewSorted = getEngine()->getRegistry().view<const VoxelComponent, const TransformComponent>();
     viewSorted.use<VoxelComponent>();
-    auto viewProjectionMatrix = getEngine()->getSystem<ControllerSystem>()->getViewProjectionMatrix();
+    auto viewProjectionMatrix = getEngine()->controllerSystem.getViewProjectionMatrix();
     for (auto [entity, voxelData, transform] : viewSorted.each()) {
         glm::vec3 size = transform.scale;
         glm::vec3 minBox = transform.position;
@@ -272,6 +254,7 @@ void RenderSystem::update(float) {
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
+
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -281,7 +264,7 @@ void RenderSystem::update(float) {
     glfwPollEvents();
 }
 
-unsigned int RenderSystem::createVoxelTexture(VoxelData<std::uint8_t> const& data) {
+unsigned int RenderSystem::createVoxelTexture(std::vector<std::uint8_t> const& data, glm::ivec3 size) {
     GLuint texname;
     glGenTextures(1, &texname);
     glBindTexture(GL_TEXTURE_3D, texname);
@@ -292,7 +275,18 @@ unsigned int RenderSystem::createVoxelTexture(VoxelData<std::uint8_t> const& dat
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, data.getWidth(), data.getHeight(), data.getDepth(), 0, GL_RED,
-                 GL_UNSIGNED_BYTE, data.getData());
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, GL_UNSIGNED_BYTE, data.data());
     return texname;
+}
+
+void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const& data, glm::ivec3 size) {
+    if (0 != worldVoxelTexture) {
+        glDeleteTextures(1, &worldVoxelTexture);
+    }
+    worldVoxelTextureSize = size;
+    worldVoxelTexture = createVoxelTexture(data, size);
+}
+
+void RenderSystem::updateWorldTexture(std::vector<std::uint8_t> const&, glm::ivec3, glm::ivec3) {
+    // todo
 }
