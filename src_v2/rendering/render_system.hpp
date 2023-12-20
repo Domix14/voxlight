@@ -22,6 +22,16 @@ struct VoxelUniform {
     unsigned int paletteTexture;
 };
 
+struct SunlightUniform {
+    unsigned int invResolution;
+    unsigned int magicMatrix;
+    unsigned int sunPos;
+    unsigned int worldTexture;
+    unsigned int albedoTexture;
+    unsigned int depthTexture;
+    unsigned int normalTexture;
+};
+
 class RenderSystem : public System {
    public:
     RenderSystem(VoxelEngine* engine);
@@ -40,10 +50,11 @@ class RenderSystem : public System {
 
     // opengl programs
     unsigned int voxelProgram;
-    unsigned int sunglightProgram;
+    unsigned int sunlightProgram;
 
     // uniforms
     VoxelUniform voxelUniform;
+    SunlightUniform sunlightUniform;
 
     // opengl buffers
     unsigned int cubeVertexBuffer;

@@ -141,7 +141,14 @@ void RenderSystem::init() {
     voxelUniform.chunkTexture = glGetUniformLocation(voxelProgram, "uChunkTexture");
     voxelUniform.paletteTexture = glGetUniformLocation(voxelProgram, "uPaletteTexture");
 
-    sunglightProgram = createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
+    sunlightProgram = createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
+    sunlightUniform.invResolution = glGetUniformLocation(voxelProgram, "uInvResolution");
+    sunlightUniform.magicMatrix = glGetUniformLocation(voxelProgram, "uMagicMatrix");
+    sunlightUniform.sunPos = glGetUniformLocation(voxelProgram, "uSunPos");
+    sunlightUniform.worldTexture = glGetUniformLocation(voxelProgram, "uWorldTexture");
+    sunlightUniform.albedoTexture = glGetUniformLocation(voxelProgram, "uAlbedoTexture");
+    sunlightUniform.depthTexture = glGetUniformLocation(voxelProgram, "uDepthTexture");
+    sunlightUniform.normalTexture = glGetUniformLocation(voxelProgram, "uNormalTexture");
 
     // Create vertex buffers
     glGenBuffers(1, &cubeVertexBuffer);
@@ -221,12 +228,12 @@ void RenderSystem::update(float) {
     auto viewSorted = getEngine()->getRegistry().view<const VoxelComponent, const TransformComponent>();
     viewSorted.use<VoxelComponent>();
     auto viewProjectionMatrix = getEngine()->controllerSystem.getViewProjectionMatrix();
+    auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
     for (auto [entity, voxelData, transform] : viewSorted.each()) {
         glm::vec3 size = transform.scale;
         glm::vec3 minBox = transform.position;
         glm::vec3 maxBox = minBox + size;
 
-        auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
         auto translateMatrix = glm::translate(glm::mat4(1.f), minBox);
         auto scaleMatrix = glm::scale(glm::mat4(1.f), size);
         auto rotationMatrix = glm::toMat4(transform.rotation);
@@ -254,6 +261,45 @@ void RenderSystem::update(float) {
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
+
+    // Sunlight stage
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUseProgram(sunlightProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, worldVoxelTexture);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, colorTexture);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, normalTexture);
+
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uWorldTexture"), 0);
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uAlbedoTexture"), 1);
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uDepthTexture"), 2);
+    glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
+
+    auto mm = glm::scale(glm::mat4(1.f), glm::vec3(8)) * viewProjectionInv;
+    glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f / WINDOW_WIDTH, 1.f / WINDOW_HEIGHT);
+    glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"), 1, GL_FALSE, &mm[0][0]);
+    glUniform3f(glGetUniformLocation(sunlightProgram, "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+    glVertexAttribPointer(0,  // attribute 0. No particular reason for 0, but
+                              // must match the layout in the shader.
+                          3,         // size
+                          GL_FLOAT,  // type
+                          GL_FALSE,  // normalized?
+                          0,         // stride
+                          (void*)0   // array buffer offset
+    );
+    glDrawArrays(GL_TRIANGLES, 0, 6);  // 3 indices starting at 0 -> 1 triangle
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

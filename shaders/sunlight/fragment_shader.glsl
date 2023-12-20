@@ -3,10 +3,9 @@
 
 layout (location = 0) out vec4 outColor;
 
-uniform vec2 invResolution;
+uniform vec2 uInvResolution;
 uniform mat4 uMagicMatrix;
 uniform vec3 uSunPos;
-uniform vec3 uCameraPos;
 
 layout(binding=0) uniform sampler3D uWorldTexture;
 layout(binding=1) uniform sampler2D uAlbedoTexture;
