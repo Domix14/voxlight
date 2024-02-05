@@ -10,29 +10,42 @@
 
 class GLFWwindow;
 
-class VoxelEngine {
-   public:
-    VoxelEngine() : worldSystem(this), renderSystem(this), controllerSystem(this), initialized(false), running(true) {}
-    ~VoxelEngine() = default;
+class VoxelEngine final {
+public:
+  VoxelEngine() = default;
+  ~VoxelEngine() = default;
 
-    [[nodiscard]] entt::registry& getRegistry() { return registry; }
-    [[nodiscard]] GLFWwindow* getWindow() const { return window; }
+  [[nodiscard]] entt::registry &getRegistry() { return registry; }
+  [[nodiscard]] GLFWwindow *getWindow() const { return window; }
 
-    void init();
-    void run();
-    void terminate() { running = false; };
+  void init();
+  void run();
+  void terminate() { running = false; };
 
-    // Internal systems
-    WorldSystem worldSystem;
-    RenderSystem renderSystem;
-    ControllerSystem controllerSystem;
+  template <std::derived_from<ISystem> T> void createSystem() {
+    T *system = new T();
+    system->init(this);
+    customSystems.push_back(system);
+  }
 
-   private:
-    void deinit();
+  WorldSystem &getWorldSystem() { return worldSystem; }
+  RenderSystem &getRenderSystem() { return renderSystem; }
+  ControllerSystem &getControllerSystem() { return controllerSystem; }
 
-    entt::registry registry;
-    bool initialized;
-    bool running;
+private:
+  void deinit();
 
-    GLFWwindow* window;
+  entt::registry registry;
+  bool initialized;
+  bool running;
+
+  GLFWwindow *window;
+
+  // Internal systems
+  WorldSystem worldSystem;
+  RenderSystem renderSystem;
+  ControllerSystem controllerSystem;
+
+  // Custom systems
+  std::vector<ISystem *> customSystems;
 };

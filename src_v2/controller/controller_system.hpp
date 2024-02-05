@@ -4,18 +4,19 @@
 
 class GLFWwindow;
 
-class ControllerSystem : public System {
-   public:
-    ControllerSystem(VoxelEngine* engine);
+class ControllerSystem : public ISystem {
+public:
+  ControllerSystem() = default;
 
-    void init();
-    void update(float deltaTime);
-    void deinit();
+  void init(VoxelEngine *voxelEngine);
+  void update(float deltaTime);
+  void deinit();
 
-    glm::mat4 getViewProjectionMatrix() const;
-    glm::vec3 getCameraPosition() const;
+  glm::mat4 getViewProjectionMatrix() const;
+  glm::vec3 getCameraPosition() const;
 
-   private:
-    GLFWwindow* window;
-    Camera camera;
+private:
+  GLFWwindow *window;
+  Camera camera;
+  VoxelEngine *engine;
 };
