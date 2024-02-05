@@ -37,14 +37,31 @@ void VoxelEngine::init() {
   // Initialize GLFW window
   window = initGLFW();
 
+  // Initialize internal systems
   controllerSystem.init(this);
   renderSystem.init(this);
   worldSystem.init(this);
+
+  // Initialize custom systems
+  for (auto system : customSystems) {
+    system->init(this);
+  }
 
   initialized = true;
 }
 
 void VoxelEngine::deinit() {
+  // Deinitialize internal systems
+  worldSystem.deinit();
+  renderSystem.deinit();
+  controllerSystem.deinit();
+
+  // Deinitialize custom systems
+  for (auto system : customSystems) {
+    system->deinit();
+    delete system;
+  }
+
   // Deinitialize GLFW
   glfwDestroyWindow(window);
   glfwTerminate();

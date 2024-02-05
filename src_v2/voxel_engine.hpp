@@ -10,13 +10,12 @@
 
 class GLFWwindow;
 
+typedef entt::entity Entity;
+
 class VoxelEngine final {
 public:
   VoxelEngine() = default;
   ~VoxelEngine() = default;
-
-  [[nodiscard]] entt::registry &getRegistry() { return registry; }
-  [[nodiscard]] GLFWwindow *getWindow() const { return window; }
 
   void init();
   void run();
@@ -24,10 +23,19 @@ public:
 
   template <std::derived_from<ISystem> T> void createSystem() {
     T *system = new T();
-    system->init(this);
     customSystems.push_back(system);
   }
 
+  Entity createEntity() { return registry.create(); }
+
+  template <typename... Components>
+  void addComponent(Entity entity, Components &&...components) {
+    registry.emplace<Components...>(entity,
+                                    std::forward<Components>(components)...);
+  }
+
+  entt::registry &getRegistry() { return registry; }
+  GLFWwindow *getWindow() const { return window; }
   WorldSystem &getWorldSystem() { return worldSystem; }
   RenderSystem &getRenderSystem() { return renderSystem; }
   ControllerSystem &getControllerSystem() { return controllerSystem; }
