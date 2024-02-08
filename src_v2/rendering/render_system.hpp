@@ -7,7 +7,7 @@
 #include "system.hpp"
 
 class GLFWwindow;
-class VoxelEngine;
+class Voxlight;
 
 struct VoxelUniform {
   unsigned int modelMatrix;
@@ -35,7 +35,7 @@ class RenderSystem : public ISystem {
 public:
   RenderSystem() = default;
 
-  void init(VoxelEngine *voxelEngine);
+  void init(Voxlight *voxlight);
   void update(float deltaTime);
   void deinit();
 
@@ -49,7 +49,7 @@ public:
 
 private:
   GLFWwindow *window;
-  VoxelEngine *engine;
+  Voxlight *engine;
 
   // opengl programs
   unsigned int voxelProgram;

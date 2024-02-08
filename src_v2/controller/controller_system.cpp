@@ -1,8 +1,8 @@
 #include "controller_system.hpp"
-#include "voxel_engine.hpp"
+#include "voxlight.hpp"
 
-void ControllerSystem::init(VoxelEngine *voxelEngine) {
-  engine = voxelEngine;
+void ControllerSystem::init(Voxlight *voxlight) {
+  engine = voxlight;
   window = engine->getWindow();
 };
 

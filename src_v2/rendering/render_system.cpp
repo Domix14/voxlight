@@ -20,7 +20,7 @@
 #include "core/components.hpp"
 #include "engine_config.hpp"
 #include "generated/shaders.hpp"
-#include "voxel_engine.hpp"
+#include "voxlight.hpp"
 
 static const GLfloat cubeVertexData[] = {
     0.0f, 0.0f, 0.0f, // Vertex 0
@@ -114,15 +114,15 @@ static GLuint createProgram(std::string_view vertexSrc,
   return program;
 }
 
-void RenderSystem::init(VoxelEngine *voxelEngine) {
+void RenderSystem::init(Voxlight *voxlight) {
   // Init OpenGL
   if (!gladLoadGL(glfwGetProcAddress)) {
     throw std::runtime_error("Failed to initialize GLAD\n");
   }
 
-  engine = voxelEngine;
+  engine = voxlight;
   // Save pointer to GLFW window
-  window = voxelEngine->getWindow();
+  window = voxlight->getWindow();
 
   // Set window resize callback
   glViewport(0, 0, WindowWidth, WindowHeight);

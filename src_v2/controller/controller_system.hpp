@@ -8,7 +8,7 @@ class ControllerSystem : public ISystem {
 public:
   ControllerSystem() = default;
 
-  void init(VoxelEngine *voxelEngine);
+  void init(Voxlight *voxlight);
   void update(float deltaTime);
   void deinit();
 
@@ -18,5 +18,5 @@ public:
 private:
   GLFWwindow *window;
   Camera camera;
-  VoxelEngine *engine;
+  Voxlight *engine;
 };

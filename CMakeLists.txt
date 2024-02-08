@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
-project(VoxelEngine C CXX)
+project(Voxlight C CXX)
 
 
 
@@ -14,7 +14,7 @@ add_custom_command(
 )
 add_library(generatedLib "{CMAKE_CURRENT_SOURCE_DIR}/src_v2/generated/shaders/shaders.hpp")
 set_target_properties(generatedLib PROPERTIES LINKER_LANGUAGE CXX)
-add_dependencies(VoxelEngine generatedLib)
+add_dependencies(Voxlight generatedLib)
 
 # set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -36,44 +36,44 @@ add_dependencies(VoxelEngine generatedLib)
 #  ${SOURCE_DIR}/VoxelWorld.cpp
 #  ${SOURCE_DIR}/VoxelObject.cpp)
 
-# add_library(VoxelEngine ${sources} ${includes})
-# target_include_directories(VoxelEngine PUBLIC ${SOURCE_DIR}/include)
+# add_library(Voxlight ${sources} ${includes})
+# target_include_directories(Voxlight PUBLIC ${SOURCE_DIR}/include)
 
 
 # # Perform dependency linkage
 # include(${CMAKE_DIR}/LinkGLFW.cmake)
-# LinkGLFW(VoxelEngine PUBLIC)
+# LinkGLFW(Voxlight PUBLIC)
 
 # include(${CMAKE_DIR}/LinkGLAD.cmake)
-# LinkGLAD(VoxelEngine PUBLIC)
+# LinkGLAD(Voxlight PUBLIC)
 
 # include(${CMAKE_DIR}/LinkGLM.cmake)
-# LinkGLM(VoxelEngine PUBLIC)
+# LinkGLM(Voxlight PUBLIC)
 
 
 # include(${CMAKE_DIR}/LinkSTB.cmake)
-# LinkSTB(VoxelEngine PUBLIC)
+# LinkSTB(Voxlight PUBLIC)
 
 # # include(${CMAKE_DIR}/LinkIMGUI.cmake)
-# # LinkIMGUI(VoxelEngine PRIVATE)
+# # LinkIMGUI(Voxlight PRIVATE)
 
 # find_package(OpenGL REQUIRED)
 # if (OpenGL_FOUND)
-#     target_include_directories(VoxelEngine PRIVATE ${OPENGL_INCLDUE_DIRS})
-#     target_link_libraries(VoxelEngine PRIVATE ${OPENGL_LIBRARIES})
+#     target_include_directories(Voxlight PRIVATE ${OPENGL_INCLDUE_DIRS})
+#     target_link_libraries(Voxlight PRIVATE ${OPENGL_LIBRARIES})
 # else()
 #     message(FATAL_ERROR "OpenGL was not found on the system")
 # endif()
 
 # # Enable C++20
-# set_target_properties(VoxelEngine PROPERTIES
+# set_target_properties(Voxlight PROPERTIES
 #     CXX_STANDARD 20
 #     CXX_STANDARD_REQUIRED YES
 #     CXX_EXTENSIONS NO)
 
 # # Set project folders
-# set_target_properties(VoxelEngine PROPERTIES FOLDER ${PROJECT_NAME})
-# target_compile_options(VoxelEngine PRIVATE -Wall -Wextra)
+# set_target_properties(Voxlight PROPERTIES FOLDER ${PROJECT_NAME})
+# target_compile_options(Voxlight PRIVATE -Wall -Wextra)
 
 
 

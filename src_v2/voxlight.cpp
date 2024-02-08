@@ -1,4 +1,4 @@
-#include "voxel_engine.hpp"
+#include "voxlight.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -33,28 +33,42 @@ static GLFWwindow *initGLFW() {
   return window;
 }
 
-void VoxelEngine::init() {
+void Voxlight::init() {
   // Initialize GLFW window
-  window = initGLFW();
+  glfwWindow = initGLFW();
 
   // Initialize internal systems
-  controllerSystem.init(this);
-  renderSystem.init(this);
-  worldSystem.init(this);
+  // controllerSystem.init(this);
+  // renderSystem.init(this);
+  // worldSystem.init(this);
 
   // Initialize custom systems
   for (auto system : customSystems) {
     system->init(this);
   }
-
-  initialized = true;
 }
 
-void VoxelEngine::deinit() {
+void Voxlight::run() {
+  isRunning = true;
+  auto lastTime = std::chrono::system_clock::now();
+  float deltaTime = 0.f;
+
+  while (isRunning && !glfwWindowShouldClose(glfwWindow)) {
+    auto currentTime = std::chrono::system_clock::now();
+    // worldSystem.update(deltaTime);
+    // controllerSystem.update(deltaTime);
+    // renderSystem.update(deltaTime);
+    deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+    lastTime = currentTime;
+  }
+  isRunning = false;
+}
+
+void Voxlight::deinit() {
   // Deinitialize internal systems
-  worldSystem.deinit();
-  renderSystem.deinit();
-  controllerSystem.deinit();
+  // worldSystem.deinit();
+  // renderSystem.deinit();
+  // controllerSystem.deinit();
 
   // Deinitialize custom systems
   for (auto system : customSystems) {
@@ -63,26 +77,8 @@ void VoxelEngine::deinit() {
   }
 
   // Deinitialize GLFW
-  glfwDestroyWindow(window);
+  glfwDestroyWindow(glfwWindow);
   glfwTerminate();
-  initialized = false;
 }
 
-void VoxelEngine::run() {
-  if (!initialized) {
-    throw std::runtime_error("VoxelEngine is not initialized\n");
-  }
-
-  running = true;
-  auto lastTime = std::chrono::system_clock::now();
-  float deltaTime = 0.f;
-  while (running && !glfwWindowShouldClose(window)) {
-    auto currentTime = std::chrono::system_clock::now();
-    worldSystem.update(deltaTime);
-    controllerSystem.update(deltaTime);
-    renderSystem.update(deltaTime);
-    deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-    lastTime = currentTime;
-  }
-  deinit();
-}
+void Voxlight::stop() {}

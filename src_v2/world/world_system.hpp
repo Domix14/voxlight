@@ -11,12 +11,11 @@ class WorldSystem : public ISystem {
 public:
   WorldSystem() = default;
 
-  void init(VoxelEngine *voxelEngine);
+  void init(Voxlight *voxlight);
   void update(float deltaTime);
   void deinit();
 
-  std::uint32_t createVoxelEntity(VoxelData<std::uint8_t> const &data,
-                                  glm::vec3 position,
+  std::uint32_t createVoxelEntity(VoxelData const &data, glm::vec3 position,
                                   glm::quat rotation = {1.f, 0.f, 0.f, 0.f});
   void setVoxel(glm::ivec3 position);
   void clearVoxel(glm::ivec3 position);
@@ -24,5 +23,5 @@ public:
 private:
   std::vector<std::uint8_t> voxelMap;
 
-  VoxelEngine *engine;
+  Voxlight *engine;
 };
