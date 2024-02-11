@@ -5,6 +5,7 @@ project(Voxlight C CXX)
 
 add_subdirectory(src_v2)
 add_subdirectory(examples/test)
+add_subdirectory(tests)
 
 add_custom_command(
      COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py" "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${CMAKE_CURRENT_SOURCE_DIR}/src_v2/generated"
