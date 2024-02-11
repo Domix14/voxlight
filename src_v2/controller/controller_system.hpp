@@ -4,7 +4,7 @@
 
 class GLFWwindow;
 
-class ControllerSystem : public ISystem {
+class ControllerSystem : public System {
 public:
   ControllerSystem() = default;
 

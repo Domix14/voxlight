@@ -3,6 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+struct NameComponent {
+    std::string name;
+};
+
 struct TransformComponent {
     glm::vec3 position;
     glm::vec3 scale;
@@ -14,3 +18,5 @@ struct VoxelComponent {
     bool needsUpdate;
     float distance;
 };
+
+struct CustomComponent {};

@@ -4,11 +4,12 @@
 #include <core/voxel_data.hpp>
 #include <voxlight.hpp>
 #include <world/world_system.hpp>
-
+#include <core/components.hpp>
 
 int main() {
   spdlog::set_level(spdlog::level::info);
   Voxlight engine;
+  // EntityApi(engine).addComponent<MyCustomComponent>();
   EngineApi(engine).start();
 
   // engine.init();

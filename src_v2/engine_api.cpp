@@ -9,7 +9,7 @@ void EngineApi::start() {
     spdlog::error("Failed to execure run(). Engine is already running.");
     return;
   }
-
+  
   voxlight.init();
   voxlight.run();
 }
@@ -22,3 +22,11 @@ void EngineApi::stop() {
 
   voxlight.stop();
 }
+
+void EngineApi::addSystemInternal(System* newSystem) {
+  voxlight.customSystems.push_back(newSystem);
+}
+
+GLFWwindow* EngineApi::getGLFWwindow() {return voxlight.glfwWindow;}
+
+entt::registry& EngineApi::getRegistry() {return voxlight.registry;}

@@ -8,13 +8,14 @@ set(sources
     # core
     ${CMAKE_CURRENT_SOURCE_DIR}/voxlight.cpp
     # rendering
-    # ${CMAKE_CURRENT_SOURCE_DIR}/rendering/render_system.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/render_system.cpp
     # controller
     # ${CMAKE_CURRENT_SOURCE_DIR}/controller/controller_system.cpp
     # world
     # ${CMAKE_CURRENT_SOURCE_DIR}/world/world_system.cpp
     # api
     ${CMAKE_CURRENT_SOURCE_DIR}/engine_api.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity_api.cpp
     )
 
 add_library(Voxlight ${sources})

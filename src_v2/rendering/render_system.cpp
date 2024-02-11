@@ -22,6 +22,8 @@
 #include "generated/shaders.hpp"
 #include "voxlight.hpp"
 
+#include "api/voxlight_api.hpp"
+
 static const GLfloat cubeVertexData[] = {
     0.0f, 0.0f, 0.0f, // Vertex 0
     0.0f, 0.0f, 1.0f, // Vertex 1
@@ -114,23 +116,24 @@ static GLuint createProgram(std::string_view vertexSrc,
   return program;
 }
 
-void RenderSystem::init(Voxlight *voxlight) {
+RenderSystem::RenderSystem(Voxlight& voxlight) : System(voxlight) {}
+
+void RenderSystem::init() {
   // Init OpenGL
   if (!gladLoadGL(glfwGetProcAddress)) {
     throw std::runtime_error("Failed to initialize GLAD\n");
   }
 
-  engine = voxlight;
-  // Save pointer to GLFW window
-  window = voxlight->getWindow();
+  // Pointer to GLFW window
+  auto glfwWindow = EngineApi(voxlight).getGLFWwindow();
 
   // Set window resize callback
   glViewport(0, 0, WindowWidth, WindowHeight);
-  glfwSetWindowUserPointer(window, this);
+  glfwSetWindowUserPointer(glfwWindow, this);
   auto framebufferSizeCallback = [](GLFWwindow *, int width, int height) {
     glViewport(0, 0, width, height);
   };
-  glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+  glfwSetFramebufferSizeCallback(glfwWindow, framebufferSizeCallback);
 
   // Set clear color
   glClearColor(0.529f, 0.8f, 0.92f, 0.f);
@@ -253,13 +256,23 @@ void RenderSystem::update(float) {
   glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  auto view = engine->getRegistry().view<TransformComponent, VoxelComponent>();
+  entt::registry& registry = EngineApi(voxlight).getRegistry();
+  auto view = registry.view<TransformComponent, VoxelComponent>();
 
-  auto viewSorted = engine->getRegistry()
-                        .view<const VoxelComponent, const TransformComponent>();
+  auto viewSorted = registry.view<const VoxelComponent, const TransformComponent>();
   viewSorted.use<VoxelComponent>();
-  auto viewProjectionMatrix =
-      engine->getControllerSystem().getViewProjectionMatrix();
+  // auto viewProjectionMatrix =
+  //     engine->getControllerSystem().getViewProjectionMatrix();
+
+  // temporary
+  glm::vec3 cameraPos = {0,0,0};
+  glm::vec3 cameraDir = {0,0,1};
+  glm::mat4 viewMat = glm::lookAt(cameraPos, cameraDir, {0,1,0});
+  glm::mat4 projMat = glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f);
+
+  auto viewProjectionMatrix = projMat * viewMat;
+
+
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
   for (auto [entity, voxelData, transform] : viewSorted.each()) {
     glm::vec3 size = transform.scale;
@@ -344,7 +357,7 @@ void RenderSystem::update(float) {
                     WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-  glfwSwapBuffers(window);
+  glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
 }
 

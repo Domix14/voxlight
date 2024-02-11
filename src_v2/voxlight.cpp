@@ -37,14 +37,16 @@ void Voxlight::init() {
   // Initialize GLFW window
   glfwWindow = initGLFW();
 
+  renderSystem = new RenderSystem(*this);
   // Initialize internal systems
   // controllerSystem.init(this);
   // renderSystem.init(this);
   // worldSystem.init(this);
 
+  renderSystem->init();
   // Initialize custom systems
   for (auto system : customSystems) {
-    system->init(this);
+    system->init();
   }
 }
 
@@ -57,7 +59,7 @@ void Voxlight::run() {
     auto currentTime = std::chrono::system_clock::now();
     // worldSystem.update(deltaTime);
     // controllerSystem.update(deltaTime);
-    // renderSystem.update(deltaTime);
+    renderSystem->update(deltaTime);
     deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
     lastTime = currentTime;
   }

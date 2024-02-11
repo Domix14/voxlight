@@ -7,7 +7,7 @@
 #include "glm/glm.hpp"
 #include "system.hpp"
 
-class WorldSystem : public ISystem {
+class WorldSystem : public System {
 public:
   WorldSystem() = default;
 

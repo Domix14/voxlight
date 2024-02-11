@@ -6,9 +6,6 @@
 
 #include "system.hpp"
 
-class GLFWwindow;
-class Voxlight;
-
 struct VoxelUniform {
   unsigned int modelMatrix;
   unsigned int viewProjectionMatrix;
@@ -31,11 +28,10 @@ struct SunlightUniform {
   unsigned int normalTexture;
 };
 
-class RenderSystem : public ISystem {
+class RenderSystem : public System {
 public:
-  RenderSystem() = default;
-
-  void init(Voxlight *voxlight);
+  RenderSystem(Voxlight& voxlight);  
+  void init();
   void update(float deltaTime);
   void deinit();
 
@@ -48,9 +44,6 @@ public:
                           glm::ivec3 size, glm::ivec3 offset);
 
 private:
-  GLFWwindow *window;
-  Voxlight *engine;
-
   // opengl programs
   unsigned int voxelProgram;
   unsigned int sunlightProgram;

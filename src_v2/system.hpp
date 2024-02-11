@@ -2,12 +2,15 @@
 
 class Voxlight;
 
-class ISystem {
+class System {
 public:
-  ISystem() = default;
-  virtual ~ISystem() = default;
+  System(Voxlight& voxlight) : voxlight(voxlight) {};
+  virtual ~System() = default;
 
-  virtual void init(Voxlight *voxlight) = 0;
+  virtual void init() = 0;
   virtual void update(float deltaTime) = 0;
   virtual void deinit() = 0;
+
+  protected:
+    Voxlight& voxlight;
 };

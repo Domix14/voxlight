@@ -26,18 +26,19 @@ private:
   entt::registry registry;
   void deinit();
 
-  bool isRunning;
+  bool isRunning = false;
 
   GLFWwindow *glfwWindow;
 
   // Internal systems
   // WorldSystem worldSystem;
-  // RenderSystem renderSystem;
+  RenderSystem* renderSystem;
   // ControllerSystem controllerSystem;
 
   // Custom systems
-  std::vector<ISystem *> customSystems;
+  std::vector<System *> customSystems;
 
   // Friend class declarations
   friend class EngineApi;
+  friend class EntityApi;
 };
