@@ -16,6 +16,7 @@ set(sources
     # api
     engine_api.cpp
     entity_api.cpp
+    voxel_component_api.cpp
     )
 
 add_library(Voxlight ${sources})

@@ -11,6 +11,7 @@ class Voxlight;
 class GLFWwindow;
 struct TransformComponent;
 struct CustomComponent;
+class VoxelData;
 
 class EngineApi {
 public:
@@ -46,6 +47,20 @@ public:
 
 
   EntityApi(Voxlight &voxlight);
+
+private:
+  Voxlight &voxlight;
+};
+
+class VoxelComponentApi {
+public:
+  void addComponent(entt::entity entity, VoxelData const& voxelData);
+  void removeComponent(entt::entity entity);
+  bool hasComponent(entt::entity entity) const;
+
+  void setVoxelData(entt::entity entity, VoxelData const& voxelData);
+
+  VoxelComponentApi(Voxlight &voxlight);
 
 private:
   Voxlight &voxlight;

@@ -21,6 +21,7 @@
 #include "engine_config.hpp"
 #include "generated/shaders.hpp"
 #include "voxlight.hpp"
+#include "core/voxel_data.hpp"
 
 #include "api/voxlight_api.hpp"
 
@@ -361,9 +362,7 @@ void RenderSystem::update(float) {
   glfwPollEvents();
 }
 
-unsigned int
-RenderSystem::createVoxelTexture(std::vector<std::uint8_t> const &data,
-                                 glm::ivec3 size) {
+unsigned int RenderSystem::createVoxelTexture(VoxelData const &voxelData) {
   GLuint texname;
   glGenTextures(1, &texname);
   glBindTexture(GL_TEXTURE_3D, texname);
@@ -374,21 +373,26 @@ RenderSystem::createVoxelTexture(std::vector<std::uint8_t> const &data,
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+  auto size = voxelData.getDimensions();
   glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED,
-               GL_UNSIGNED_BYTE, data.data());
+               GL_UNSIGNED_BYTE, voxelData.getData());
   return texname;
 }
 
-void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const &data,
-                                      glm::ivec3 size) {
-  if (0 != worldVoxelTexture) {
-    glDeleteTextures(1, &worldVoxelTexture);
-  }
-  worldVoxelTextureSize = size;
-  worldVoxelTexture = createVoxelTexture(data, size);
+void RenderSystem::deleteVoxelTexture(unsigned int textureId) {
+  glDeleteTextures(1, &textureId);
 }
 
-void RenderSystem::updateWorldTexture(std::vector<std::uint8_t> const &,
-                                      glm::ivec3, glm::ivec3) {
-  // todo
-}
+// void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const &data,
+//                                       glm::ivec3 size) {
+//   if (0 != worldVoxelTexture) {
+//     glDeleteTextures(1, &worldVoxelTexture);
+//   }
+//   worldVoxelTextureSize = size;
+//   worldVoxelTexture = createVoxelTexture(data, size);
+// }
+
+// void RenderSystem::updateWorldTexture(std::vector<std::uint8_t> const &,
+//                                       glm::ivec3, glm::ivec3) {
+//   // todo
+// }

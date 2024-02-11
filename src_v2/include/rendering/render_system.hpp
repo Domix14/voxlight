@@ -6,6 +6,7 @@
 
 #include "system.hpp"
 
+struct VoxelData;
 struct VoxelUniform {
   unsigned int modelMatrix;
   unsigned int viewProjectionMatrix;
@@ -35,14 +36,13 @@ public:
   void update(float deltaTime);
   void deinit();
 
-  unsigned int createVoxelTexture(std::vector<std::uint8_t> const &data,
-                                  glm::ivec3 size);
-
   void createWorldTexture(std::vector<std::uint8_t> const &data,
                           glm::ivec3 size);
   void updateWorldTexture(std::vector<std::uint8_t> const &data,
                           glm::ivec3 size, glm::ivec3 offset);
 
+  static unsigned int createVoxelTexture(VoxelData const &data);
+  static void deleteVoxelTexture(unsigned int textueId);
 private:
   // opengl programs
   unsigned int voxelProgram;

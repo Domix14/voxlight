@@ -41,4 +41,5 @@ private:
   // Friend class declarations
   friend class EngineApi;
   friend class EntityApi;
+  friend class VoxelComponentApi;
 };
