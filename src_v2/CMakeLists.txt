@@ -6,20 +6,20 @@ cmake_minimum_required(VERSION 3.24)
 
 set(sources
     # core
-    ${CMAKE_CURRENT_SOURCE_DIR}/voxlight.cpp
+    voxlight.cpp
     # rendering
-    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/render_system.cpp
+    render_system.cpp
     # controller
     # ${CMAKE_CURRENT_SOURCE_DIR}/controller/controller_system.cpp
     # world
     # ${CMAKE_CURRENT_SOURCE_DIR}/world/world_system.cpp
     # api
-    ${CMAKE_CURRENT_SOURCE_DIR}/engine_api.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/entity_api.cpp
+    engine_api.cpp
+    entity_api.cpp
     )
 
 add_library(Voxlight ${sources})
-target_include_directories(Voxlight PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(Voxlight PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
