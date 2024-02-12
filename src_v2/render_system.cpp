@@ -22,6 +22,7 @@
 #include "generated/shaders.hpp"
 #include "voxlight.hpp"
 #include "core/voxel_data.hpp"
+#include "rendering/palette.hpp"
 
 #include "api/voxlight_api.hpp"
 
@@ -237,17 +238,20 @@ void RenderSystem::init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // load and generate the texture
-  int width, height, nrChannels;
-  unsigned char *data =
-      stbi_load("./palette.png", &width, &height, &nrChannels, 0);
-  if (data) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  } else {
-    spdlog::error("Failed to load texture");
-  }
-  stbi_image_free(data);
+  // int width, height, nrChannels;
+  // unsigned char *data =
+  //     stbi_load("./palette.png", &width, &height, &nrChannels, 0);
+  // if (data) {
+  //   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+  //                GL_UNSIGNED_BYTE, data);
+  //   glGenerateMipmap(GL_TEXTURE_2D);
+  // } else {
+  //   spdlog::error("Failed to load texture");
+  // }
+  // stbi_image_free(data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, COLOR_PALETTE);
+  glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void RenderSystem::deinit() {}
