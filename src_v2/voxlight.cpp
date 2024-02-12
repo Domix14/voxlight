@@ -5,10 +5,13 @@
 #include <chrono>
 #include <stdexcept>
 
+#include <spdlog/spdlog.h>
+
 // clang-format off
 #include "world/world_system.hpp"
 #include "rendering/render_system.hpp"
 #include "controller/controller_system.hpp"
+#include "core/components.hpp"
 // clang-format on
 #include "engine_config.hpp"
 
@@ -45,7 +48,7 @@ void Voxlight::init() {
 
   renderSystem->init();
   // Initialize custom systems
-  for (auto system : customSystems) {
+  for (auto& system : customSystems) {
     system->init();
   }
 }
@@ -55,8 +58,18 @@ void Voxlight::run() {
   auto lastTime = std::chrono::system_clock::now();
   float deltaTime = 0.f;
 
+  if(entt::null == currentCamera || !registry.all_of<CameraComponent>(currentCamera)) {
+    spdlog::warn("No camera found. Creating a default one.");
+    auto camera = EntityApi(*this).createEntity("default_camera", TransformComponent());
+    CameraComponentApi(*this).addComponent(camera);
+    CameraComponentApi(*this).setCurrentCamera(camera);
+  }
+
   while (isRunning && !glfwWindowShouldClose(glfwWindow)) {
     auto currentTime = std::chrono::system_clock::now();
+    for(auto& system : customSystems) {
+      system->update(deltaTime);
+    }
     // worldSystem.update(deltaTime);
     // controllerSystem.update(deltaTime);
     renderSystem->update(deltaTime);

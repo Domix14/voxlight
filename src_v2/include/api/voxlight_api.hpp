@@ -11,6 +11,7 @@ class Voxlight;
 class GLFWwindow;
 struct TransformComponent;
 struct CustomComponent;
+struct CameraComponent;
 class VoxelData;
 
 class EngineApi {
@@ -61,6 +62,27 @@ public:
   void setVoxelData(entt::entity entity, VoxelData const& voxelData);
 
   VoxelComponentApi(Voxlight &voxlight);
+
+private:
+  Voxlight &voxlight;
+};
+class CameraComponentApi {
+public:
+  void addComponent(entt::entity entity);
+  void removeComponent(entt::entity entity);
+  bool hasComponent(entt::entity entity) const;
+  CameraComponent const& getComponent(entt::entity entity) const;
+
+  void setProjectionMatrix(entt::entity entity, glm::mat4 const& projectionMatrix);
+  void setDirection(entt::entity entity, glm::vec3 const& direction);
+
+  entt::entity getCurrentCamera() const;
+  void setCurrentCamera(entt::entity camera);
+
+  glm::mat4 getViewProjectionMatrix() const;
+  
+
+  CameraComponentApi(Voxlight &voxlight);
 
 private:
   Voxlight &voxlight;

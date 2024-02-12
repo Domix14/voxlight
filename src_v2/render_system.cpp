@@ -238,20 +238,20 @@ void RenderSystem::init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // load and generate the texture
-  // int width, height, nrChannels;
-  // unsigned char *data =
-  //     stbi_load("./palette.png", &width, &height, &nrChannels, 0);
-  // if (data) {
-  //   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-  //                GL_UNSIGNED_BYTE, data);
-  //   glGenerateMipmap(GL_TEXTURE_2D);
-  // } else {
-  //   spdlog::error("Failed to load texture");
-  // }
-  // stbi_image_free(data);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, COLOR_PALETTE);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  int width, height, nrChannels;
+  unsigned char *data =
+      stbi_load("./palette.png", &width, &height, &nrChannels, 0);
+  if (data) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  } else {
+    spdlog::error("Failed to load texture");
+  }
+  stbi_image_free(data);
+  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA,
+  //                GL_UNSIGNED_BYTE, COLOR_PALETTE);
+  // glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void RenderSystem::deinit() {}
@@ -270,23 +270,26 @@ void RenderSystem::update(float) {
   //     engine->getControllerSystem().getViewProjectionMatrix();
 
   // temporary
-  glm::vec3 cameraPos = {0,0,0};
-  glm::vec3 cameraDir = {0,0,1};
-  glm::mat4 viewMat = glm::lookAt(cameraPos, cameraDir, {0,1,0});
-  glm::mat4 projMat = glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f);
+  // glm::vec3 cameraPos = {0,0,-10};
+  // glm::vec3 cameraDir = {0,0,1};
+  // glm::mat4 viewMat = glm::lookAt(cameraPos, cameraDir, {0,1,0});
+  // glm::mat4 projMat = glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f);
 
-  auto viewProjectionMatrix = projMat * viewMat;
-
-
+  // auto viewProjectionMatrix = projMat * viewMat;
+  auto viewProjectionMatrix = CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
-  for (auto [entity, voxelData, transform] : viewSorted.each()) {
-    glm::vec3 size = transform.scale;
-    glm::vec3 minBox = transform.position;
+  int p = 0;
+  for (auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
+    spdlog::info("Drawing voxel entity {}", p);
+    p++;
+    spdlog::info("Voxel texture {}", voxelComponent.textureId);
+    glm::vec3 size = voxelComponent.voxelData.getDimensions();
+    glm::vec3 minBox = transformComponent.position;
     glm::vec3 maxBox = minBox + size;
 
     auto translateMatrix = glm::translate(glm::mat4(1.f), minBox);
     auto scaleMatrix = glm::scale(glm::mat4(1.f), size);
-    auto rotationMatrix = glm::toMat4(transform.rotation);
+    auto rotationMatrix = glm::toMat4(transformComponent.rotation);
     auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
     auto mvp = viewProjectionMatrix * modelMatrix;
     auto magicMatrix = translateMatrix * scaleMatrix * glm::inverse(mvp);
@@ -303,7 +306,7 @@ void RenderSystem::update(float) {
 
     glUniform1i(voxelUniform.chunkTexture, 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, voxelData.textureId);
+    glBindTexture(GL_TEXTURE_3D, voxelComponent.textureId);
 
     glUniform1i(voxelUniform.paletteTexture, 1);
     glActiveTexture(GL_TEXTURE1);
@@ -380,6 +383,7 @@ unsigned int RenderSystem::createVoxelTexture(VoxelData const &voxelData) {
   auto size = voxelData.getDimensions();
   glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED,
                GL_UNSIGNED_BYTE, voxelData.getData());
+  glBindTexture(GL_TEXTURE_3D, 0);
   return texname;
 }
 

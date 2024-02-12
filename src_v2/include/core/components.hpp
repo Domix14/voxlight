@@ -21,3 +21,7 @@ struct VoxelComponent {
     VoxelData voxelData;
 };
 
+struct CameraComponent {
+    glm::mat4 projectionMatrix;
+    glm::vec3 direction;
+};

@@ -38,8 +38,12 @@ private:
   // Custom systems
   std::vector<System *> customSystems;
 
+  // Camera
+  entt::entity currentCamera = entt::null;
+
   // Friend class declarations
   friend class EngineApi;
   friend class EntityApi;
   friend class VoxelComponentApi;
+  friend class CameraComponentApi;
 };

@@ -5,13 +5,16 @@
 #include <voxlight.hpp>
 #include <world/world_system.hpp>
 #include <core/components.hpp>
+#include "test_system.hpp"
+#include "core/voxel_data.hpp"
 
 int main() {
   spdlog::set_level(spdlog::level::info);
   Voxlight engine;
-  // EntityApi(engine).addComponent<MyCustomComponent>();
-  EngineApi(engine).start();
+  EngineApi(engine).addSystem<TestSystem>();
 
+  EngineApi(engine).start();
+  
   // engine.init();
   // spdlog::info("Engine initialized");
 

@@ -8,7 +8,7 @@
 VoxelComponentApi::VoxelComponentApi(Voxlight &voxlight) : voxlight(voxlight) {}
 
 void VoxelComponentApi::addComponent(entt::entity entity, VoxelData const& voxelData) {
-    auto voxelComponent = voxlight.registry.emplace<VoxelComponent>(entity);
+    auto& voxelComponent = voxlight.registry.emplace<VoxelComponent>(entity);
     voxelComponent.voxelData = voxelData;
     voxelComponent.textureId = RenderSystem::createVoxelTexture(voxelComponent.voxelData);
 }
@@ -24,7 +24,7 @@ bool VoxelComponentApi::hasComponent(entt::entity entity) const {
 }
 
 void VoxelComponentApi::setVoxelData(entt::entity entity, VoxelData const& voxelData) {
-    auto voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
+    auto& voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
     voxelComponent.voxelData = voxelData;
     RenderSystem::deleteVoxelTexture(voxelComponent.textureId);
     voxelComponent.textureId = RenderSystem::createVoxelTexture(voxelComponent.voxelData);
