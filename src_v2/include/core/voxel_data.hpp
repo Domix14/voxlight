@@ -29,6 +29,12 @@ public:
   };
   size_t getByteSize() const { return sizeof(std::uint8_t) * data.size(); };
 
+  void fill(std::uint8_t voxel) {
+    for (size_t i = 0; i < data.size(); ++i) {
+      data[i] = voxel;
+    }
+  }
+
   //   void shrinkToFit() {
   //     bool voxelFlag = false;
   //     size_t minDepth = depth;

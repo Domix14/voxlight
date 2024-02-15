@@ -281,11 +281,7 @@ void RenderSystem::update(float) {
   auto viewProjectionMatrix =
       CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
-  int p = 0;
   for (auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
-    spdlog::info("Drawing voxel entity {}", p);
-    p++;
-    spdlog::info("Voxel texture {}", voxelComponent.textureId);
     glm::vec3 size = voxelComponent.voxelData.getDimensions();
     glm::vec3 minBox = transformComponent.position;
     glm::vec3 maxBox = minBox + size;

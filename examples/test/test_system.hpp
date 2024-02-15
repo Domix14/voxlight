@@ -1,94 +1,127 @@
 #include <spdlog/spdlog.h>
 
 #include <api/voxlight_api.hpp>
+#include <glm/gtc/noise.hpp>
 #include <voxlight.hpp>
 
 class TestSystem : public System {
-   public:
-    TestSystem(Voxlight& voxlight) : System(voxlight) {}
+public:
+  TestSystem(Voxlight &voxlight) : System(voxlight) {}
 
-    void init() override {
-        spdlog::info("TestSystem::init()");
-        window = EngineApi(voxlight).getGLFWwindow();
+  void generateChunk(glm::vec3 pos, glm::vec3 size) {
+    auto entity =
+        EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
+    EntityApi(voxlight).setPosition(entity, pos);
+    VoxelData voxelData;
+    voxelData.resize(size);
+    static int p = 0;
 
-        auto entity = EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
-
-        spdlog::info("1");
-        VoxelData voxelData;
-        voxelData.resize({8, 8, 8});
-        for (int i = 0; i < 64; i++) {
-            voxelData.setVoxel({i, 0, 0}, 50);
+    // generate chunk with random heioghts
+    for (size_t x = 0; x < size.x; ++x) {
+      for (size_t z = 0; z < size.z; ++z) {
+        glm::vec2 pos2d = glm::vec2(x + pos.x, z + pos.z) / 30.f;
+        float perlin = glm::clamp((glm::perlin(pos2d) + 1.f) / 2.f, 0.f, 1.f);
+        // spdlog::info("perlin: {}", perlin);
+        size_t height = size.y * perlin;
+        for (size_t y = 0; y < height; ++y) {
+          voxelData.setVoxel({x, y, z}, p);
         }
-        spdlog::info("2");
-
-        VoxelComponentApi(voxlight).addComponent(entity, voxelData);
-        // EntityApi(engine).addComponent<MyCustomComponent>();
-        spdlog::info("3");
+      }
     }
 
-    void update(float deltaTime) override {
-        spdlog::info("TestSystem::update()");
-        double xpos = 0;
-        double ypos = 0;
+    p++;
+    VoxelComponentApi(voxlight).addComponent(entity, voxelData);
+  }
 
-        glfwGetCursorPos(window, &xpos, &ypos);
-        double dx = xpos - cursorX;
-        double dy = ypos - cursorY;
-        cursorX = xpos;
-        cursorY = ypos;
-        camRight = glm::normalize(glm::cross(direction, camUp));
-        //  camUp = glm::normalize(glm::cross(camRight, direction));
+  void init() override {
+    spdlog::info("TestSystem::init()");
+    window = EngineApi(voxlight).getGLFWwindow();
 
-        glm::mat4 rotMat(1.0f);
-        rotMat = glm::rotate(rotMat, (float)-dx / 100.f, camUp);
-        rotMat = glm::rotate(rotMat, (float)-dy / 100.0f, camRight);
-        direction = glm::normalize(rotMat * glm::vec4(direction, 0.0f));
+    // auto entity =
+    //     EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
 
-        // Movement
-        float horizontalSpeed = 5.f * deltaTime;
-        int state = glfwGetKey(window, GLFW_KEY_W);
-        glm::vec3 horizontalDir = glm::normalize(glm::vec3(direction.x, 0, direction.z));
-        if (state == GLFW_PRESS) {
-            position += horizontalDir * horizontalSpeed;
-        }
-        state = glfwGetKey(window, GLFW_KEY_S);
-        if (state == GLFW_PRESS) {
-            position -= horizontalDir * horizontalSpeed;
-        }
-        state = glfwGetKey(window, GLFW_KEY_A);
-        if (state == GLFW_PRESS) {
-            position -= camRight * horizontalSpeed;
-        }
-        state = glfwGetKey(window, GLFW_KEY_D);
-        if (state == GLFW_PRESS) {
-            position += camRight * horizontalSpeed;
-        }
+    // spdlog::info("1");
+    // VoxelData voxelData;
+    // voxelData.resize({8, 8, 8});
+    // for (int i = 0; i < 64; i++) {
+    //   voxelData.setVoxel({i, 0, 0}, 50);
+    // }
+    // spdlog::info("2");
 
-        float verticalSpeed = 5.f * deltaTime;
-        state = glfwGetKey(window, GLFW_KEY_SPACE);
-        if (state == GLFW_PRESS) {
-            position += camUp * verticalSpeed;
-        }
-        state = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
-        if (state == GLFW_PRESS) {
-            position -= camUp * verticalSpeed;
-        }
+    // VoxelComponentApi(voxlight).addComponent(entity, voxelData);
 
-        auto camera = CameraComponentApi(voxlight).getCurrentCamera();
-        CameraComponentApi(voxlight).setProjectionMatrix(
-            camera, glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
-        CameraComponentApi(voxlight).setDirection(camera, direction);
-        EntityApi(voxlight).setPosition(camera, position);
+    size_t size = 16;
+    for (size_t x = 0; x < 10; ++x) {
+      for (size_t y = 0; y < 10; ++y) {
+        generateChunk({x * size, 0, y * size}, {size, size, size});
+      }
+    }
+  }
+
+  void update(float deltaTime) override {
+    double xpos = 0;
+    double ypos = 0;
+
+    glfwGetCursorPos(window, &xpos, &ypos);
+    double dx = xpos - cursorX;
+    double dy = ypos - cursorY;
+    cursorX = xpos;
+    cursorY = ypos;
+    camRight = glm::normalize(glm::cross(direction, camUp));
+    //  camUp = glm::normalize(glm::cross(camRight, direction));
+
+    glm::mat4 rotMat(1.0f);
+    rotMat = glm::rotate(rotMat, (float)-dx / 100.f, camUp);
+    rotMat = glm::rotate(rotMat, (float)-dy / 100.0f, camRight);
+    direction = glm::normalize(rotMat * glm::vec4(direction, 0.0f));
+
+    // Movement
+    float horizontalSpeed = 15.f * deltaTime;
+    int state = glfwGetKey(window, GLFW_KEY_W);
+    glm::vec3 horizontalDir =
+        glm::normalize(glm::vec3(direction.x, 0, direction.z));
+    if (state == GLFW_PRESS) {
+      position += horizontalDir * horizontalSpeed;
+    }
+    state = glfwGetKey(window, GLFW_KEY_S);
+    if (state == GLFW_PRESS) {
+      position -= horizontalDir * horizontalSpeed;
+    }
+    state = glfwGetKey(window, GLFW_KEY_A);
+    if (state == GLFW_PRESS) {
+      position -= camRight * horizontalSpeed;
+    }
+    state = glfwGetKey(window, GLFW_KEY_D);
+    if (state == GLFW_PRESS) {
+      position += camRight * horizontalSpeed;
     }
 
-    void deinit() override { spdlog::info("TestSystem::deinit()"); }
+    float verticalSpeed = 15.f * deltaTime;
+    state = glfwGetKey(window, GLFW_KEY_SPACE);
+    if (state == GLFW_PRESS) {
+      position += camUp * verticalSpeed;
+    }
+    state = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+    if (state == GLFW_PRESS) {
+      position -= camUp * verticalSpeed;
+    }
 
-   private:
-    GLFWwindow* window;
-    double cursorX = 0;
-    double cursorY = 0;
-    glm::vec3 position = glm::vec3(0, 0, 0);
-    glm::vec3 direction = glm::vec3(0, 0, -1);
-    glm::vec3 camRight = glm::vec3(1, 0, 0);
-    glm::vec3 camUp = glm::vec3(0, 1, 0);
+    auto camera = CameraComponentApi(voxlight).getCurrentCamera();
+    CameraComponentApi(voxlight).setProjectionMatrix(
+        camera,
+        glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
+    CameraComponentApi(voxlight).setDirection(camera, direction);
+    EntityApi(voxlight).setPosition(camera, position);
+  }
+
+  void deinit() override { spdlog::info("TestSystem::deinit()"); }
+
+private:
+  GLFWwindow *window;
+  double cursorX = 0;
+  double cursorY = 0;
+  glm::vec3 position = glm::vec3(0, 0, 0);
+  glm::vec3 direction = glm::vec3(0, 0, -1);
+  glm::vec3 camRight = glm::vec3(1, 0, 0);
+  glm::vec3 camUp = glm::vec3(0, 1, 0);
 };
