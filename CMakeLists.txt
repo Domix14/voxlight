@@ -8,12 +8,12 @@ add_subdirectory(examples/test)
 add_subdirectory(tests)
 
 add_custom_command(
-     COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py" "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${CMAKE_CURRENT_SOURCE_DIR}/src_v2/generated"
-     OUTPUT  "{CMAKE_CURRENT_SOURCE_DIR}/src_v2/include/generated/shaders/shaders.hpp"
+     COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py" "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${CMAKE_CURRENT_SOURCE_DIR}/src_v2/include/generated"
+     OUTPUT  "${CMAKE_CURRENT_SOURCE_DIR}/src_v2/include/generated/shaders.hpp"
      COMMENT "Generating shader header files."
      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders
 )
-add_library(generatedLib "{CMAKE_CURRENT_SOURCE_DIR}/src_v2/include/generated/shaders/shaders.hpp")
+add_library(generatedLib "${CMAKE_CURRENT_SOURCE_DIR}/src_v2/include/generated/shaders.hpp")
 set_target_properties(generatedLib PROPERTIES LINKER_LANGUAGE CXX)
 add_dependencies(Voxlight generatedLib)
 

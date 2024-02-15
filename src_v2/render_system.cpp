@@ -18,11 +18,11 @@
 
 #include "controller/controller_system.hpp"
 #include "core/components.hpp"
+#include "core/voxel_data.hpp"
 #include "engine_config.hpp"
 #include "generated/shaders.hpp"
-#include "voxlight.hpp"
-#include "core/voxel_data.hpp"
 #include "rendering/palette.hpp"
+#include "voxlight.hpp"
 
 #include "api/voxlight_api.hpp"
 
@@ -118,7 +118,7 @@ static GLuint createProgram(std::string_view vertexSrc,
   return program;
 }
 
-RenderSystem::RenderSystem(Voxlight& voxlight) : System(voxlight) {}
+RenderSystem::RenderSystem(Voxlight &voxlight) : System(voxlight) {}
 
 void RenderSystem::init() {
   // Init OpenGL
@@ -237,21 +237,21 @@ void RenderSystem::init() {
   glBindTexture(GL_TEXTURE_2D, paletteTexture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // load and generate the texture
-  int width, height, nrChannels;
-  unsigned char *data =
-      stbi_load("./palette.png", &width, &height, &nrChannels, 0);
-  if (data) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  } else {
-    spdlog::error("Failed to load texture");
-  }
-  stbi_image_free(data);
-  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA,
-  //                GL_UNSIGNED_BYTE, COLOR_PALETTE);
-  // glGenerateMipmap(GL_TEXTURE_2D);
+  // // load and generate the texture
+  // int width, height, nrChannels;
+  // unsigned char *data =
+  //     stbi_load("./palette.png", &width, &height, &nrChannels, 0);
+  // if (data) {
+  //   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+  //                GL_UNSIGNED_BYTE, data);
+  //   glGenerateMipmap(GL_TEXTURE_2D);
+  // } else {
+  //   spdlog::error("Failed to load texture");
+  // }
+  // stbi_image_free(data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0,
+               GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
+  glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void RenderSystem::deinit() {}
@@ -261,10 +261,11 @@ void RenderSystem::update(float) {
   glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  entt::registry& registry = EngineApi(voxlight).getRegistry();
+  entt::registry &registry = EngineApi(voxlight).getRegistry();
   auto view = registry.view<TransformComponent, VoxelComponent>();
 
-  auto viewSorted = registry.view<const VoxelComponent, const TransformComponent>();
+  auto viewSorted =
+      registry.view<const VoxelComponent, const TransformComponent>();
   viewSorted.use<VoxelComponent>();
   // auto viewProjectionMatrix =
   //     engine->getControllerSystem().getViewProjectionMatrix();
@@ -273,10 +274,12 @@ void RenderSystem::update(float) {
   // glm::vec3 cameraPos = {0,0,-10};
   // glm::vec3 cameraDir = {0,0,1};
   // glm::mat4 viewMat = glm::lookAt(cameraPos, cameraDir, {0,1,0});
-  // glm::mat4 projMat = glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f);
+  // glm::mat4 projMat = glm::perspective(glm::radians(90.f), 16.0f / 9.0f,
+  // 0.1f, 500.0f);
 
   // auto viewProjectionMatrix = projMat * viewMat;
-  auto viewProjectionMatrix = CameraComponentApi(voxlight).getViewProjectionMatrix();
+  auto viewProjectionMatrix =
+      CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
   int p = 0;
   for (auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
