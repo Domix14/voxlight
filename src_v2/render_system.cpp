@@ -234,6 +234,21 @@ void RenderSystem::update(float) {
   entt::registry &registry = EngineApi(voxlight).getRegistry();
   auto view = registry.view<TransformComponent, VoxelComponent>();
 
+  auto camera = CameraComponentApi(voxlight).getCurrentCamera();
+  auto cameraPos = EntityApi(voxlight).getTransform(camera).position;
+  for(auto [entity, transformComponent, voxelComponent] : view.each()) {
+    glm::vec3 size = voxelComponent.voxelData.getDimensions();
+    glm::vec3 minBox = transformComponent.position;
+    glm::vec3 maxBox = minBox + size;
+
+    auto rotatedCameraPos = cameraPos; // TODO: rotate camera
+    auto closestPoint = glm::vec3(glm::clamp(rotatedCameraPos.x, minBox.x, maxBox.x),
+                                  glm::clamp(rotatedCameraPos.y, minBox.y, maxBox.y),
+                                  glm::clamp(rotatedCameraPos.z, minBox.z, maxBox.z));
+    voxelComponent.distance = glm::distance(rotatedCameraPos, closestPoint);
+  }
+  registry.sort<VoxelComponent>([](auto const &a, auto const &b) { return a.distance > b.distance; });
+
   auto viewSorted = registry.view<VoxelComponent const, TransformComponent const>();
   viewSorted.use<VoxelComponent>();
   // auto viewProjectionMatrix =

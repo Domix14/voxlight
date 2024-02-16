@@ -1,6 +1,7 @@
 #include <spdlog/spdlog.h>
 
 #include <api/voxlight_api.hpp>
+#include <core/components.hpp>
 #include <glm/gtc/noise.hpp>
 #include <voxlight.hpp>
 
