@@ -31,18 +31,17 @@ struct SunlightUniform {
 
 class RenderSystem : public System {
 public:
-  RenderSystem(Voxlight& voxlight);  
+  RenderSystem(Voxlight &voxlight);
   void init();
   void update(float deltaTime);
   void deinit();
 
-  void createWorldTexture(std::vector<std::uint8_t> const &data,
-                          glm::ivec3 size);
-  void updateWorldTexture(std::vector<std::uint8_t> const &data,
-                          glm::ivec3 size, glm::ivec3 offset);
+  void createWorldTexture(std::vector<std::uint8_t> const &data, glm::ivec3 size);
+  void updateWorldTexture(std::vector<std::uint8_t> const &data, glm::ivec3 size, glm::ivec3 offset);
 
   static unsigned int createVoxelTexture(VoxelData const &data);
   static void deleteVoxelTexture(unsigned int textueId);
+
 private:
   // opengl programs
   unsigned int voxelProgram;

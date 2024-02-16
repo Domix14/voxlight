@@ -26,7 +26,7 @@
 
 #include "api/voxlight_api.hpp"
 
-static const GLfloat cubeVertexData[] = {
+static GLfloat const cubeVertexData[] = {
     0.0f, 0.0f, 0.0f, // Vertex 0
     0.0f, 0.0f, 1.0f, // Vertex 1
     0.0f, 1.0f, 0.0f, // Vertex 2
@@ -76,27 +76,25 @@ static const GLfloat cubeVertexData[] = {
     1.0f, 1.0f, 1.0f  // Vertex 7
 };
 
-static const GLfloat quadVertexData[] = {-1.f, -1.f, 0.f, 1.f,  1.f,  0.f,
-                                         1.f,  -1.f, 0.f, -1.f, 1.f,  0.f,
-                                         1.f,  1.f,  0.f, -1.f, -1.f, 0.f};
+static GLfloat const quadVertexData[] = {-1.f, -1.f, 0.f, 1.f, 1.f, 0.f, 1.f,  -1.f, 0.f,
+                                         -1.f, 1.f,  0.f, 1.f, 1.f, 0.f, -1.f, -1.f, 0.f};
 
 static void frameBufferCheck() {
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-  if (status != GL_FRAMEBUFFER_COMPLETE) {
+  if(status != GL_FRAMEBUFFER_COMPLETE) {
     spdlog::error("Framebuffer is not complete");
   }
 }
 
-static std::tuple<GLuint, int> loadShader(GLenum shaderType,
-                                          std::string_view shaderCode) {
+static std::tuple<GLuint, int> loadShader(GLenum shaderType, std::string_view shaderCode) {
   auto shader = glCreateShader(shaderType);
-  const char *c_str = shaderCode.data();
+  char const *c_str = shaderCode.data();
   glShaderSource(shader, 1, &c_str, nullptr);
   glCompileShader(shader);
 
   GLint success;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
+  if(!success) {
     GLchar infoLog[512];
     glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
     spdlog::error("Failed to compile shader: {}", infoLog);
@@ -105,13 +103,10 @@ static std::tuple<GLuint, int> loadShader(GLenum shaderType,
   return {shader, 0};
 }
 
-static GLuint createProgram(std::string_view vertexSrc,
-                            std::string_view fragmentSrc) {
+static GLuint createProgram(std::string_view vertexSrc, std::string_view fragmentSrc) {
   GLuint program = glCreateProgram();
-  auto [vertexShader, vertexShaderStatus] =
-      loadShader(GL_VERTEX_SHADER, vertexSrc);
-  auto [fragmentShader, fragmentShaderStatus] =
-      loadShader(GL_FRAGMENT_SHADER, fragmentSrc);
+  auto [vertexShader, vertexShaderStatus] = loadShader(GL_VERTEX_SHADER, vertexSrc);
+  auto [fragmentShader, fragmentShaderStatus] = loadShader(GL_FRAGMENT_SHADER, fragmentSrc);
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
   glLinkProgram(program);
@@ -122,7 +117,7 @@ RenderSystem::RenderSystem(Voxlight &voxlight) : System(voxlight) {}
 
 void RenderSystem::init() {
   // Init OpenGL
-  if (!gladLoadGL(glfwGetProcAddress)) {
+  if(!gladLoadGL(glfwGetProcAddress)) {
     throw std::runtime_error("Failed to initialize GLAD\n");
   }
 
@@ -132,57 +127,41 @@ void RenderSystem::init() {
   // Set window resize callback
   glViewport(0, 0, WindowWidth, WindowHeight);
   glfwSetWindowUserPointer(glfwWindow, this);
-  auto framebufferSizeCallback = [](GLFWwindow *, int width, int height) {
-    glViewport(0, 0, width, height);
-  };
+  auto framebufferSizeCallback = [](GLFWwindow *, int width, int height) { glViewport(0, 0, width, height); };
   glfwSetFramebufferSizeCallback(glfwWindow, framebufferSizeCallback);
 
   // Set clear color
   glClearColor(0.529f, 0.8f, 0.92f, 0.f);
 
   // Create shader programs
-  voxelProgram =
-      createProgram(VOXEL_VERTEX_SHADER_SRC, VOXEL_FRAGMENT_SHADER_SRC);
+  voxelProgram = createProgram(VOXEL_VERTEX_SHADER_SRC, VOXEL_FRAGMENT_SHADER_SRC);
   voxelUniform.modelMatrix = glGetUniformLocation(voxelProgram, "uModelMatrix");
-  voxelUniform.viewProjectionMatrix =
-      glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
-  voxelUniform.invResolution =
-      glGetUniformLocation(voxelProgram, "uInvResolution");
+  voxelUniform.viewProjectionMatrix = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
+  voxelUniform.invResolution = glGetUniformLocation(voxelProgram, "uInvResolution");
   voxelUniform.minBox = glGetUniformLocation(voxelProgram, "uMinBox");
   voxelUniform.maxBox = glGetUniformLocation(voxelProgram, "uMaxBox");
   voxelUniform.chunkSize = glGetUniformLocation(voxelProgram, "uChunkSize");
   voxelUniform.magicMatrix = glGetUniformLocation(voxelProgram, "uMagicMatrix");
-  voxelUniform.chunkTexture =
-      glGetUniformLocation(voxelProgram, "uChunkTexture");
-  voxelUniform.paletteTexture =
-      glGetUniformLocation(voxelProgram, "uPaletteTexture");
+  voxelUniform.chunkTexture = glGetUniformLocation(voxelProgram, "uChunkTexture");
+  voxelUniform.paletteTexture = glGetUniformLocation(voxelProgram, "uPaletteTexture");
 
-  sunlightProgram =
-      createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
-  sunlightUniform.invResolution =
-      glGetUniformLocation(voxelProgram, "uInvResolution");
-  sunlightUniform.magicMatrix =
-      glGetUniformLocation(voxelProgram, "uMagicMatrix");
+  sunlightProgram = createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
+  sunlightUniform.invResolution = glGetUniformLocation(voxelProgram, "uInvResolution");
+  sunlightUniform.magicMatrix = glGetUniformLocation(voxelProgram, "uMagicMatrix");
   sunlightUniform.sunPos = glGetUniformLocation(voxelProgram, "uSunPos");
-  sunlightUniform.worldTexture =
-      glGetUniformLocation(voxelProgram, "uWorldTexture");
-  sunlightUniform.albedoTexture =
-      glGetUniformLocation(voxelProgram, "uAlbedoTexture");
-  sunlightUniform.depthTexture =
-      glGetUniformLocation(voxelProgram, "uDepthTexture");
-  sunlightUniform.normalTexture =
-      glGetUniformLocation(voxelProgram, "uNormalTexture");
+  sunlightUniform.worldTexture = glGetUniformLocation(voxelProgram, "uWorldTexture");
+  sunlightUniform.albedoTexture = glGetUniformLocation(voxelProgram, "uAlbedoTexture");
+  sunlightUniform.depthTexture = glGetUniformLocation(voxelProgram, "uDepthTexture");
+  sunlightUniform.normalTexture = glGetUniformLocation(voxelProgram, "uNormalTexture");
 
   // Create vertex buffers
   glGenBuffers(1, &cubeVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexData), cubeVertexData,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexData), cubeVertexData, GL_STATIC_DRAW);
 
   glGenBuffers(1, &quadVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexData), quadVertexData,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexData), quadVertexData, GL_STATIC_DRAW);
 
   // Create framebuffers
   glGenFramebuffers(1, &mainFramebuffer);
@@ -192,15 +171,12 @@ void RenderSystem::init() {
   unsigned int rboDepth;
   glGenRenderbuffers(1, &rboDepth);
   glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WindowWidth,
-                        WindowHeight);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER, rboDepth);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WindowWidth, WindowHeight);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 
   glGenTextures(1, &colorTexture);
   glBindTexture(GL_TEXTURE_2D, colorTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0, GL_RGBA,
-               GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -208,8 +184,7 @@ void RenderSystem::init() {
 
   glGenTextures(1, &normalTexture);
   glBindTexture(GL_TEXTURE_2D, normalTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, WindowWidth, WindowHeight, 0,
-               GL_RGB, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -217,19 +192,15 @@ void RenderSystem::init() {
 
   glGenTextures(1, &depthTexture);
   glBindTexture(GL_TEXTURE_2D, depthTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, WindowWidth, WindowHeight, 0, GL_RGB,
-               GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         colorTexture, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
-                         normalTexture, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D,
-                         depthTexture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, depthTexture, 0);
   frameBufferCheck();
 
   // Create palette texture
@@ -249,8 +220,7 @@ void RenderSystem::init() {
   //   spdlog::error("Failed to load texture");
   // }
   // stbi_image_free(data);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0,
-               GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
   glGenerateMipmap(GL_TEXTURE_2D);
 }
 
@@ -264,8 +234,7 @@ void RenderSystem::update(float) {
   entt::registry &registry = EngineApi(voxlight).getRegistry();
   auto view = registry.view<TransformComponent, VoxelComponent>();
 
-  auto viewSorted =
-      registry.view<const VoxelComponent, const TransformComponent>();
+  auto viewSorted = registry.view<VoxelComponent const, TransformComponent const>();
   viewSorted.use<VoxelComponent>();
   // auto viewProjectionMatrix =
   //     engine->getControllerSystem().getViewProjectionMatrix();
@@ -278,10 +247,9 @@ void RenderSystem::update(float) {
   // 0.1f, 500.0f);
 
   // auto viewProjectionMatrix = projMat * viewMat;
-  auto viewProjectionMatrix =
-      CameraComponentApi(voxlight).getViewProjectionMatrix();
+  auto viewProjectionMatrix = CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
-  for (auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
+  for(auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
     glm::vec3 size = voxelComponent.voxelData.getDimensions();
     glm::vec3 minBox = transformComponent.position;
     glm::vec3 maxBox = minBox + size;
@@ -292,16 +260,13 @@ void RenderSystem::update(float) {
     auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
     auto mvp = viewProjectionMatrix * modelMatrix;
     auto magicMatrix = translateMatrix * scaleMatrix * glm::inverse(mvp);
-    glUniformMatrix4fv(voxelUniform.modelMatrix, 1, GL_FALSE,
-                       glm::value_ptr(modelMatrix));
-    glUniformMatrix4fv(voxelUniform.viewProjectionMatrix, 1, GL_FALSE,
-                       glm::value_ptr(viewProjectionMatrix));
+    glUniformMatrix4fv(voxelUniform.modelMatrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(voxelUniform.viewProjectionMatrix, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
     glUniform2f(voxelUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
     glUniform3f(voxelUniform.minBox, minBox.x, minBox.y, minBox.z);
     glUniform3f(voxelUniform.maxBox, maxBox.x, maxBox.y, maxBox.z);
     glUniform3f(voxelUniform.chunkSize, size.x, size.y, size.z);
-    glUniformMatrix4fv(voxelUniform.magicMatrix, 1, GL_FALSE,
-                       glm::value_ptr(magicMatrix));
+    glUniformMatrix4fv(voxelUniform.magicMatrix, 1, GL_FALSE, glm::value_ptr(magicMatrix));
 
     glUniform1i(voxelUniform.chunkTexture, 0);
     glActiveTexture(GL_TEXTURE0);
@@ -360,8 +325,7 @@ void RenderSystem::update(float) {
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth,
-                    WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
@@ -380,15 +344,12 @@ unsigned int RenderSystem::createVoxelTexture(VoxelData const &voxelData) {
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
   auto size = voxelData.getDimensions();
-  glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED,
-               GL_UNSIGNED_BYTE, voxelData.getData());
+  glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, GL_UNSIGNED_BYTE, voxelData.getData());
   glBindTexture(GL_TEXTURE_3D, 0);
   return texname;
 }
 
-void RenderSystem::deleteVoxelTexture(unsigned int textureId) {
-  glDeleteTextures(1, &textureId);
-}
+void RenderSystem::deleteVoxelTexture(unsigned int textureId) { glDeleteTextures(1, &textureId); }
 
 // void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const &data,
 //                                       glm::ivec3 size) {

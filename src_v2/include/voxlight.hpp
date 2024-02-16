@@ -32,7 +32,7 @@ private:
 
   // Internal systems
   // WorldSystem worldSystem;
-  RenderSystem* renderSystem;
+  RenderSystem *renderSystem;
   // ControllerSystem controllerSystem;
 
   // Custom systems

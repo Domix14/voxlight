@@ -9,21 +9,20 @@ public:
   TestSystem(Voxlight &voxlight) : System(voxlight) {}
 
   void generateChunk(glm::vec3 pos, glm::vec3 size) {
-    auto entity =
-        EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
+    auto entity = EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
     EntityApi(voxlight).setPosition(entity, pos);
     VoxelData voxelData;
     voxelData.resize(size);
     static int p = 0;
 
     // generate chunk with random heioghts
-    for (size_t x = 0; x < size.x; ++x) {
-      for (size_t z = 0; z < size.z; ++z) {
+    for(size_t x = 0; x < size.x; ++x) {
+      for(size_t z = 0; z < size.z; ++z) {
         glm::vec2 pos2d = glm::vec2(x + pos.x, z + pos.z) / 30.f;
         float perlin = glm::clamp((glm::perlin(pos2d) + 1.f) / 2.f, 0.f, 1.f);
         // spdlog::info("perlin: {}", perlin);
         size_t height = size.y * perlin;
-        for (size_t y = 0; y < height; ++y) {
+        for(size_t y = 0; y < height; ++y) {
           voxelData.setVoxel({x, y, z}, p);
         }
       }
@@ -51,8 +50,8 @@ public:
     // VoxelComponentApi(voxlight).addComponent(entity, voxelData);
 
     size_t size = 16;
-    for (size_t x = 0; x < 10; ++x) {
-      for (size_t y = 0; y < 10; ++y) {
+    for(size_t x = 0; x < 10; ++x) {
+      for(size_t y = 0; y < 10; ++y) {
         generateChunk({x * size, 0, y * size}, {size, size, size});
       }
     }
@@ -78,38 +77,36 @@ public:
     // Movement
     float horizontalSpeed = 15.f * deltaTime;
     int state = glfwGetKey(window, GLFW_KEY_W);
-    glm::vec3 horizontalDir =
-        glm::normalize(glm::vec3(direction.x, 0, direction.z));
-    if (state == GLFW_PRESS) {
+    glm::vec3 horizontalDir = glm::normalize(glm::vec3(direction.x, 0, direction.z));
+    if(state == GLFW_PRESS) {
       position += horizontalDir * horizontalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_S);
-    if (state == GLFW_PRESS) {
+    if(state == GLFW_PRESS) {
       position -= horizontalDir * horizontalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_A);
-    if (state == GLFW_PRESS) {
+    if(state == GLFW_PRESS) {
       position -= camRight * horizontalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_D);
-    if (state == GLFW_PRESS) {
+    if(state == GLFW_PRESS) {
       position += camRight * horizontalSpeed;
     }
 
     float verticalSpeed = 15.f * deltaTime;
     state = glfwGetKey(window, GLFW_KEY_SPACE);
-    if (state == GLFW_PRESS) {
+    if(state == GLFW_PRESS) {
       position += camUp * verticalSpeed;
     }
     state = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
-    if (state == GLFW_PRESS) {
+    if(state == GLFW_PRESS) {
       position -= camUp * verticalSpeed;
     }
 
     auto camera = CameraComponentApi(voxlight).getCurrentCamera();
-    CameraComponentApi(voxlight).setProjectionMatrix(
-        camera,
-        glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
+    CameraComponentApi(voxlight).setProjectionMatrix(camera,
+                                                     glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
     CameraComponentApi(voxlight).setDirection(camera, direction);
     EntityApi(voxlight).setPosition(camera, position);
   }

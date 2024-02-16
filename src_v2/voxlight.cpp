@@ -16,16 +16,15 @@
 #include "engine_config.hpp"
 
 static GLFWwindow *initGLFW() {
-  if (!glfwInit()) {
+  if(!glfwInit()) {
     throw std::runtime_error("Failed to initialize GLFW\n");
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-  GLFWwindow *window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle,
-                                        nullptr, nullptr);
-  if (!window) {
+  GLFWwindow *window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle, nullptr, nullptr);
+  if(!window) {
     glfwTerminate();
     throw std::runtime_error("Failed to create GLFW window\n");
   }
@@ -48,7 +47,7 @@ void Voxlight::init() {
 
   renderSystem->init();
   // Initialize custom systems
-  for (auto& system : customSystems) {
+  for(auto &system : customSystems) {
     system->init();
   }
 }
@@ -65,9 +64,9 @@ void Voxlight::run() {
     CameraComponentApi(*this).setCurrentCamera(camera);
   }
 
-  while (isRunning && !glfwWindowShouldClose(glfwWindow)) {
+  while(isRunning && !glfwWindowShouldClose(glfwWindow)) {
     auto currentTime = std::chrono::system_clock::now();
-    for(auto& system : customSystems) {
+    for(auto &system : customSystems) {
       system->update(deltaTime);
     }
     // worldSystem.update(deltaTime);
@@ -86,7 +85,7 @@ void Voxlight::deinit() {
   // controllerSystem.deinit();
 
   // Deinitialize custom systems
-  for (auto system : customSystems) {
+  for(auto system : customSystems) {
     system->deinit();
     delete system;
   }

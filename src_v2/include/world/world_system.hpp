@@ -15,8 +15,7 @@ public:
   void update(float deltaTime);
   void deinit();
 
-  std::uint32_t createVoxelEntity(VoxelData const &data, glm::vec3 position,
-                                  glm::quat rotation = {1.f, 0.f, 0.f, 0.f});
+  std::uint32_t createVoxelEntity(VoxelData const &data, glm::vec3 position, glm::quat rotation = {1.f, 0.f, 0.f, 0.f});
   void setVoxel(glm::ivec3 position);
   void clearVoxel(glm::ivec3 position);
 

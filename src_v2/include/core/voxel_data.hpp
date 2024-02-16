@@ -13,24 +13,20 @@ public:
   VoxelData() = default;
   ~VoxelData() = default;
 
-  void setVoxel(glm::uvec3 pos, std::uint8_t voxel) {
-    data.at(getIndex(pos)) = voxel;
-  };
-  std::uint8_t getVoxel(glm::uvec3 pos) const {
-    return data.at(getIndex(pos));
-  };
+  void setVoxel(glm::uvec3 pos, std::uint8_t voxel) { data.at(getIndex(pos)) = voxel; }
+  std::uint8_t getVoxel(glm::uvec3 pos) const { return data.at(getIndex(pos)); }
 
-  std::uint8_t const *getData() const { return data.data(); };
-  std::vector<std::uint8_t> getDataAsVector() const { return data; };
-  glm::uvec3 getDimensions() const { return dimensions; };
+  std::uint8_t const *getData() const { return data.data(); }
+  std::vector<std::uint8_t> getDataAsVector() const { return data; }
+  glm::uvec3 getDimensions() const { return dimensions; }
   void resize(glm::uvec3 newSize) {
     dimensions = newSize;
     data.resize(dimensions.x * dimensions.y * dimensions.z);
-  };
-  size_t getByteSize() const { return sizeof(std::uint8_t) * data.size(); };
+  }
+  size_t getByteSize() const { return sizeof(std::uint8_t) * data.size(); }
 
   void fill(std::uint8_t voxel) {
-    for (size_t i = 0; i < data.size(); ++i) {
+    for(size_t i = 0; i < data.size(); ++i) {
       data[i] = voxel;
     }
   }
@@ -167,9 +163,7 @@ public:
   //   }
 
 private:
-  size_t getIndex(glm::uvec3 pos) const {
-    return pos.x + pos.y * dimensions.x + pos.z * dimensions.x * dimensions.y;
-  };
+  size_t getIndex(glm::uvec3 pos) const { return pos.x + pos.y * dimensions.x + pos.z * dimensions.x * dimensions.y; }
 
   std::vector<std::uint8_t> data;
   glm::uvec3 dimensions;
