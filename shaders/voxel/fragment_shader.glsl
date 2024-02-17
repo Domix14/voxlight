@@ -59,6 +59,21 @@ float intersect(vec3 ro, vec3 rd, float maxDist, out vec4 color, out vec3 norm) 
     tMax.y = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
     tMax.z = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
     
+    // there must be a better way to do this
+    if (tMax.x < tMax.y) {
+        if (tMax.z < tMax.x) {
+            norm = vec3(0, 0,-step.z);
+        } else {
+            norm = vec3(-step.x, 0, 0);
+        }
+    } else {
+        if (tMax.z < tMax.y) {
+            norm = vec3(0, 0, -step.z);
+        } else {
+            norm = vec3(0, -step.y, 0);
+        }
+    }
+
 
     float d = 0;
     vec3 pos = floor(ro);
@@ -118,6 +133,13 @@ void main(){
     camDir /= depthLength;
 
     raycastAABB(camPos, camDir, uMinBox, uMaxBox, minDist, maxDist);
+    
+    float depth = texture(uDepthTexture, coord).r;
+	float currentMinDepth = depthLength*depth;
+
+    if (minDist > currentMinDepth) {
+        discard;
+    }
 
     vec4 color;
     vec3 norm;
@@ -128,6 +150,8 @@ void main(){
     if(d == (maxDist-minDist)) {
         discard;
     }
+    float linearDepth = (minDist + d)/depthLength;
+    outDepth = vec4(linearDepth, 0, 0, 0);
     outColor = vec4(color.rgb, 1);
     outNormal = norm;
 }

@@ -28,3 +28,7 @@ void EngineApi::addSystemInternal(System *newSystem) { voxlight.customSystems.pu
 GLFWwindow *EngineApi::getGLFWwindow() { return voxlight.glfwWindow; }
 
 entt::registry &EngineApi::getRegistry() { return voxlight.registry; }
+
+void EngineApi::syncGpuData() { voxlight.voxelWorld.sync(); }
+
+unsigned int EngineApi::getWorldTexture() const { return voxlight.voxelWorld.getTexture(); }

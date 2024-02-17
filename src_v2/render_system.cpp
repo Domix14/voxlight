@@ -147,13 +147,13 @@ void RenderSystem::init() {
   voxelUniform.paletteTexture = glGetUniformLocation(voxelProgram, "uPaletteTexture");
 
   sunlightProgram = createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
-  sunlightUniform.invResolution = glGetUniformLocation(voxelProgram, "uInvResolution");
-  sunlightUniform.magicMatrix = glGetUniformLocation(voxelProgram, "uMagicMatrix");
-  sunlightUniform.sunPos = glGetUniformLocation(voxelProgram, "uSunPos");
-  sunlightUniform.worldTexture = glGetUniformLocation(voxelProgram, "uWorldTexture");
-  sunlightUniform.albedoTexture = glGetUniformLocation(voxelProgram, "uAlbedoTexture");
-  sunlightUniform.depthTexture = glGetUniformLocation(voxelProgram, "uDepthTexture");
-  sunlightUniform.normalTexture = glGetUniformLocation(voxelProgram, "uNormalTexture");
+  sunlightUniform.invResolution = glGetUniformLocation(sunlightProgram, "uInvResolution");
+  sunlightUniform.magicMatrix = glGetUniformLocation(sunlightProgram, "uMagicMatrix");
+  sunlightUniform.sunPos = glGetUniformLocation(sunlightProgram, "uSunPos");
+  sunlightUniform.worldTexture = glGetUniformLocation(sunlightProgram, "uWorldTexture");
+  sunlightUniform.albedoTexture = glGetUniformLocation(sunlightProgram, "uAlbedoTexture");
+  sunlightUniform.depthTexture = glGetUniformLocation(sunlightProgram, "uDepthTexture");
+  sunlightUniform.normalTexture = glGetUniformLocation(sunlightProgram, "uNormalTexture");
 
   // Create vertex buffers
   glGenBuffers(1, &cubeVertexBuffer);
@@ -230,7 +230,12 @@ void RenderSystem::deinit() {}
 void RenderSystem::update(float) {
   glUseProgram(voxelProgram);
   glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  GLenum attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+  glDrawBuffers(3, attachments);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  float depth = 1.0f;
+  glClearTexImage(depthTexture, 0, GL_RGB, GL_FLOAT, &depth);
 
   entt::registry &registry = EngineApi(voxlight).getRegistry();
   auto view = registry.view<TransformComponent, VoxelComponent>();
@@ -257,13 +262,14 @@ void RenderSystem::update(float) {
 
     voxelComponent.distance = glm::distance(cameraLocalPos, closestPoint);
   }
-  registry.sort<VoxelComponent>([](auto const &a, auto const &b) { return a.distance > b.distance; });
+  registry.sort<VoxelComponent>([](auto const &a, auto const &b) { return a.distance < b.distance; });
 
   auto viewSorted = registry.view<VoxelComponent const, TransformComponent const>();
   viewSorted.use<VoxelComponent>();
 
   auto viewProjectionMatrix = CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
+
   for(auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
     glm::vec3 size = voxelComponent.voxelData.getDimensions();
     glm::vec3 minBox = transformComponent.position;
@@ -295,59 +301,61 @@ void RenderSystem::update(float) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glTextureBarrier();
   }
 
   // Sunlight stage
-  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // glUseProgram(sunlightProgram);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glUseProgram(sunlightProgram);
 
-  // glActiveTexture(GL_TEXTURE0);
-  // glBindTexture(GL_TEXTURE_3D, worldVoxelTexture);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_3D, EngineApi(voxlight).getWorldTexture());
 
-  // glActiveTexture(GL_TEXTURE1);
-  // glBindTexture(GL_TEXTURE_2D, colorTexture);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, colorTexture);
 
-  // glActiveTexture(GL_TEXTURE2);
-  // glBindTexture(GL_TEXTURE_2D, depthTexture);
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, depthTexture);
 
-  // glActiveTexture(GL_TEXTURE3);
-  // glBindTexture(GL_TEXTURE_2D, normalTexture);
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, normalTexture);
 
-  // glUniform1i(glGetUniformLocation(sunlightProgram, "uWorldTexture"), 0);
-  // glUniform1i(glGetUniformLocation(sunlightProgram, "uAlbedoTexture"), 1);
-  // glUniform1i(glGetUniformLocation(sunlightProgram, "uDepthTexture"), 2);
-  // glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
+  glUniform1i(glGetUniformLocation(sunlightProgram, "uWorldTexture"), 0);
+  glUniform1i(glGetUniformLocation(sunlightProgram, "uAlbedoTexture"), 1);
+  glUniform1i(glGetUniformLocation(sunlightProgram, "uDepthTexture"), 2);
+  glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
 
-  // auto mm = glm::scale(glm::mat4(1.f), glm::vec3(8)) * viewProjectionInv;
-  // glUniform2f(glGetUniformLocation(sunlightProgram, "invResolution"), 1.f /
-  // WINDOW_WIDTH, 1.f / WINDOW_HEIGHT);
-  // glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"),
-  // 1, GL_FALSE, &mm[0][0]); glUniform3f(glGetUniformLocation(sunlightProgram,
-  // "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
+  glm::vec3 sunPosition = {1000.f, 1000.f, 1000.f};
+  auto mm = invViewProjectionMatrix;
+  glUniform2f(sunlightUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
+  glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"),
+  1, GL_FALSE, &mm[0][0]); glUniform3f(glGetUniformLocation(sunlightProgram,
+  "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
 
-  // glEnableVertexAttribArray(0);
-  // glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
-  // glVertexAttribPointer(0,  // attribute 0. No particular reason for 0, but
-  //                           // must match the layout in the shader.
-  //                       3,         // size
-  //                       GL_FLOAT,  // type
-  //                       GL_FALSE,  // normalized?
-  //                       0,         // stride
-  //                       (void*)0   // array buffer offset
-  // );
-  // glDrawArrays(GL_TRIANGLES, 0, 6);  // 3 indices starting at 0 -> 1 triangle
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+  glVertexAttribPointer(0,  // attribute 0. No particular reason for 0, but
+                            // must match the layout in the shader.
+                        3,         // size
+                        GL_FLOAT,  // type
+                        GL_FALSE,  // normalized?
+                        0,         // stride
+                        (void*)0   // array buffer offset
+  );
+  glDrawArrays(GL_TRIANGLES, 0, 6);  // 3 indices starting at 0 -> 1 triangle
 
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+  // glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  // glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  // glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
 }
 
-unsigned int RenderSystem::createVoxelTexture(VoxelData const &voxelData) {
+unsigned int RenderSystem::createVoxelTexture(std::uint8_t const *data, glm::ivec3 size) {
   GLuint texname;
   glGenTextures(1, &texname);
   glBindTexture(GL_TEXTURE_3D, texname);
@@ -358,8 +366,7 @@ unsigned int RenderSystem::createVoxelTexture(VoxelData const &voxelData) {
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-  auto size = voxelData.getDimensions();
-  glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, GL_UNSIGNED_BYTE, voxelData.getData());
+  glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, GL_UNSIGNED_BYTE, data);
   glBindTexture(GL_TEXTURE_3D, 0);
   return texname;
 }

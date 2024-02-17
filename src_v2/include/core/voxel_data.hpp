@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 class VoxelData {
 public:
@@ -26,9 +27,7 @@ public:
   size_t getByteSize() const { return sizeof(std::uint8_t) * data.size(); }
 
   void fill(std::uint8_t voxel) {
-    for(size_t i = 0; i < data.size(); ++i) {
-      data[i] = voxel;
-    }
+    std::fill(data.begin(), data.end(), voxel);
   }
 
   //   void shrinkToFit() {

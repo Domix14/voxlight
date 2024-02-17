@@ -4,6 +4,8 @@
 #include <core/components.hpp>
 #include <glm/gtc/noise.hpp>
 #include <voxlight.hpp>
+#include <glm/gtc/random.hpp>
+#include <cstdint>
 
 class TestSystem : public System {
 public:
@@ -12,9 +14,13 @@ public:
   void generateChunk(glm::vec3 pos, glm::vec3 size) {
     auto entity = EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
     EntityApi(voxlight).setPosition(entity, pos);
+
+    // glm::vec3 rotation = glm::sphericalRand(1.f);
+    // EntityApi(voxlight).setRotation(entity, glm::quat(rotation));
+
     VoxelData voxelData;
     voxelData.resize(size);
-    static int p = 0;
+    static std::uint8_t p = 2;
 
     // generate chunk with random heioghts
     for(size_t x = 0; x < size.x; ++x) {
@@ -29,7 +35,7 @@ public:
       }
     }
 
-    p++;
+    p += 5;
     VoxelComponentApi(voxlight).addComponent(entity, voxelData);
   }
 
@@ -50,12 +56,41 @@ public:
 
     // VoxelComponentApi(voxlight).addComponent(entity, voxelData);
 
-    size_t size = 16;
-    for(size_t x = 0; x < 10; ++x) {
-      for(size_t y = 0; y < 10; ++y) {
-        generateChunk({x * size, 0, y * size}, {size, size, size});
+    // size_t size = 16;
+    // for(size_t x = 0; x < 2; ++x) {
+    //   for(size_t y = 0; y < 2; ++y) {
+    //     generateChunk({x * size, 0, y * size}, {size, size, size});
+    //   }
+    // }
+
+    // Create plane entity
+    auto planeEntity = EntityApi(voxlight).createEntity("Plane", TransformComponent());
+    VoxelData planeVoxelData;
+    planeVoxelData.resize({32, 1, 32});
+    for(size_t x = 0; x < 32; ++x) {
+      for(size_t z = 0; z < 32; ++z) {
+        planeVoxelData.setVoxel({x, 0, z}, 2);
       }
     }
+    VoxelComponentApi(voxlight).addComponent(planeEntity, planeVoxelData);
+
+    // create cube on plane
+    auto cubeEntity = EntityApi(voxlight).createEntity("Cube", TransformComponent());
+    VoxelData cubeVoxelData;
+    cubeVoxelData.resize({4, 4, 4});  
+    for(size_t x = 0; x < 4; ++x) {
+      for(size_t y = 0; y < 4; ++y) {
+        for(size_t z = 0; z < 4; ++z) {
+          cubeVoxelData.setVoxel({x, y, z}, 3);
+        }
+      }
+    }
+    EntityApi(voxlight).setPosition(cubeEntity, {10, 1, 10});
+    VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
+
+    
+
+    EngineApi(voxlight).syncGpuData();
   }
 
   void update(float deltaTime) override {

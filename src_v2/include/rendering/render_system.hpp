@@ -36,10 +36,7 @@ public:
   void update(float deltaTime);
   void deinit();
 
-  void createWorldTexture(std::vector<std::uint8_t> const &data, glm::ivec3 size);
-  void updateWorldTexture(std::vector<std::uint8_t> const &data, glm::ivec3 size, glm::ivec3 offset);
-
-  static unsigned int createVoxelTexture(VoxelData const &data);
+  static unsigned int createVoxelTexture(std::uint8_t const *data, glm::ivec3 size);
   static void deleteVoxelTexture(unsigned int textueId);
 
 private:
@@ -57,10 +54,6 @@ private:
 
   // framebuffer
   unsigned int mainFramebuffer;
-
-  // voxel world
-  unsigned int worldVoxelTexture;
-  glm::ivec3 worldVoxelTextureSize;
 
   // opengl textures
   unsigned int colorTexture;

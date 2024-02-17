@@ -15,7 +15,7 @@ layout(binding=3) uniform sampler2D uNormalTexture;
 uint isOccupied(ivec3 pos) {
     vec3 pos0 = pos >> 1;
     ivec3 bitPos = pos & 1;
-    vec3 uv = pos0/256.f;
+    vec3 uv = pos0/64.f;
     uint value = uint(textureLod(uWorldTexture, uv, 0).r*255);
     return value & (1U << (bitPos.x + bitPos.z*2 + bitPos.y*4));
 }
@@ -45,13 +45,13 @@ bool raycastToTarget(vec3 ro, vec3 target) {
             if (tMax.z < tMax.x) {
                 tMax.z += tDelta.z;
                 pos.z += step.z;
-                if(pos.z >= 256 || pos.z < 0) {
+                if(pos.z >= 64 || pos.z < 0) {
                     return false;
                 }
             } else {
                 tMax.x += tDelta.x;
             	pos.x += step.x;
-                if(pos.x >= 256|| pos.x < 0) {
+                if(pos.x >= 64|| pos.x < 0) {
                     return false;
                 }
             }
@@ -59,13 +59,13 @@ bool raycastToTarget(vec3 ro, vec3 target) {
             if (tMax.z < tMax.y) {
                 tMax.z += tDelta.z;
                 pos.z += step.z;
-                if(pos.z >= 256 || pos.z < 0) {
+                if(pos.z >= 64 || pos.z < 0) {
                     return false;
                 }
             } else {
             	tMax.y += tDelta.y;
             	pos.y += step.y;
-                if(pos.y >= 256 || pos.y < 0) {
+                if(pos.y >= 64 || pos.y < 0) {
                     return false;
                 }
             }
@@ -92,7 +92,7 @@ vec3 computeNearVec(vec2 texCoord)
 
 
 void main(){
-    vec2 coord = gl_FragCoord.xy * invResolution;
+    vec2 coord = gl_FragCoord.xy * uInvResolution;
     outColor = texture(uAlbedoTexture, coord);
     float depth = texture(uDepthTexture, coord).r;
 
@@ -106,14 +106,17 @@ void main(){
 
     vec3 norm = texture(uNormalTexture, coord).xyz;
 
-
-
     float d = length(fv - camPos);
-    vec3 target = camPos + rayDir*(depth*d-0.09);
+    vec3 target = camPos + rayDir*(depth*d-0.05f);
 
 
-    vec3 sunPos = vec3(1000,1000,1000);
-    bool hit = raycastToTarget(target, uSunPos);
+    vec3 sunDir = normalize(uSunPos - target);
+    bool hit = false;
+    if(dot(norm, sunDir) <= 0.0f) {
+        hit = true;
+    } else {
+        hit = raycastToTarget(target, uSunPos);
+    }
     
     if(hit) {
         outColor.rgb *= 0.5;

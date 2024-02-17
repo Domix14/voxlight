@@ -38,6 +38,8 @@ static GLFWwindow *initGLFW() {
 void Voxlight::init() {
   // Initialize GLFW window
   glfwWindow = initGLFW();
+  
+
 
   renderSystem = new RenderSystem(*this);
   // Initialize internal systems
@@ -45,11 +47,16 @@ void Voxlight::init() {
   // renderSystem.init(this);
   // worldSystem.init(this);
 
+  voxelWorld.init(glm::ivec3(128));
+
   renderSystem->init();
   // Initialize custom systems
   for(auto &system : customSystems) {
     system->init();
   }
+
+  // temporary
+  voxelWorld.sync();
 }
 
 void Voxlight::run() {

@@ -25,6 +25,9 @@ public:
 
   template <std::derived_from<System> T> void addSystem() { addSystemInternal(new T(voxlight)); }
 
+  void syncGpuData();
+  unsigned int getWorldTexture() const;
+
   EngineApi(Voxlight &voxlight);
 
 private:
