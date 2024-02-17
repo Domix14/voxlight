@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -118,7 +119,7 @@ RenderSystem::RenderSystem(Voxlight &voxlight) : System(voxlight) {}
 void RenderSystem::init() {
   // Init OpenGL
   if(!gladLoadGL(glfwGetProcAddress)) {
-    throw std::runtime_error("Failed to initialize GLAD\n");
+    throw std::runtime_error("Failed to initialize GLAD \n");
   }
 
   // Pointer to GLFW window
@@ -241,27 +242,26 @@ void RenderSystem::update(float) {
     glm::vec3 minBox = transformComponent.position;
     glm::vec3 maxBox = minBox + size;
 
-    auto rotatedCameraPos = cameraPos; // TODO: rotate camera
-    auto closestPoint = glm::vec3(glm::clamp(rotatedCameraPos.x, minBox.x, maxBox.x),
-                                  glm::clamp(rotatedCameraPos.y, minBox.y, maxBox.y),
-                                  glm::clamp(rotatedCameraPos.z, minBox.z, maxBox.z));
-    voxelComponent.distance = glm::distance(rotatedCameraPos, closestPoint);
+    auto center = (minBox + maxBox) / 2.f;
+    glm::mat4 transformMatrix = glm::translate(glm::mat4(1.f), center) * glm::toMat4(transformComponent.rotation);
+    // Calculate the inverse of the rotation matrix applied to the AABB box
+    glm::mat4 inverseTransformation = glm::inverse(transformMatrix);
+    
+    glm::vec3 cameraLocalPos = glm::vec3(inverseTransformation * glm::vec4(cameraPos, 1.0f));
+
+    // Calculate the closest point to the camera within the AABB box
+    auto halfSize = size / 2.f;
+    glm::vec3 closestPoint = glm::vec3(glm::clamp(cameraLocalPos.x, -halfSize.x, halfSize.x),
+                                      glm::clamp(cameraLocalPos.y, -halfSize.y, halfSize.y),
+                                      glm::clamp(cameraLocalPos.z, -halfSize.z, halfSize.z));
+
+    voxelComponent.distance = glm::distance(cameraLocalPos, closestPoint);
   }
   registry.sort<VoxelComponent>([](auto const &a, auto const &b) { return a.distance > b.distance; });
 
   auto viewSorted = registry.view<VoxelComponent const, TransformComponent const>();
   viewSorted.use<VoxelComponent>();
-  // auto viewProjectionMatrix =
-  //     engine->getControllerSystem().getViewProjectionMatrix();
 
-  // temporary
-  // glm::vec3 cameraPos = {0,0,-10};
-  // glm::vec3 cameraDir = {0,0,1};
-  // glm::mat4 viewMat = glm::lookAt(cameraPos, cameraDir, {0,1,0});
-  // glm::mat4 projMat = glm::perspective(glm::radians(90.f), 16.0f / 9.0f,
-  // 0.1f, 500.0f);
-
-  // auto viewProjectionMatrix = projMat * viewMat;
   auto viewProjectionMatrix = CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
   for(auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
