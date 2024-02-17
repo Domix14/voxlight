@@ -47,16 +47,11 @@ void Voxlight::init() {
   // renderSystem.init(this);
   // worldSystem.init(this);
 
-  voxelWorld.init(glm::ivec3(128));
-
   renderSystem->init();
   // Initialize custom systems
   for(auto &system : customSystems) {
     system->init();
   }
-
-  // temporary
-  voxelWorld.sync();
 }
 
 void Voxlight::run() {

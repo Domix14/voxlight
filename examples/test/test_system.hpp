@@ -87,10 +87,6 @@ public:
     }
     EntityApi(voxlight).setPosition(cubeEntity, {10, 1, 10});
     VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
-
-    
-
-    EngineApi(voxlight).syncGpuData();
   }
 
   void update(float deltaTime) override {
@@ -145,6 +141,16 @@ public:
                                                      glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
     CameraComponentApi(voxlight).setDirection(camera, direction);
     EntityApi(voxlight).setPosition(camera, position);
+
+    auto cubeEntity = EntityApi(voxlight).getFirstWithName("Cube");
+    // move cube from left to right
+    glm::vec3 cubePos = EntityApi(voxlight).getTransform(cubeEntity).position;
+    cubePos.x += 1.f * deltaTime;
+    if(cubePos.x > 20) {
+      cubePos.x = 10;
+    }
+    EntityApi(voxlight).setPosition(cubeEntity, cubePos);
+  
   }
 
   void deinit() override { spdlog::info("TestSystem::deinit()"); }

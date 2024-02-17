@@ -223,6 +223,8 @@ void RenderSystem::init() {
   // stbi_image_free(data);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
   glGenerateMipmap(GL_TEXTURE_2D);
+
+  voxelWorld.init(glm::ivec3(128));
 }
 
 void RenderSystem::deinit() {}
@@ -243,6 +245,14 @@ void RenderSystem::update(float) {
   auto camera = CameraComponentApi(voxlight).getCurrentCamera();
   auto cameraPos = EntityApi(voxlight).getTransform(camera).position;
   for(auto [entity, transformComponent, voxelComponent] : view.each()) {
+    if(voxelComponent.needsUpdate) {
+      voxelWorld.rasterizeVoxelData(voxelComponent.lastPosition, voxelComponent.lastRotation, voxelComponent.voxelData, true);
+      voxelComponent.needsUpdate = false;
+      voxelComponent.lastPosition = transformComponent.position;
+      voxelComponent.lastRotation = transformComponent.rotation;
+      voxelWorld.rasterizeVoxelData(voxelComponent.lastPosition, voxelComponent.lastRotation, voxelComponent.voxelData, false);
+    }
+
     glm::vec3 size = voxelComponent.voxelData.getDimensions();
     glm::vec3 minBox = transformComponent.position;
     glm::vec3 maxBox = minBox + size;
@@ -262,6 +272,8 @@ void RenderSystem::update(float) {
 
     voxelComponent.distance = glm::distance(cameraLocalPos, closestPoint);
   }
+  voxelWorld.sync();
+
   registry.sort<VoxelComponent>([](auto const &a, auto const &b) { return a.distance < b.distance; });
 
   auto viewSorted = registry.view<VoxelComponent const, TransformComponent const>();
@@ -311,7 +323,7 @@ void RenderSystem::update(float) {
   glUseProgram(sunlightProgram);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_3D, EngineApi(voxlight).getWorldTexture());
+  glBindTexture(GL_TEXTURE_3D, voxelWorld.getTexture());
 
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, colorTexture);
@@ -354,24 +366,6 @@ void RenderSystem::update(float) {
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
 }
-
-unsigned int RenderSystem::createVoxelTexture(std::uint8_t const *data, glm::ivec3 size) {
-  GLuint texname;
-  glGenTextures(1, &texname);
-  glBindTexture(GL_TEXTURE_3D, texname);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-  glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, size.x, size.y, size.z, 0, GL_RED, GL_UNSIGNED_BYTE, data);
-  glBindTexture(GL_TEXTURE_3D, 0);
-  return texname;
-}
-
-void RenderSystem::deleteVoxelTexture(unsigned int textureId) { glDeleteTextures(1, &textureId); }
 
 // void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const &data,
 //                                       glm::ivec3 size) {

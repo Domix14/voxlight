@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "system.hpp"
+#include "voxel_world.hpp"
 
 struct VoxelData;
 struct VoxelUniform {
@@ -36,9 +37,6 @@ public:
   void update(float deltaTime);
   void deinit();
 
-  static unsigned int createVoxelTexture(std::uint8_t const *data, glm::ivec3 size);
-  static void deleteVoxelTexture(unsigned int textueId);
-
 private:
   // opengl programs
   unsigned int voxelProgram;
@@ -60,4 +58,7 @@ private:
   unsigned int depthTexture;
   unsigned int normalTexture;
   unsigned int paletteTexture;
+
+  // Voxel world
+  VoxelWorld voxelWorld;
 };

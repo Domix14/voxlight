@@ -9,6 +9,8 @@ set(sources
 
     # rendering
     render_system.cpp
+    voxel_world.cpp
+    render_utils.cpp
 
     # controller
     # ${CMAKE_CURRENT_SOURCE_DIR}/controller/controller_system.cpp

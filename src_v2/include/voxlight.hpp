@@ -8,7 +8,6 @@
 #include "rendering/render_system.hpp"
 #include "system.hpp"
 #include "world/world_system.hpp"
-#include "core/voxel_world.hpp"
 
 class GLFWwindow;
 
@@ -41,9 +40,6 @@ private:
 
   // Camera
   entt::entity currentCamera = entt::null;
-
-  // Voxel world
-  VoxelWorld voxelWorld;
 
   // Friend class declarations
   friend class EngineApi;

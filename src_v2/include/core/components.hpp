@@ -19,6 +19,8 @@ struct VoxelComponent {
   unsigned int textureId;
   bool needsUpdate;
   float distance;
+  glm::vec3 lastPosition;
+  glm::quat lastRotation;
   VoxelData voxelData;
 };
 
