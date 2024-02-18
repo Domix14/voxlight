@@ -10,6 +10,7 @@
 struct VoxelData;
 struct VoxelUniform {
   unsigned int modelMatrix;
+  unsigned int modelMatrix2;
   unsigned int viewProjectionMatrix;
   unsigned int invResolution;
   unsigned int minBox;

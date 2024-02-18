@@ -64,7 +64,10 @@ public:
     // }
 
     // Create plane entity
-    auto planeEntity = EntityApi(voxlight).createEntity("Plane", TransformComponent());
+    TransformComponent transform;
+    transform.position = {0, 0, 0};
+    transform.rotation = glm::quat(glm::vec3(0, 0, 0));
+    auto planeEntity = EntityApi(voxlight).createEntity("Plane", transform);
     VoxelData planeVoxelData;
     planeVoxelData.resize({128, 1, 128});
     for(size_t x = 0; x < 128; ++x) {
@@ -75,6 +78,8 @@ public:
     VoxelComponentApi(voxlight).addComponent(planeEntity, planeVoxelData);
 
     // create cube on plane
+
+
     auto cubeEntity = EntityApi(voxlight).createEntity("Cube", TransformComponent());
     VoxelData cubeVoxelData;
     cubeVoxelData.resize({16, 16, 16});  
@@ -85,7 +90,7 @@ public:
         }
       }
     }
-    EntityApi(voxlight).setPosition(cubeEntity, {10, 5, 20});
+    EntityApi(voxlight).setPosition(cubeEntity, {60, 5, 60});
     VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
 
     // create sphere
@@ -105,6 +110,20 @@ public:
     EntityApi(voxlight).setPosition(sphereEntity, {96, 8, 96});
     VoxelComponentApi(voxlight).addComponent(sphereEntity, sphereVoxelData);
 
+
+    // spawn another cube
+    auto cubeEntity2 = EntityApi(voxlight).createEntity("Cube2", TransformComponent());
+    VoxelData cubeVoxelData2;
+    cubeVoxelData2.resize({16, 16, 16});
+    for(size_t x = 0; x < 16; ++x) {
+      for(size_t y = 0; y < 16; ++y) {
+        for(size_t z = 0; z < 16; ++z) {
+          cubeVoxelData2.setVoxel({x, y, z}, 70);
+        }
+      }
+    }
+    EntityApi(voxlight).setPosition(cubeEntity2, {30, 5, 30});
+    // VoxelComponentApi(voxlight).addComponent(cubeEntity2, cubeVoxelData2);
   }
 
   void update(float deltaTime) override {
@@ -168,7 +187,24 @@ public:
       cubePos.x = 10;
     }
     EntityApi(voxlight).setPosition(cubeEntity, cubePos);
-  
+
+    // rotate cube in 2 axes
+    // glm::quat cubeRot = EntityApi(voxlight).getTransform(cubeEntity).rotation;
+    // cubeRot = glm::rotate(cubeRot, 1.f, glm::vec3(1, 0, 0));
+    // cubeRot = glm::rotate(cubeRot, .5f, glm::vec3(0, 1, 0));
+
+
+    // genrate random rotation quat
+    auto rot = EntityApi(voxlight).getTransform(cubeEntity).rotation;
+    static float rotation = 0;
+
+    // rotate in y axis
+
+    EntityApi(voxlight).setRotation(cubeEntity, glm::angleAxis(rotation, glm::vec3(0.f, 1.f, 0.f)));
+    rotation += 0.1f * deltaTime;
+
+
+    
   }
 
   void deinit() override { spdlog::info("TestSystem::deinit()"); }

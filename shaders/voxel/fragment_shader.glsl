@@ -10,6 +10,9 @@ uniform vec3 uMinBox;
 uniform vec3 uMaxBox;
 uniform vec3 uChunkSize;
 uniform mat4 uMagicMatrix;
+uniform mat4 uModelMatrix;
+uniform mat4 uModelMatrix2;
+uniform mat4 uMagicMatrix2;
 
 layout(binding=0) uniform sampler3D uChunkTexture;
 layout(binding=1) uniform sampler2D uPaletteTexture;
@@ -132,7 +135,7 @@ void main(){
     float depthLength = length(camDir);
     camDir /= depthLength;
 
-    raycastAABB(camPos, camDir, uMinBox, uMaxBox, minDist, maxDist);
+    raycastAABB(camPos, camDir, vec3(0), uMaxBox - uMinBox, minDist, maxDist);
     
     float depth = texture(uDepthTexture, coord).r;
 	float currentMinDepth = depthLength*depth;
@@ -144,14 +147,25 @@ void main(){
     vec4 color;
     vec3 norm;
     float d;
-    vec3 rayStart = camPos - uMinBox;
-    d = intersect(rayStart + camDir*(minDist-0.00001), camDir, maxDist-minDist, color, norm);
+    vec3 rayStart = camPos;
+    d = intersect(rayStart + camDir*(minDist-0.0001), camDir, maxDist-minDist, color, norm);
 
     if(d == (maxDist-minDist)) {
         discard;
     }
-    float linearDepth = (minDist + d)/depthLength;
-    outDepth = vec4(linearDepth, 0, 0, 0);
+    vec3 localPos = camPos + camDir*(minDist + d);
+    vec3 worldPos = (uModelMatrix * vec4(localPos, 1.f)).xyz;
+    vec3 cameraWorldPos = (uModelMatrix * vec4(camPos, 1.f)).xyz;
+    vec3 worldFarVector = (uModelMatrix * vec4(fv, 1.f)).xyz;
+    float worldDepthLength = length(worldFarVector - cameraWorldPos);
+    float linearDepth = length(worldPos - cameraWorldPos)/worldDepthLength;
+
+
+    // float linearDepth = (dist)/depthLength;
+
+
     outColor = vec4(color.rgb, 1);
-    outNormal = norm;
+    outDepth = vec4(linearDepth, 0, 0, 0);
+    norm = normalize(norm);
+    outNormal = vec3(uModelMatrix2*vec4(norm, 0.f));
 }

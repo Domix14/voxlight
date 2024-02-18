@@ -108,19 +108,22 @@ void main(){
     vec3 norm = texture(uNormalTexture, coord).xyz;
 
     float d = length(fv - camPos);
-    vec3 target = camPos + rayDir*(depth*d) + norm*0.1f;
+    vec3 target = camPos + rayDir*(depth*d);
 
 
     vec3 sunDir = normalize(uSunPos - target);
-    bool hit = false;
-    if(dot(norm, sunDir) <= 0.0f) {
-        hit = true;
-    } else {
-        hit = raycastToTarget(target, uSunPos);
+
+
+    float intensity = 0.0;
+    float strenght = dot(norm, sunDir);
+    if(strenght > 0.0f) {
+        vec3 startPos = target + sunDir*0.5 + norm*0.5;
+        bool hit = raycastToTarget(startPos, uSunPos);
+        if(!hit) {
+            intensity += strenght * 1;
+        }
     }
     
-    if(hit) {
-        outColor.rgb *= 0.5;
-    }
+    outColor.rgb *= intensity;
     // outColor = vec4(vec3(floor(target)/10), 1.0f);
 }

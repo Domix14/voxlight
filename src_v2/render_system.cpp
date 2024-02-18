@@ -146,6 +146,8 @@ void RenderSystem::init() {
   voxelUniform.chunkTexture = glGetUniformLocation(voxelProgram, "uChunkTexture");
   voxelUniform.paletteTexture = glGetUniformLocation(voxelProgram, "uPaletteTexture");
 
+  voxelUniform.modelMatrix2 = glGetUniformLocation(voxelProgram, "uModelMatrix2");
+
   sunlightProgram = createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
   sunlightUniform.invResolution = glGetUniformLocation(sunlightProgram, "uInvResolution");
   sunlightUniform.magicMatrix = glGetUniformLocation(sunlightProgram, "uMagicMatrix");
@@ -293,7 +295,7 @@ void RenderSystem::update(float) {
     auto rotationMatrix = glm::toMat4(transformComponent.rotation);
     auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
     auto mvp = viewProjectionMatrix * modelMatrix;
-    auto magicMatrix = translateMatrix * scaleMatrix * glm::inverse(mvp);
+    auto magicMatrix = glm::inverse(viewProjectionMatrix * translateMatrix * rotationMatrix);
     glUniformMatrix4fv(voxelUniform.modelMatrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(voxelUniform.viewProjectionMatrix, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
     glUniform2f(voxelUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
@@ -301,6 +303,12 @@ void RenderSystem::update(float) {
     glUniform3f(voxelUniform.maxBox, maxBox.x, maxBox.y, maxBox.z);
     glUniform3f(voxelUniform.chunkSize, size.x, size.y, size.z);
     glUniformMatrix4fv(voxelUniform.magicMatrix, 1, GL_FALSE, glm::value_ptr(magicMatrix));
+
+    glm::mat4 modelMatrix2 = translateMatrix * rotationMatrix;
+    glUniformMatrix4fv(voxelUniform.modelMatrix2, 1, GL_FALSE, glm::value_ptr(modelMatrix2));
+
+    glm::mat4 magicMatrix2 =  modelMatrix * glm::inverse(translateMatrix * scaleMatrix);
+    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "uMagicMatrix2"), 1, GL_FALSE, glm::value_ptr(magicMatrix2));
 
     glUniform1i(voxelUniform.chunkTexture, 0);
     glActiveTexture(GL_TEXTURE0);
@@ -340,7 +348,7 @@ void RenderSystem::update(float) {
   glUniform1i(sunlightUniform.depthTexture, 2);
   glUniform1i(sunlightUniform.normalTexture, 3);
 
-  glm::vec3 sunPosition = {1000.f, 1000.f, 1000.f};
+  glm::vec3 sunPosition = {100000.f, 100000.f, 100000.f};
   auto mm = invViewProjectionMatrix;
   glUniform2f(sunlightUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
   glUniformMatrix4fv(sunlightUniform.magicMatrix, 1, GL_FALSE, &mm[0][0]); 
