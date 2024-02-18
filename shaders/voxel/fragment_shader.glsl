@@ -145,7 +145,7 @@ void main(){
     vec3 norm;
     float d;
     vec3 rayStart = camPos - uMinBox;
-    d = intersect(rayStart + camDir*(minDist-0.001), camDir, maxDist-minDist, color, norm);
+    d = intersect(rayStart + camDir*(minDist-0.00001), camDir, maxDist-minDist, color, norm);
 
     if(d == (maxDist-minDist)) {
         discard;

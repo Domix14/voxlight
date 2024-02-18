@@ -66,9 +66,9 @@ public:
     // Create plane entity
     auto planeEntity = EntityApi(voxlight).createEntity("Plane", TransformComponent());
     VoxelData planeVoxelData;
-    planeVoxelData.resize({32, 1, 32});
-    for(size_t x = 0; x < 32; ++x) {
-      for(size_t z = 0; z < 32; ++z) {
+    planeVoxelData.resize({128, 1, 128});
+    for(size_t x = 0; x < 128; ++x) {
+      for(size_t z = 0; z < 128; ++z) {
         planeVoxelData.setVoxel({x, 0, z}, 2);
       }
     }
@@ -77,16 +77,34 @@ public:
     // create cube on plane
     auto cubeEntity = EntityApi(voxlight).createEntity("Cube", TransformComponent());
     VoxelData cubeVoxelData;
-    cubeVoxelData.resize({4, 4, 4});  
-    for(size_t x = 0; x < 4; ++x) {
-      for(size_t y = 0; y < 4; ++y) {
-        for(size_t z = 0; z < 4; ++z) {
-          cubeVoxelData.setVoxel({x, y, z}, 3);
+    cubeVoxelData.resize({16, 16, 16});  
+    for(size_t x = 0; x < 16; ++x) {
+      for(size_t y = 0; y < 16; ++y) {
+        for(size_t z = 0; z < 16; ++z) {
+          cubeVoxelData.setVoxel({x, y, z}, 70);
         }
       }
     }
-    EntityApi(voxlight).setPosition(cubeEntity, {10, 1, 10});
+    EntityApi(voxlight).setPosition(cubeEntity, {10, 5, 20});
     VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
+
+    // create sphere
+    auto sphereEntity = EntityApi(voxlight).createEntity("Sphere", TransformComponent());
+    VoxelData sphereVoxelData;
+    sphereVoxelData.resize({16, 16, 16});
+    for(size_t x = 0; x < 16; ++x) {
+      for(size_t y = 0; y < 16; ++y) {
+        for(size_t z = 0; z < 16; ++z) {
+          glm::vec3 pos = glm::vec3(x, y, z) - glm::vec3(8, 8, 8);
+          if(glm::length(pos) < 8) {
+            sphereVoxelData.setVoxel({x, y, z}, 70);
+          }
+        }
+      }
+    }
+    EntityApi(voxlight).setPosition(sphereEntity, {96, 8, 96});
+    VoxelComponentApi(voxlight).addComponent(sphereEntity, sphereVoxelData);
+
   }
 
   void update(float deltaTime) override {
@@ -145,8 +163,8 @@ public:
     auto cubeEntity = EntityApi(voxlight).getFirstWithName("Cube");
     // move cube from left to right
     glm::vec3 cubePos = EntityApi(voxlight).getTransform(cubeEntity).position;
-    cubePos.x += 1.f * deltaTime;
-    if(cubePos.x > 20) {
+    cubePos.x += 5.f * deltaTime;
+    if(cubePos.x > 80) {
       cubePos.x = 10;
     }
     EntityApi(voxlight).setPosition(cubeEntity, cubePos);

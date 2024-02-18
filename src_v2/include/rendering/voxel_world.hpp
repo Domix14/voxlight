@@ -23,6 +23,7 @@ public:
 
   std::uint8_t const *getData() const;
   unsigned int getTexture() const;
+  glm::ivec3 getDimensions() const;
 
   void rasterizeVoxelData(glm::ivec3 const& pos, glm::quat const& rot, VoxelData const& voxelData, bool clear);
 

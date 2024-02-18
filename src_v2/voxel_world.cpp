@@ -20,6 +20,8 @@ std::uint8_t const *VoxelWorld::getData() const { return data.data(); }
 
 unsigned int VoxelWorld::getTexture() const { return worldTexture; }
 
+glm::ivec3 VoxelWorld::getDimensions() const { return dimensions; }
+
 void VoxelWorld::rasterizeVoxelData(glm::ivec3 const &pos, glm::quat const &rot, VoxelData const &voxelData,
                                     bool clear) {
   for(int x = 0; x < voxelData.getDimensions().x; ++x) {

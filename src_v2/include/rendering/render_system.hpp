@@ -24,6 +24,7 @@ struct SunlightUniform {
   unsigned int invResolution;
   unsigned int magicMatrix;
   unsigned int sunPos;
+  unsigned int worldDimensions;
   unsigned int worldTexture;
   unsigned int albedoTexture;
   unsigned int depthTexture;

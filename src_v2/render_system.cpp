@@ -150,6 +150,7 @@ void RenderSystem::init() {
   sunlightUniform.invResolution = glGetUniformLocation(sunlightProgram, "uInvResolution");
   sunlightUniform.magicMatrix = glGetUniformLocation(sunlightProgram, "uMagicMatrix");
   sunlightUniform.sunPos = glGetUniformLocation(sunlightProgram, "uSunPos");
+  sunlightUniform.worldDimensions = glGetUniformLocation(sunlightProgram, "uWorldDimensions");
   sunlightUniform.worldTexture = glGetUniformLocation(sunlightProgram, "uWorldTexture");
   sunlightUniform.albedoTexture = glGetUniformLocation(sunlightProgram, "uAlbedoTexture");
   sunlightUniform.depthTexture = glGetUniformLocation(sunlightProgram, "uDepthTexture");
@@ -334,17 +335,17 @@ void RenderSystem::update(float) {
   glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, normalTexture);
 
-  glUniform1i(glGetUniformLocation(sunlightProgram, "uWorldTexture"), 0);
-  glUniform1i(glGetUniformLocation(sunlightProgram, "uAlbedoTexture"), 1);
-  glUniform1i(glGetUniformLocation(sunlightProgram, "uDepthTexture"), 2);
-  glUniform1i(glGetUniformLocation(sunlightProgram, "uNormalTexture"), 3);
+  glUniform1i(sunlightUniform.worldTexture, 0);
+  glUniform1i(sunlightUniform.albedoTexture, 1);
+  glUniform1i(sunlightUniform.depthTexture, 2);
+  glUniform1i(sunlightUniform.normalTexture, 3);
 
   glm::vec3 sunPosition = {1000.f, 1000.f, 1000.f};
   auto mm = invViewProjectionMatrix;
   glUniform2f(sunlightUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
-  glUniformMatrix4fv(glGetUniformLocation(sunlightProgram, "uMagicMatrix"),
-  1, GL_FALSE, &mm[0][0]); glUniform3f(glGetUniformLocation(sunlightProgram,
-  "uSunPos"), sunPosition.x, sunPosition.y, sunPosition.z);
+  glUniformMatrix4fv(sunlightUniform.magicMatrix, 1, GL_FALSE, &mm[0][0]); 
+  glUniform3f(sunlightUniform.sunPos, sunPosition.x, sunPosition.y, sunPosition.z);
+  glUniform3fv(sunlightUniform.worldDimensions, 1, glm::value_ptr(glm::vec3(voxelWorld.getDimensions())));
 
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
