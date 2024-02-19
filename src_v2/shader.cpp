@@ -17,7 +17,7 @@ std::uint32_t Shader::compileShader(std::uint32_t shaderType, std::string_view s
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
   if(!success) {
     std::string infoLog(512, '\0');
-    glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog.data());
+    glGetShaderInfoLog(shader, infoLog.size(), nullptr, infoLog.data());
     spdlog::error("Failed to compile shader: {}", infoLog);
     return 0;
   }
