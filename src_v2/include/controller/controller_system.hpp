@@ -2,7 +2,7 @@
 #include "camera.hpp"
 #include "system.hpp"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 class ControllerSystem : public System {
 public:

@@ -31,7 +31,7 @@ public:
     return projection * view;
   }
 
-  void update(class GLFWwindow *window, float deltaTime) {
+  void update(struct GLFWwindow *window, float deltaTime) {
     double xpos = 0;
     double ypos = 0;
 

@@ -9,7 +9,7 @@
 
 // Forward declarations
 class Voxlight;
-class GLFWwindow;
+struct GLFWwindow;
 struct TransformComponent;
 struct CustomComponent;
 struct CameraComponent;

@@ -4,7 +4,6 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 // clang-format on
-
 #include <spdlog/spdlog.h>
 
 #include <entt/entt.hpp>
@@ -24,6 +23,7 @@
 #include "generated/shaders.hpp"
 #include "rendering/palette.hpp"
 #include "voxlight.hpp"
+#include <rendering/shader.hpp>
 
 #include "api/voxlight_api.hpp"
 
@@ -87,33 +87,6 @@ static void frameBufferCheck() {
   }
 }
 
-static std::tuple<GLuint, int> loadShader(GLenum shaderType, std::string_view shaderCode) {
-  auto shader = glCreateShader(shaderType);
-  char const *c_str = shaderCode.data();
-  glShaderSource(shader, 1, &c_str, nullptr);
-  glCompileShader(shader);
-
-  GLint success;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if(!success) {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
-    spdlog::error("Failed to compile shader: {}", infoLog);
-    return {0, -1};
-  }
-  return {shader, 0};
-}
-
-static GLuint createProgram(std::string_view vertexSrc, std::string_view fragmentSrc) {
-  GLuint program = glCreateProgram();
-  auto [vertexShader, vertexShaderStatus] = loadShader(GL_VERTEX_SHADER, vertexSrc);
-  auto [fragmentShader, fragmentShaderStatus] = loadShader(GL_FRAGMENT_SHADER, fragmentSrc);
-  glAttachShader(program, vertexShader);
-  glAttachShader(program, fragmentShader);
-  glLinkProgram(program);
-  return program;
-}
-
 RenderSystem::RenderSystem(Voxlight &voxlight) : System(voxlight) {}
 
 void RenderSystem::init() {
@@ -125,6 +98,11 @@ void RenderSystem::init() {
   // Pointer to GLFW window
   auto glfwWindow = EngineApi(voxlight).getGLFWwindow();
 
+
+  // voxelShader.create(VOXEL_VERTEX_SHADER_SRC, VOXEL_FRAGMENT_SHADER_SRC);
+  voxelShader.loadAndCreate(VOXEL_VERTEX_SHADER_PATH, VOXEL_FRAGMENT_SHADER_PATH);
+  sunlightShader.loadAndCreate(SUNLIGHT_VERTEX_SHADER_PATH, SUNLIGHT_FRAGMENT_SHADER_PATH);
+
   // Set window resize callback
   glViewport(0, 0, WindowWidth, WindowHeight);
   glfwSetWindowUserPointer(glfwWindow, this);
@@ -133,30 +111,6 @@ void RenderSystem::init() {
 
   // Set clear color
   glClearColor(0.529f, 0.8f, 0.92f, 0.f);
-
-  // Create shader programs
-  voxelProgram = createProgram(VOXEL_VERTEX_SHADER_SRC, VOXEL_FRAGMENT_SHADER_SRC);
-  voxelUniform.modelMatrix = glGetUniformLocation(voxelProgram, "uModelMatrix");
-  voxelUniform.viewProjectionMatrix = glGetUniformLocation(voxelProgram, "uViewProjectionMatrix");
-  voxelUniform.invResolution = glGetUniformLocation(voxelProgram, "uInvResolution");
-  voxelUniform.minBox = glGetUniformLocation(voxelProgram, "uMinBox");
-  voxelUniform.maxBox = glGetUniformLocation(voxelProgram, "uMaxBox");
-  voxelUniform.chunkSize = glGetUniformLocation(voxelProgram, "uChunkSize");
-  voxelUniform.magicMatrix = glGetUniformLocation(voxelProgram, "uMagicMatrix");
-  voxelUniform.chunkTexture = glGetUniformLocation(voxelProgram, "uChunkTexture");
-  voxelUniform.paletteTexture = glGetUniformLocation(voxelProgram, "uPaletteTexture");
-
-  voxelUniform.modelMatrix2 = glGetUniformLocation(voxelProgram, "uModelMatrix2");
-
-  sunlightProgram = createProgram(SUNLIGHT_VERTEX_SHADER_SRC, SUNLIGHT_FRAGMENT_SHADER_SRC);
-  sunlightUniform.invResolution = glGetUniformLocation(sunlightProgram, "uInvResolution");
-  sunlightUniform.magicMatrix = glGetUniformLocation(sunlightProgram, "uMagicMatrix");
-  sunlightUniform.sunPos = glGetUniformLocation(sunlightProgram, "uSunPos");
-  sunlightUniform.worldDimensions = glGetUniformLocation(sunlightProgram, "uWorldDimensions");
-  sunlightUniform.worldTexture = glGetUniformLocation(sunlightProgram, "uWorldTexture");
-  sunlightUniform.albedoTexture = glGetUniformLocation(sunlightProgram, "uAlbedoTexture");
-  sunlightUniform.depthTexture = glGetUniformLocation(sunlightProgram, "uDepthTexture");
-  sunlightUniform.normalTexture = glGetUniformLocation(sunlightProgram, "uNormalTexture");
 
   // Create vertex buffers
   glGenBuffers(1, &cubeVertexBuffer);
@@ -233,7 +187,6 @@ void RenderSystem::init() {
 void RenderSystem::deinit() {}
 
 void RenderSystem::update(float) {
-  glUseProgram(voxelProgram);
   glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
   GLenum attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
   glDrawBuffers(3, attachments);
@@ -285,6 +238,7 @@ void RenderSystem::update(float) {
   auto viewProjectionMatrix = CameraComponentApi(voxlight).getViewProjectionMatrix();
   auto invViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
 
+  voxelShader.use();
   for(auto [entity, voxelComponent, transformComponent] : viewSorted.each()) {
     glm::vec3 size = voxelComponent.voxelData.getDimensions();
     glm::vec3 minBox = transformComponent.position;
@@ -296,27 +250,28 @@ void RenderSystem::update(float) {
     auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
     auto mvp = viewProjectionMatrix * modelMatrix;
     auto magicMatrix = glm::inverse(viewProjectionMatrix * translateMatrix * rotationMatrix);
-    glUniformMatrix4fv(voxelUniform.modelMatrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-    glUniformMatrix4fv(voxelUniform.viewProjectionMatrix, 1, GL_FALSE, glm::value_ptr(viewProjectionMatrix));
-    glUniform2f(voxelUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
-    glUniform3f(voxelUniform.minBox, minBox.x, minBox.y, minBox.z);
-    glUniform3f(voxelUniform.maxBox, maxBox.x, maxBox.y, maxBox.z);
-    glUniform3f(voxelUniform.chunkSize, size.x, size.y, size.z);
-    glUniformMatrix4fv(voxelUniform.magicMatrix, 1, GL_FALSE, glm::value_ptr(magicMatrix));
+
+    voxelShader.setMat4("uModelMatrix", glm::value_ptr(modelMatrix));
+    voxelShader.setMat4("uViewProjectionMatrix", glm::value_ptr(viewProjectionMatrix));
+    voxelShader.setVec2("uInvResolution", 1.f / 1280.f, 1.f / 720.f);
+    voxelShader.setVec3("uMinBox", minBox.x, minBox.y, minBox.z);
+    voxelShader.setVec3("uMaxBox", maxBox.x, maxBox.y, maxBox.z);
+    voxelShader.setVec3("uChunkSize", size.x, size.y, size.z);
+    voxelShader.setMat4("uMagicMatrix", glm::value_ptr(magicMatrix));
 
     glm::mat4 modelMatrix2 = translateMatrix * rotationMatrix;
-    glUniformMatrix4fv(voxelUniform.modelMatrix2, 1, GL_FALSE, glm::value_ptr(modelMatrix2));
+    voxelShader.setMat4("uModelMatrix2", glm::value_ptr(modelMatrix2));
 
-    glm::mat4 magicMatrix2 =  modelMatrix * glm::inverse(translateMatrix * scaleMatrix);
-    glUniformMatrix4fv(glGetUniformLocation(voxelProgram, "uMagicMatrix2"), 1, GL_FALSE, glm::value_ptr(magicMatrix2));
+    // glm::mat4 magicMatrix2 =  modelMatrix * glm::inverse(translateMatrix * scaleMatrix);
+    // voxelShader.setMat4("uMagicMatrix2", glm::value_ptr(magicMatrix2));
 
-    glUniform1i(voxelUniform.chunkTexture, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, voxelComponent.textureId);
+    voxelShader.setInt("uChunkTexture", 0);
 
-    glUniform1i(voxelUniform.paletteTexture, 1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, paletteTexture);
+    voxelShader.setInt("uPaletteTexture", 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
     glEnableVertexAttribArray(0);
@@ -329,7 +284,7 @@ void RenderSystem::update(float) {
   // Sunlight stage
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(sunlightProgram);
+  sunlightShader.use();
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_3D, voxelWorld.getTexture());
@@ -343,17 +298,18 @@ void RenderSystem::update(float) {
   glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, normalTexture);
 
-  glUniform1i(sunlightUniform.worldTexture, 0);
-  glUniform1i(sunlightUniform.albedoTexture, 1);
-  glUniform1i(sunlightUniform.depthTexture, 2);
-  glUniform1i(sunlightUniform.normalTexture, 3);
+  sunlightShader.setInt("uWorldTexture", 0);
+  sunlightShader.setInt("uAlbedoTexture", 1);
+  sunlightShader.setInt("uDepthTexture", 2);
+  sunlightShader.setInt("uNormalTexture", 3);
 
   glm::vec3 sunPosition = {100000.f, 100000.f, 100000.f};
   auto mm = invViewProjectionMatrix;
-  glUniform2f(sunlightUniform.invResolution, 1.f / 1280.f, 1.f / 720.f);
-  glUniformMatrix4fv(sunlightUniform.magicMatrix, 1, GL_FALSE, &mm[0][0]); 
-  glUniform3f(sunlightUniform.sunPos, sunPosition.x, sunPosition.y, sunPosition.z);
-  glUniform3fv(sunlightUniform.worldDimensions, 1, glm::value_ptr(glm::vec3(voxelWorld.getDimensions())));
+  sunlightShader.setVec2("uInvResolution", 1.f / 1280.f, 1.f / 720.f);
+  sunlightShader.setMat4("uMagicMatrix", glm::value_ptr(mm));
+  sunlightShader.setVec3("uSunPos", sunPosition.x, sunPosition.y, sunPosition.z);
+  glm::vec3 worldDimensions = glm::vec3(voxelWorld.getDimensions());
+  sunlightShader.setVec3("uWorldDimensions", worldDimensions.x, worldDimensions.y, worldDimensions.z);
 
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
@@ -374,6 +330,9 @@ void RenderSystem::update(float) {
 
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
+
+  voxelShader.refresh();
+  sunlightShader.refresh();
 }
 
 // void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const &data,

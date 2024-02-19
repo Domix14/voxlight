@@ -11,6 +11,7 @@ set(sources
     render_system.cpp
     voxel_world.cpp
     render_utils.cpp
+    shader.cpp
 
     # controller
     # ${CMAKE_CURRENT_SOURCE_DIR}/controller/controller_system.cpp

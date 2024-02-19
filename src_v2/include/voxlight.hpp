@@ -9,7 +9,7 @@
 #include "system.hpp"
 #include "world/world_system.hpp"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 typedef entt::entity Entity;
 

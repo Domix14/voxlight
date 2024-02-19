@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project(Voxlight C CXX)
 
-
+add_compile_definitions(VOXEL_FRAGMENT_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/shaders/voxel/fragment_shader.glsl")
+add_compile_definitions(VOXEL_VERTEX_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/shaders/voxel/vertex_shader.glsl")
+add_compile_definitions(SUNLIGHT_FRAGMENT_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/shaders/sunlight/fragment_shader.glsl")
+add_compile_definitions(SUNLIGHT_VERTEX_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/shaders/sunlight/vertex_shader.glsl")
 
 add_subdirectory(src_v2)
 add_subdirectory(examples/test)

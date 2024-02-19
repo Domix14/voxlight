@@ -10,7 +10,7 @@
 #include <vector>
 
 class ICamera;
-class GLFWwindow;
+struct GLFWwindow;
 
 class VoxelWorld;
 

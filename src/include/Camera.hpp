@@ -19,7 +19,7 @@ class Camera : public ICamera {
 
     glm::mat4 getViewProjectionMatrix() const override;
 
-    void update(class GLFWwindow* window, double deltaTime);
+    void update(struct GLFWwindow* window, double deltaTime);
     void setPosition(glm::vec3 pos) { position = pos; }
     void setDirection(glm::vec3 dir) { direction = glm::normalize(dir); }
     glm::vec3 getPosition() { return position; }

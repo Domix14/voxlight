@@ -12,7 +12,6 @@ uniform vec3 uChunkSize;
 uniform mat4 uMagicMatrix;
 uniform mat4 uModelMatrix;
 uniform mat4 uModelMatrix2;
-uniform mat4 uMagicMatrix2;
 
 layout(binding=0) uniform sampler3D uChunkTexture;
 layout(binding=1) uniform sampler2D uPaletteTexture;
@@ -163,7 +162,7 @@ void main(){
 
     // float linearDepth = (dist)/depthLength;
 
-
+    
     outColor = vec4(color.rgb, 1);
     outDepth = vec4(linearDepth, 0, 0, 0);
     norm = normalize(norm);
