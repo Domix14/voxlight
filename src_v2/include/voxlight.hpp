@@ -15,7 +15,7 @@ typedef entt::entity Entity;
 
 class Voxlight final {
 public:
-  Voxlight() = default;
+  Voxlight();
   ~Voxlight() = default;
 
 private:
@@ -31,12 +31,10 @@ private:
   GLFWwindow *glfwWindow;
 
   // Internal systems
-  // WorldSystem worldSystem;
-  RenderSystem *renderSystem;
-  // ControllerSystem controllerSystem;
+  RenderSystem renderSystem;
 
   // Custom systems
-  std::vector<System *> customSystems;
+  std::vector<std::unique_ptr<System>> customSystems;
 
   // Camera
   entt::entity currentCamera = entt::null;

@@ -35,19 +35,15 @@ static GLFWwindow *initGLFW() {
   return window;
 }
 
+Voxlight::Voxlight() : registry(), renderSystem(*this) {}
+
 void Voxlight::init() {
   // Initialize GLFW window
   glfwWindow = initGLFW();
   
-
-
-  renderSystem = new RenderSystem(*this);
   // Initialize internal systems
-  // controllerSystem.init(this);
-  // renderSystem.init(this);
-  // worldSystem.init(this);
+  renderSystem.init();
 
-  renderSystem->init();
   // Initialize custom systems
   for(auto &system : customSystems) {
     system->init();
@@ -71,9 +67,8 @@ void Voxlight::run() {
     for(auto &system : customSystems) {
       system->update(deltaTime);
     }
-    // worldSystem.update(deltaTime);
-    // controllerSystem.update(deltaTime);
-    renderSystem->update(deltaTime);
+
+    renderSystem.update(deltaTime);
     deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
     lastTime = currentTime;
   }
@@ -87,9 +82,8 @@ void Voxlight::deinit() {
   // controllerSystem.deinit();
 
   // Deinitialize custom systems
-  for(auto system : customSystems) {
+  for(auto& system : customSystems) {
     system->deinit();
-    delete system;
   }
 
   // Deinitialize GLFW

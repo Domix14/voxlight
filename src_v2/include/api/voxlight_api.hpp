@@ -23,12 +23,12 @@ public:
   GLFWwindow *getGLFWwindow();
   entt::registry &getRegistry();
 
-  template <std::derived_from<System> T> void addSystem() { addSystemInternal(new T(voxlight)); }
+  template <std::derived_from<System> T> void addSystem() { addSystemInternal(std::make_unique<T>(voxlight)); }
 
   EngineApi(Voxlight &voxlight);
 
 private:
-  void addSystemInternal(System *newSystem);
+  void addSystemInternal(std::unique_ptr<System> newSystem);
   Voxlight &voxlight;
 };
 
