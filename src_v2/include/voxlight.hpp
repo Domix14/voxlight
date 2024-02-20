@@ -8,6 +8,9 @@
 #include "rendering/render_system.hpp"
 #include "system.hpp"
 #include "world/world_system.hpp"
+#include "core/event_manager.hpp"
+#include "core/event_manager.hpp"
+#include "core/components.hpp"
 
 struct GLFWwindow;
 
@@ -38,6 +41,10 @@ private:
 
   // Camera
   entt::entity currentCamera = entt::null;
+
+  // Event system
+  EventManager<VoxelComponentEvent> voxelComponentEventManager;
+  
 
   // Friend class declarations
   friend class EngineApi;

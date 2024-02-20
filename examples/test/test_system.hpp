@@ -43,6 +43,15 @@ public:
     spdlog::info("TestSystem::init()");
     window = EngineApi(voxlight).getGLFWwindow();
 
+    VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::AfterVoxelDataChange, [](VoxelComponentEventType eventType, VoxelComponentEvent const& event) {
+      spdlog::info("VoxelComponentEventType::AfterVoxelDataChange 1");
+    });
+
+    // VoxelComponentApi(voxlight).listenForEvent(VoxelComponentEventType::AfterVoxelDataChange, [](VoxelComponentEvent const& event) {
+    //   spdlog::info("VoxelComponentEventType::AfterVoxelDataChange 1");
+    // });
+
+
     // auto entity =
     //     EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
 
@@ -176,8 +185,11 @@ public:
     auto camera = CameraComponentApi(voxlight).getCurrentCamera();
     CameraComponentApi(voxlight).setProjectionMatrix(camera,
                                                      glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
-    CameraComponentApi(voxlight).setDirection(camera, direction);
-    EntityApi(voxlight).setPosition(camera, position);
+    
+    if(glfwGetWindowAttrib(window, GLFW_FOCUSED)) {
+      CameraComponentApi(voxlight).setDirection(camera, direction);
+      EntityApi(voxlight).setPosition(camera, position);
+    }
 
     auto cubeEntity = EntityApi(voxlight).getFirstWithName("Cube");
     // move cube from left to right

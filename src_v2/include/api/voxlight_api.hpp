@@ -14,6 +14,8 @@ struct TransformComponent;
 struct CustomComponent;
 struct CameraComponent;
 class VoxelData;
+struct VoxelComponent;
+struct VoxelComponentEvent;
 
 class EngineApi {
 public:
@@ -52,6 +54,13 @@ private:
   Voxlight &voxlight;
 };
 
+enum VoxelComponentEventType : std::uint8_t {
+  BeforeVoxelDataChange,
+  AfterVoxelDataChange,
+};
+
+using VoxelComponentEventCallback = std::function<void(VoxelComponentEventType, VoxelComponentEvent const&)>;
+
 class VoxelComponentApi {
 public:
   void addComponent(entt::entity entity, VoxelData const &voxelData);
@@ -59,6 +68,8 @@ public:
   bool hasComponent(entt::entity entity) const;
 
   void setVoxelData(entt::entity entity, VoxelData const &voxelData);
+
+  void subscribe(VoxelComponentEventType eventType, VoxelComponentEventCallback listener);
 
   VoxelComponentApi(Voxlight &voxlight);
 
