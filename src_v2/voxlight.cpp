@@ -40,7 +40,7 @@ Voxlight::Voxlight() : registry(), renderSystem(*this) {}
 void Voxlight::init() {
   // Initialize GLFW window
   glfwWindow = initGLFW();
-  
+
   // Initialize internal systems
   renderSystem.init();
 
@@ -82,7 +82,7 @@ void Voxlight::deinit() {
   // controllerSystem.deinit();
 
   // Deinitialize custom systems
-  for(auto& system : customSystems) {
+  for(auto &system : customSystems) {
     system->deinit();
   }
 

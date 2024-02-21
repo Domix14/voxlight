@@ -1,11 +1,10 @@
 #include <rendering/shader.hpp>
 
-#include <glad/gl.h>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <glad/gl.h>
 #include <spdlog/spdlog.h>
-#include <chrono>
-
 
 std::uint32_t Shader::compileShader(std::uint32_t shaderType, std::string_view shaderCode) const {
   auto shader = glCreateShader(shaderType);
@@ -41,7 +40,7 @@ void Shader::create(std::string_view vertexSource, std::string_view fragmentSour
     GLenum type;
     char name[256];
     glGetActiveUniform(programId, i, sizeof(name), &length, &size, &type, name);
-    uniformLocations[name] = glGetUniformLocation(programId, name);    
+    uniformLocations[name] = glGetUniformLocation(programId, name);
   }
   lastCompileTime = std::chrono::system_clock::now().time_since_epoch().count();
 }
@@ -58,17 +57,25 @@ void Shader::setFloat(std::string_view name, float value) const { glUniform1f(ge
 
 void Shader::setVec2(std::string_view name, float x, float y) const { glUniform2f(getUniformLocation(name), x, y); }
 
-void Shader::setVec3(std::string_view name, float x, float y, float z) const { glUniform3f(getUniformLocation(name), x, y, z); }
+void Shader::setVec3(std::string_view name, float x, float y, float z) const {
+  glUniform3f(getUniformLocation(name), x, y, z);
+}
 
 void Shader::setVec4(std::string_view name, float x, float y, float z, float w) const {
   glUniform4f(getUniformLocation(name), x, y, z, w);
 }
 
-void Shader::setMat2(std::string_view name, float const *value) const { glUniformMatrix2fv(getUniformLocation(name), 1, GL_FALSE, value); }
+void Shader::setMat2(std::string_view name, float const *value) const {
+  glUniformMatrix2fv(getUniformLocation(name), 1, GL_FALSE, value);
+}
 
-void Shader::setMat3(std::string_view name, float const *value) const { glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, value); }
+void Shader::setMat3(std::string_view name, float const *value) const {
+  glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, value);
+}
 
-void Shader::setMat4(std::string_view name, float const *value) const { glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, value); }
+void Shader::setMat4(std::string_view name, float const *value) const {
+  glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, value);
+}
 
 void Shader::loadAndCreate(std::string_view vertexPath, std::string_view fragmentPath) {
   std::ifstream vertexFile(vertexPath.data());
@@ -82,8 +89,14 @@ void Shader::loadAndCreate(std::string_view vertexPath, std::string_view fragmen
 }
 
 void Shader::refresh() {
-  std::uint64_t lastVertexWrite = std::chrono::clock_cast<std::chrono::system_clock>(std::filesystem::last_write_time(vertexShaderPath)).time_since_epoch().count();
-  std::uint64_t lastFragmentWrite = std::chrono::clock_cast<std::chrono::system_clock>(std::filesystem::last_write_time(fragmentShaderPath)).time_since_epoch().count();
+  std::uint64_t lastVertexWrite =
+      std::chrono::clock_cast<std::chrono::system_clock>(std::filesystem::last_write_time(vertexShaderPath))
+          .time_since_epoch()
+          .count();
+  std::uint64_t lastFragmentWrite =
+      std::chrono::clock_cast<std::chrono::system_clock>(std::filesystem::last_write_time(fragmentShaderPath))
+          .time_since_epoch()
+          .count();
   if(lastVertexWrite > lastCompileTime || lastFragmentWrite > lastCompileTime) {
     spdlog::info("Reloading shaders");
     loadAndCreate(vertexShaderPath, fragmentShaderPath);
@@ -98,4 +111,3 @@ std::uint32_t Shader::getUniformLocation(std::string_view name) const {
 
   return uniformLocations.at(name.data());
 }
-

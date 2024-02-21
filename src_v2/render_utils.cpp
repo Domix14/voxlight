@@ -2,7 +2,6 @@
 
 #include <glad/gl.h>
 
-
 unsigned int CreateVoxelTexture(std::uint8_t const *data, glm::ivec3 size) {
   unsigned int texname;
   glGenTextures(1, &texname);

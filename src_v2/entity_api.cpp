@@ -35,7 +35,7 @@ void EntityApi::setName(entt::entity entity, std::string_view name) {
 }
 
 void EntityApi::setPosition(entt::entity entity, glm::vec3 const &position) {
-  auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
+  auto &transformComponent = voxlight.registry.get<TransformComponent>(entity);
   TransformComponent oldTransform = transformComponent;
   transformComponent.position = position;
 
@@ -48,7 +48,7 @@ void EntityApi::setScale(entt::entity entity, glm::vec3 const &scale) {
 }
 
 void EntityApi::setRotation(entt::entity entity, glm::quat const &rotation) {
-  auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
+  auto &transformComponent = voxlight.registry.get<TransformComponent>(entity);
   TransformComponent oldTransform = transformComponent;
   transformComponent.rotation = rotation;
 
@@ -57,10 +57,10 @@ void EntityApi::setRotation(entt::entity entity, glm::quat const &rotation) {
 }
 
 void EntityApi::setTransform(entt::entity entity, TransformComponent const &transform) {
-  auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
+  auto &transformComponent = voxlight.registry.get<TransformComponent>(entity);
   TransformComponent oldTransform = transformComponent;
   transformComponent = transform;
-  
+
   EntityEvent event(entity, transformComponent, oldTransform);
   voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
 }

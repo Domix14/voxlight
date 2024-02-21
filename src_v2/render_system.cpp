@@ -8,10 +8,10 @@
 
 #include <entt/entity/registry.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -98,7 +98,6 @@ void RenderSystem::init() {
   // Pointer to GLFW window
   auto glfwWindow = EngineApi(voxlight).getGLFWwindow();
 
-
   // voxelShader.create(VOXEL_VERTEX_SHADER_SRC, VOXEL_FRAGMENT_SHADER_SRC);
   voxelShader.loadAndCreate(VOXEL_VERTEX_SHADER_PATH, VOXEL_FRAGMENT_SHADER_PATH);
   sunlightShader.loadAndCreate(SUNLIGHT_VERTEX_SHADER_PATH, SUNLIGHT_FRAGMENT_SHADER_PATH);
@@ -124,13 +123,6 @@ void RenderSystem::init() {
   // Create framebuffers
   glGenFramebuffers(1, &mainFramebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
-
-  // Do we need this?
-  unsigned int rboDepth;
-  glGenRenderbuffers(1, &rboDepth);
-  glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WindowWidth, WindowHeight);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 
   glGenTextures(1, &colorTexture);
   glBindTexture(GL_TEXTURE_2D, colorTexture);
@@ -166,28 +158,24 @@ void RenderSystem::init() {
   glBindTexture(GL_TEXTURE_2D, paletteTexture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // // load and generate the texture
-  // int width, height, nrChannels;
-  // unsigned char *data =
-  //     stbi_load("./palette.png", &width, &height, &nrChannels, 0);
-  // if (data) {
-  //   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-  //                GL_UNSIGNED_BYTE, data);
-  //   glGenerateMipmap(GL_TEXTURE_2D);
-  // } else {
-  //   spdlog::error("Failed to load texture");
-  // }
-  // stbi_image_free(data);
+
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
   glGenerateMipmap(GL_TEXTURE_2D);
 
   voxelWorld.init(glm::ivec3(128));
 
-
-  VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::OnVoxelDataCreation, std::bind(&RenderSystem::onVoxelDataCreation, this, std::placeholders::_1, std::placeholders::_2));
-  VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::OnVoxelDataDestruction, std::bind(&RenderSystem::onVoxelDataDestruction, this, std::placeholders::_1, std::placeholders::_2));
-  VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::OnVoxelDataChange, std::bind(&RenderSystem::onVoxelDataModification, this, std::placeholders::_1, std::placeholders::_2));
-  EntityApi(voxlight).subscribe(EntityEventType::OnTransformChange, std::bind(&RenderSystem::onEntityTransformChange, this, std::placeholders::_1, std::placeholders::_2));
+  VoxelComponentApi(voxlight).subscribe(
+      VoxelComponentEventType::OnVoxelDataCreation,
+      std::bind(&RenderSystem::onVoxelDataCreation, this, std::placeholders::_1, std::placeholders::_2));
+  VoxelComponentApi(voxlight).subscribe(
+      VoxelComponentEventType::OnVoxelDataDestruction,
+      std::bind(&RenderSystem::onVoxelDataDestruction, this, std::placeholders::_1, std::placeholders::_2));
+  VoxelComponentApi(voxlight).subscribe(
+      VoxelComponentEventType::OnVoxelDataChange,
+      std::bind(&RenderSystem::onVoxelDataModification, this, std::placeholders::_1, std::placeholders::_2));
+  EntityApi(voxlight).subscribe(
+      EntityEventType::OnTransformChange,
+      std::bind(&RenderSystem::onEntityTransformChange, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void RenderSystem::deinit() {}
@@ -208,11 +196,13 @@ void RenderSystem::update(float) {
   auto cameraPos = EntityApi(voxlight).getTransform(camera).position;
   for(auto [entity, transformComponent, voxelComponent] : view.each()) {
     if(voxelComponent.needsUpdate) {
-      voxelWorld.rasterizeVoxelData(voxelComponent.lastPosition, voxelComponent.lastRotation, voxelComponent.voxelData, true);
+      voxelWorld.rasterizeVoxelData(voxelComponent.lastPosition, voxelComponent.lastRotation, voxelComponent.voxelData,
+                                    true);
       voxelComponent.needsUpdate = false;
       voxelComponent.lastPosition = transformComponent.position;
       voxelComponent.lastRotation = transformComponent.rotation;
-      voxelWorld.rasterizeVoxelData(voxelComponent.lastPosition, voxelComponent.lastRotation, voxelComponent.voxelData, false);
+      voxelWorld.rasterizeVoxelData(voxelComponent.lastPosition, voxelComponent.lastRotation, voxelComponent.voxelData,
+                                    false);
     }
 
     glm::vec3 size = voxelComponent.voxelData.getDimensions();
@@ -223,14 +213,14 @@ void RenderSystem::update(float) {
     glm::mat4 transformMatrix = glm::translate(glm::mat4(1.f), center) * glm::toMat4(transformComponent.rotation);
     // Calculate the inverse of the rotation matrix applied to the AABB box
     glm::mat4 inverseTransformation = glm::inverse(transformMatrix);
-    
+
     glm::vec3 cameraLocalPos = glm::vec3(inverseTransformation * glm::vec4(cameraPos, 1.0f));
 
     // Calculate the closest point to the camera within the AABB box
     auto halfSize = size / 2.f;
     glm::vec3 closestPoint = glm::vec3(glm::clamp(cameraLocalPos.x, -halfSize.x, halfSize.x),
-                                      glm::clamp(cameraLocalPos.y, -halfSize.y, halfSize.y),
-                                      glm::clamp(cameraLocalPos.z, -halfSize.z, halfSize.z));
+                                       glm::clamp(cameraLocalPos.y, -halfSize.y, halfSize.y),
+                                       glm::clamp(cameraLocalPos.z, -halfSize.z, halfSize.z));
 
     voxelComponent.distance = glm::distance(cameraLocalPos, closestPoint);
   }
@@ -319,20 +309,20 @@ void RenderSystem::update(float) {
 
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
-  glVertexAttribPointer(0,  // attribute 0. No particular reason for 0, but
-                            // must match the layout in the shader.
-                        3,         // size
-                        GL_FLOAT,  // type
-                        GL_FALSE,  // normalized?
-                        0,         // stride
-                        (void*)0   // array buffer offset
+  glVertexAttribPointer(0,        // attribute 0. No particular reason for 0, but
+                                  // must match the layout in the shader.
+                        3,        // size
+                        GL_FLOAT, // type
+                        GL_FALSE, // normalized?
+                        0,        // stride
+                        (void *)0 // array buffer offset
   );
-  glDrawArrays(GL_TRIANGLES, 0, 6);  // 3 indices starting at 0 -> 1 triangle
+  glDrawArrays(GL_TRIANGLES, 0, 6); // 3 indices starting at 0 -> 1 triangle
 
   // glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
   // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  // glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-  // glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+  // glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT,
+  // GL_LINEAR); glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
@@ -351,12 +341,14 @@ void RenderSystem::onVoxelDataCreation(VoxelComponentEventType, VoxelComponentEv
 void RenderSystem::onVoxelDataDestruction(VoxelComponentEventType, VoxelComponentEvent const &event) {
   DeleteVoxelTexture(event.voxelComponent.textureId);
   auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
-  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.voxelComponent.voxelData, true);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
+                                event.voxelComponent.voxelData, true);
 }
 
 void RenderSystem::onVoxelDataModification(VoxelComponentEventType, VoxelComponentEvent const &event) {
   auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
-  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.voxelComponent.voxelData, true);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
+                                event.voxelComponent.voxelData, true);
   voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.newVoxelData, false);
   DeleteVoxelTexture(event.voxelComponent.textureId);
   auto texId = CreateVoxelTexture(event.newVoxelData.getData(), event.newVoxelData.getDimensions());
@@ -366,7 +358,9 @@ void RenderSystem::onVoxelDataModification(VoxelComponentEventType, VoxelCompone
 void RenderSystem::onEntityTransformChange(EntityEventType, EntityEvent const &event) {
   auto voxelComponent = EngineApi(voxlight).getRegistry().try_get<VoxelComponent>(event.entity);
   if(voxelComponent) {
-    voxelWorld.rasterizeVoxelData(event.oldTransform.position, event.oldTransform.rotation, voxelComponent->voxelData, true);
-    voxelWorld.rasterizeVoxelData(event.transformComponent.position, event.transformComponent.rotation, voxelComponent->voxelData, false);
+    voxelWorld.rasterizeVoxelData(event.oldTransform.position, event.oldTransform.rotation, voxelComponent->voxelData,
+                                  true);
+    voxelWorld.rasterizeVoxelData(event.transformComponent.position, event.transformComponent.rotation,
+                                  voxelComponent->voxelData, false);
   }
 }

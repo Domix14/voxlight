@@ -23,7 +23,9 @@ void EngineApi::stop() {
   voxlight.stop();
 }
 
-void EngineApi::addSystemInternal(std::unique_ptr<System> newSystem) { voxlight.customSystems.push_back(std::move(newSystem)); }
+void EngineApi::addSystemInternal(std::unique_ptr<System> newSystem) {
+  voxlight.customSystems.push_back(std::move(newSystem));
+}
 
 GLFWwindow *EngineApi::getGLFWwindow() { return voxlight.glfwWindow; }
 
