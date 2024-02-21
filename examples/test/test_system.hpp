@@ -1,14 +1,15 @@
+#include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
 #include <api/voxlight_api.hpp>
 #include <core/components.hpp>
-#include <glm/gtc/noise.hpp>
-#include <voxlight.hpp>
-#include <glm/gtc/random.hpp>
 #include <cstdint>
+#include <glm/gtc/noise.hpp>
+#include <glm/gtc/random.hpp>
+#include <voxlight.hpp>
 
 class TestSystem : public System {
-public:
+ public:
   TestSystem(Voxlight &voxlight) : System(voxlight) {}
 
   void generateChunk(glm::vec3 pos, glm::vec3 size) {
@@ -43,10 +44,10 @@ public:
     spdlog::info("TestSystem::init()");
     window = EngineApi(voxlight).getGLFWwindow();
 
-    // VoxelComponentApi(voxlight).listenForEvent(VoxelComponentEventType::AfterVoxelDataChange, [](VoxelComponentEvent const& event) {
+    // VoxelComponentApi(voxlight).listenForEvent(VoxelComponentEventType::AfterVoxelDataChange, [](VoxelComponentEvent
+    // const& event) {
     //   spdlog::info("VoxelComponentEventType::AfterVoxelDataChange 1");
     // });
-
 
     // auto entity =
     //     EntityApi(voxlight).createEntity("TestEntity", TransformComponent());
@@ -84,10 +85,9 @@ public:
 
     // create cube on plane
 
-
     auto cubeEntity = EntityApi(voxlight).createEntity("Cube", TransformComponent());
     VoxelData cubeVoxelData;
-    cubeVoxelData.resize({16, 16, 16});  
+    cubeVoxelData.resize({16, 16, 16});
     for(size_t x = 0; x < 16; ++x) {
       for(size_t y = 0; y < 16; ++y) {
         for(size_t z = 0; z < 16; ++z) {
@@ -114,7 +114,6 @@ public:
     }
     EntityApi(voxlight).setPosition(sphereEntity, {96, 8, 96});
     VoxelComponentApi(voxlight).addComponent(sphereEntity, sphereVoxelData);
-
 
     // spawn another cube
     auto cubeEntity2 = EntityApi(voxlight).createEntity("Cube2", TransformComponent());
@@ -181,7 +180,7 @@ public:
     auto camera = CameraComponentApi(voxlight).getCurrentCamera();
     CameraComponentApi(voxlight).setProjectionMatrix(camera,
                                                      glm::perspective(glm::radians(90.f), 16.0f / 9.0f, 0.1f, 500.0f));
-    
+
     if(glfwGetWindowAttrib(window, GLFW_FOCUSED)) {
       CameraComponentApi(voxlight).setDirection(camera, direction);
       EntityApi(voxlight).setPosition(camera, position);
@@ -200,7 +199,6 @@ public:
     // glm::quat cubeRot = EntityApi(voxlight).getTransform(cubeEntity).rotation;
     // cubeRot = glm::rotate(cubeRot, 1.f, glm::vec3(1, 0, 0));
     // cubeRot = glm::rotate(cubeRot, .5f, glm::vec3(0, 1, 0));
-
 
     // genrate random rotation quat
     auto rot = EntityApi(voxlight).getTransform(cubeEntity).rotation;
@@ -230,12 +228,11 @@ public:
     } else {
       pressed = false;
     }
-    
   }
 
   void deinit() override { spdlog::info("TestSystem::deinit()"); }
 
-private:
+ private:
   GLFWwindow *window;
   double cursorX = 0;
   double cursorY = 0;

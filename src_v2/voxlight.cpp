@@ -6,12 +6,7 @@
 #include <chrono>
 #include <stdexcept>
 
-// clang-format off
-#include "world/world_system.hpp"
-#include "rendering/render_system.hpp"
-#include "controller/controller_system.hpp"
 #include "core/components.hpp"
-// clang-format on
 #include "engine_config.hpp"
 
 static GLFWwindow *initGLFW() {

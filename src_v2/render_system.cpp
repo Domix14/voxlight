@@ -19,7 +19,6 @@
 #include <rendering/shader.hpp>
 
 #include "api/voxlight_api.hpp"
-#include "controller/controller_system.hpp"
 #include "core/components.hpp"
 #include "core/voxel_data.hpp"
 #include "engine_config.hpp"

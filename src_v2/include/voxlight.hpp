@@ -4,24 +4,18 @@
 #include <vector>
 
 #include "api/voxlight_api.hpp"
-#include "controller/controller_system.hpp"
+#include "core/components.hpp"
+#include "core/event_manager.hpp"
 #include "rendering/render_system.hpp"
 #include "system.hpp"
-#include "world/world_system.hpp"
-#include "core/event_manager.hpp"
-#include "core/event_manager.hpp"
-#include "core/components.hpp"
 
 struct GLFWwindow;
-
-typedef entt::entity Entity;
-
 class Voxlight final {
-public:
+ public:
   Voxlight();
   ~Voxlight() = default;
 
-private:
+ private:
   void init();
   void run();
   void stop();
@@ -45,7 +39,6 @@ private:
   // Event system
   EventManager<VoxelComponentEvent> voxelComponentEventManager;
   EventManager<EntityEvent> entityEventManager;
-  
 
   // Friend class declarations
   friend class EngineApi;

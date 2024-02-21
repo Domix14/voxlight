@@ -12,12 +12,6 @@ set(sources
     voxel_world.cpp
     render_utils.cpp
     shader.cpp
-
-    # controller
-    # ${CMAKE_CURRENT_SOURCE_DIR}/controller/controller_system.cpp
-    # world
-    # ${CMAKE_CURRENT_SOURCE_DIR}/world/world_system.cpp
-    # api
     engine_api.cpp
     entity_api.cpp
     voxel_component_api.cpp

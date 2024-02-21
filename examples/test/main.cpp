@@ -1,13 +1,12 @@
 #include <spdlog/spdlog.h>
 
-#include "core/voxel_data.hpp"
-#include "test_system.hpp"
 #include <api/voxlight_api.hpp>
 #include <core/components.hpp>
 #include <core/voxel_data.hpp>
 #include <voxlight.hpp>
-#include <world/world_system.hpp>
 
+#include "core/voxel_data.hpp"
+#include "test_system.hpp"
 
 int main() {
   spdlog::set_level(spdlog::level::info);
