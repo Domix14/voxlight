@@ -16,6 +16,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <rendering/shader.hpp>
+
+#include "api/voxlight_api.hpp"
 #include "controller/controller_system.hpp"
 #include "core/components.hpp"
 #include "core/voxel_data.hpp"
@@ -23,58 +26,55 @@
 #include "generated/shaders.hpp"
 #include "rendering/palette.hpp"
 #include "voxlight.hpp"
-#include <rendering/shader.hpp>
-
-#include "api/voxlight_api.hpp"
 
 static GLfloat const cubeVertexData[] = {
-    0.0f, 0.0f, 0.0f, // Vertex 0
-    0.0f, 0.0f, 1.0f, // Vertex 1
-    0.0f, 1.0f, 0.0f, // Vertex 2
+    0.0f, 0.0f, 0.0f,  // Vertex 0
+    0.0f, 0.0f, 1.0f,  // Vertex 1
+    0.0f, 1.0f, 0.0f,  // Vertex 2
 
-    0.0f, 0.0f, 1.0f, // Vertex 1
-    0.0f, 1.0f, 0.0f, // Vertex 2
-    0.0f, 1.0f, 1.0f, // Vertex 3
+    0.0f, 0.0f, 1.0f,  // Vertex 1
+    0.0f, 1.0f, 0.0f,  // Vertex 2
+    0.0f, 1.0f, 1.0f,  // Vertex 3
 
-    1.0f, 0.0f, 0.0f, // Vertex 4
-    1.0f, 0.0f, 1.0f, // Vertex 5
-    1.0f, 1.0f, 0.0f, // Vertex 6
+    1.0f, 0.0f, 0.0f,  // Vertex 4
+    1.0f, 0.0f, 1.0f,  // Vertex 5
+    1.0f, 1.0f, 0.0f,  // Vertex 6
 
-    1.0f, 0.0f, 1.0f, // Vertex 5
-    1.0f, 1.0f, 0.0f, // Vertex 6
-    1.0f, 1.0f, 1.0f, // Vertex 7
+    1.0f, 0.0f, 1.0f,  // Vertex 5
+    1.0f, 1.0f, 0.0f,  // Vertex 6
+    1.0f, 1.0f, 1.0f,  // Vertex 7
 
-    0.0f, 0.0f, 0.0f, // Vertex 0
-    0.0f, 0.0f, 1.0f, // Vertex 1
-    1.0f, 0.0f, 0.0f, // Vertex 4
+    0.0f, 0.0f, 0.0f,  // Vertex 0
+    0.0f, 0.0f, 1.0f,  // Vertex 1
+    1.0f, 0.0f, 0.0f,  // Vertex 4
 
-    0.0f, 0.0f, 1.0f, // Vertex 1
-    1.0f, 0.0f, 0.0f, // Vertex 4
-    1.0f, 0.0f, 1.0f, // Vertex 5
+    0.0f, 0.0f, 1.0f,  // Vertex 1
+    1.0f, 0.0f, 0.0f,  // Vertex 4
+    1.0f, 0.0f, 1.0f,  // Vertex 5
 
-    0.0f, 1.0f, 0.0f, // Vertex 2
-    0.0f, 1.0f, 1.0f, // Vertex 3
-    1.0f, 1.0f, 0.0f, // Vertex 6
+    0.0f, 1.0f, 0.0f,  // Vertex 2
+    0.0f, 1.0f, 1.0f,  // Vertex 3
+    1.0f, 1.0f, 0.0f,  // Vertex 6
 
-    0.0f, 1.0f, 1.0f, // Vertex 3
-    1.0f, 1.0f, 0.0f, // Vertex 6
-    1.0f, 1.0f, 1.0f, // Vertex 7
+    0.0f, 1.0f, 1.0f,  // Vertex 3
+    1.0f, 1.0f, 0.0f,  // Vertex 6
+    1.0f, 1.0f, 1.0f,  // Vertex 7
 
-    0.0f, 0.0f, 0.0f, // Vertex 0
-    0.0f, 1.0f, 0.0f, // Vertex 2
-    1.0f, 0.0f, 0.0f, // Vertex 4
+    0.0f, 0.0f, 0.0f,  // Vertex 0
+    0.0f, 1.0f, 0.0f,  // Vertex 2
+    1.0f, 0.0f, 0.0f,  // Vertex 4
 
-    0.0f, 1.0f, 0.0f, // Vertex 2
-    1.0f, 0.0f, 0.0f, // Vertex 4
-    1.0f, 1.0f, 0.0f, // Vertex 6
+    0.0f, 1.0f, 0.0f,  // Vertex 2
+    1.0f, 0.0f, 0.0f,  // Vertex 4
+    1.0f, 1.0f, 0.0f,  // Vertex 6
 
-    0.0f, 0.0f, 1.0f, // Vertex 1
-    0.0f, 1.0f, 1.0f, // Vertex 3
-    1.0f, 0.0f, 1.0f, // Vertex 5
+    0.0f, 0.0f, 1.0f,  // Vertex 1
+    0.0f, 1.0f, 1.0f,  // Vertex 3
+    1.0f, 0.0f, 1.0f,  // Vertex 5
 
-    0.0f, 1.0f, 1.0f, // Vertex 3
-    1.0f, 0.0f, 1.0f, // Vertex 5
-    1.0f, 1.0f, 1.0f  // Vertex 7
+    0.0f, 1.0f, 1.0f,  // Vertex 3
+    1.0f, 0.0f, 1.0f,  // Vertex 5
+    1.0f, 1.0f, 1.0f   // Vertex 7
 };
 
 static GLfloat const quadVertexData[] = {-1.f, -1.f, 0.f, 1.f, 1.f, 0.f, 1.f,  -1.f, 0.f,
@@ -309,15 +309,15 @@ void RenderSystem::update(float) {
 
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
-  glVertexAttribPointer(0,        // attribute 0. No particular reason for 0, but
-                                  // must match the layout in the shader.
-                        3,        // size
-                        GL_FLOAT, // type
-                        GL_FALSE, // normalized?
-                        0,        // stride
-                        (void *)0 // array buffer offset
+  glVertexAttribPointer(0,         // attribute 0. No particular reason for 0, but
+                                   // must match the layout in the shader.
+                        3,         // size
+                        GL_FLOAT,  // type
+                        GL_FALSE,  // normalized?
+                        0,         // stride
+                        (void *)0  // array buffer offset
   );
-  glDrawArrays(GL_TRIANGLES, 0, 6); // 3 indices starting at 0 -> 1 triangle
+  glDrawArrays(GL_TRIANGLES, 0, 6);  // 3 indices starting at 0 -> 1 triangle
 
   // glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
   // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

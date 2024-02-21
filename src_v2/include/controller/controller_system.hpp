@@ -5,7 +5,7 @@
 struct GLFWwindow;
 
 class ControllerSystem : public System {
-public:
+ public:
   ControllerSystem() = default;
 
   void init(Voxlight *voxlight);
@@ -15,7 +15,7 @@ public:
   glm::mat4 getViewProjectionMatrix() const;
   glm::vec3 getCameraPosition() const;
 
-private:
+ private:
   GLFWwindow *window;
   Camera camera;
   Voxlight *engine;

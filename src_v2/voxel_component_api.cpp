@@ -1,10 +1,11 @@
+#include <spdlog/spdlog.h>
+
 #include "api/voxlight_api.hpp"
 #include "core/components.hpp"
 #include "core/voxel_data.hpp"
 #include "rendering/render_system.hpp"
 #include "rendering/render_utils.hpp"
 #include "voxlight.hpp"
-#include <spdlog/spdlog.h>
 
 VoxelComponentApi::VoxelComponentApi(Voxlight &voxlight) : voxlight(voxlight) {}
 

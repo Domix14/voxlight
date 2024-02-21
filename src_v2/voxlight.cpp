@@ -1,11 +1,10 @@
 #include "voxlight.hpp"
 
 #include <GLFW/glfw3.h>
+#include <spdlog/spdlog.h>
 
 #include <chrono>
 #include <stdexcept>
-
-#include <spdlog/spdlog.h>
 
 // clang-format off
 #include "world/world_system.hpp"

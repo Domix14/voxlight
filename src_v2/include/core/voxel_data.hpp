@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <filesystem>
@@ -7,10 +8,9 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 class VoxelData {
-public:
+ public:
   VoxelData() = default;
   ~VoxelData() = default;
 
@@ -26,9 +26,7 @@ public:
   }
   size_t getByteSize() const { return sizeof(std::uint8_t) * data.size(); }
 
-  void fill(std::uint8_t voxel) {
-    std::fill(data.begin(), data.end(), voxel);
-  }
+  void fill(std::uint8_t voxel) { std::fill(data.begin(), data.end(), voxel); }
 
   //   void shrinkToFit() {
   //     bool voxelFlag = false;
@@ -161,7 +159,7 @@ public:
   //     }
   //   }
 
-private:
+ private:
   size_t getIndex(glm::uvec3 pos) const { return pos.x + pos.y * dimensions.x + pos.z * dimensions.x * dimensions.y; }
 
   std::vector<std::uint8_t> data;

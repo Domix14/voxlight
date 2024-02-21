@@ -1,9 +1,8 @@
-#include <rendering/voxel_world.hpp>
+#include <glad/gl.h>
 
 #include <glm/gtx/quaternion.hpp>
 #include <rendering/render_utils.hpp>
-
-#include <glad/gl.h>
+#include <rendering/voxel_world.hpp>
 
 void VoxelWorld::init(glm::ivec3 dim) {
   dimensions = dim;

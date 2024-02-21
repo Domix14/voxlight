@@ -6,7 +6,6 @@
 #include <string_view>
 #include <system.hpp>
 
-
 // Forward declarations
 class Voxlight;
 struct GLFWwindow;
@@ -19,18 +18,21 @@ struct VoxelComponentEvent;
 struct EntityEvent;
 
 class EngineApi {
-public:
+ public:
   void start();
   void stop();
 
   GLFWwindow *getGLFWwindow();
   entt::registry &getRegistry();
 
-  template <std::derived_from<System> T> void addSystem() { addSystemInternal(std::make_unique<T>(voxlight)); }
+  template <std::derived_from<System> T>
+  void addSystem() {
+    addSystemInternal(std::make_unique<T>(voxlight));
+  }
 
   EngineApi(Voxlight &voxlight);
 
-private:
+ private:
   void addSystemInternal(std::unique_ptr<System> newSystem);
   Voxlight &voxlight;
 };
@@ -39,10 +41,10 @@ enum EntityEventType : std::uint8_t {
   OnTransformChange,
 };
 
-using EntityEventCallback = std::function<void(EntityEventType, EntityEvent const&)>;
+using EntityEventCallback = std::function<void(EntityEventType, EntityEvent const &)>;
 
 class EntityApi {
-public:
+ public:
   entt::entity createEntity(std::string const &name, TransformComponent const &transformComponent);
 
   entt::entity getFirstWithName(std::string_view name) const;
@@ -59,7 +61,7 @@ public:
 
   EntityApi(Voxlight &voxlight);
 
-private:
+ private:
   Voxlight &voxlight;
 };
 
@@ -69,10 +71,10 @@ enum VoxelComponentEventType : std::uint8_t {
   OnVoxelDataChange,
 };
 
-using VoxelComponentEventCallback = std::function<void(VoxelComponentEventType, VoxelComponentEvent const&)>;
+using VoxelComponentEventCallback = std::function<void(VoxelComponentEventType, VoxelComponentEvent const &)>;
 
 class VoxelComponentApi {
-public:
+ public:
   void addComponent(entt::entity entity, VoxelData const &voxelData);
   void removeComponent(entt::entity entity);
   bool hasComponent(entt::entity entity) const;
@@ -83,11 +85,11 @@ public:
 
   VoxelComponentApi(Voxlight &voxlight);
 
-private:
+ private:
   Voxlight &voxlight;
 };
 class CameraComponentApi {
-public:
+ public:
   void addComponent(entt::entity entity);
   void removeComponent(entt::entity entity);
   bool hasComponent(entt::entity entity) const;
@@ -103,6 +105,6 @@ public:
 
   CameraComponentApi(Voxlight &voxlight);
 
-private:
+ private:
   Voxlight &voxlight;
 };

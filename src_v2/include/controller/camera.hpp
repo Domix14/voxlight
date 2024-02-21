@@ -7,7 +7,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 class Camera {
-public:
+ public:
   double cursorX;
   double cursorY;
 

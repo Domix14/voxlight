@@ -36,7 +36,7 @@ void WorldSystem::update(float) {
     glm::vec3 minBox = transform.position;
     glm::vec3 maxBox = minBox + size;
 
-    auto rotatedCameraPos = cameraPos; // TODO: rotate camera
+    auto rotatedCameraPos = cameraPos;  // TODO: rotate camera
     auto closestPoint = glm::vec3(glm::clamp(rotatedCameraPos.x, minBox.x, maxBox.x),
                                   glm::clamp(rotatedCameraPos.y, minBox.y, maxBox.y),
                                   glm::clamp(rotatedCameraPos.z, minBox.z, maxBox.z));

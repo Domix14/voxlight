@@ -1,5 +1,5 @@
 ﻿---
-BasedOnStyle: LLVM
+BasedOnStyle: Google
 ColumnLimit: "120"
 SpaceBeforeParens: Never
 RemoveSemicolon: true

@@ -1,11 +1,10 @@
 #pragma once
 
+#include <api/voxlight_api.hpp>
+#include <core/event.hpp>
 #include <core/voxel_data.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <core/event.hpp>
-#include <api/voxlight_api.hpp>
-
 
 struct NameComponent {
   std::string name;
@@ -35,8 +34,8 @@ struct CameraComponent {
 
 struct EntityEvent : public Event<EntityEventType> {
   EntityEvent(entt::entity entity, TransformComponent const& transformComponent, TransformComponent oldTransform)
-    : entity(entity), transformComponent(transformComponent), oldTransform(oldTransform) {}
-  
+      : entity(entity), transformComponent(transformComponent), oldTransform(oldTransform) {}
+
   entt::entity entity;
   TransformComponent const& transformComponent;
   TransformComponent oldTransform;
@@ -44,8 +43,8 @@ struct EntityEvent : public Event<EntityEventType> {
 
 struct VoxelComponentEvent : public Event<VoxelComponentEventType> {
   VoxelComponentEvent(entt::entity entity, VoxelComponent const& voxelComponent, VoxelData const& newVoxelData)
-    : entity(entity), voxelComponent(voxelComponent), newVoxelData(newVoxelData) {}
-  
+      : entity(entity), voxelComponent(voxelComponent), newVoxelData(newVoxelData) {}
+
   entt::entity entity;
   VoxelComponent const& voxelComponent;
   VoxelData const& newVoxelData;
