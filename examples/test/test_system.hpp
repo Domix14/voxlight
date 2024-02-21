@@ -43,10 +43,6 @@ public:
     spdlog::info("TestSystem::init()");
     window = EngineApi(voxlight).getGLFWwindow();
 
-    VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::AfterVoxelDataChange, [](VoxelComponentEventType eventType, VoxelComponentEvent const& event) {
-      spdlog::info("VoxelComponentEventType::AfterVoxelDataChange 1");
-    });
-
     // VoxelComponentApi(voxlight).listenForEvent(VoxelComponentEventType::AfterVoxelDataChange, [](VoxelComponentEvent const& event) {
     //   spdlog::info("VoxelComponentEventType::AfterVoxelDataChange 1");
     // });
@@ -215,7 +211,25 @@ public:
     EntityApi(voxlight).setRotation(cubeEntity, glm::angleAxis(rotation, glm::vec3(0.f, 1.f, 0.f)));
     rotation += 0.1f * deltaTime;
 
-
+    static bool pressed = false;
+    if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+      if(!pressed) {
+        VoxelData voxelData;
+        voxelData.resize({16, 16, 16});
+        // generate random voxel data
+        for(size_t x = 0; x < 16; ++x) {
+          for(size_t y = 0; y < 16; ++y) {
+            for(size_t z = 0; z < 16; ++z) {
+              voxelData.setVoxel({x, y, z}, glm::linearRand(0, 100) > 90 ? 70 : 0);
+            }
+          }
+        }
+        VoxelComponentApi(voxlight).setVoxelData(cubeEntity, voxelData);
+        pressed = true;
+      }
+    } else {
+      pressed = false;
+    }
     
   }
 

@@ -16,6 +16,7 @@ struct CameraComponent;
 class VoxelData;
 struct VoxelComponent;
 struct VoxelComponentEvent;
+struct EntityEvent;
 
 class EngineApi {
 public:
@@ -34,6 +35,12 @@ private:
   Voxlight &voxlight;
 };
 
+enum EntityEventType : std::uint8_t {
+  OnTransformChange,
+};
+
+using EntityEventCallback = std::function<void(EntityEventType, EntityEvent const&)>;
+
 class EntityApi {
 public:
   entt::entity createEntity(std::string const &name, TransformComponent const &transformComponent);
@@ -48,6 +55,8 @@ public:
   void setRotation(entt::entity entity, glm::quat const &rotation);
   void setTransform(entt::entity entity, TransformComponent const &transform);
 
+  void subscribe(EntityEventType eventType, EntityEventCallback listener);
+
   EntityApi(Voxlight &voxlight);
 
 private:
@@ -55,8 +64,9 @@ private:
 };
 
 enum VoxelComponentEventType : std::uint8_t {
-  BeforeVoxelDataChange,
-  AfterVoxelDataChange,
+  OnVoxelDataCreation,
+  OnVoxelDataDestruction,
+  OnVoxelDataChange,
 };
 
 using VoxelComponentEventCallback = std::function<void(VoxelComponentEventType, VoxelComponentEvent const&)>;

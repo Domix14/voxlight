@@ -36,34 +36,35 @@ void EntityApi::setName(entt::entity entity, std::string_view name) {
 
 void EntityApi::setPosition(entt::entity entity, glm::vec3 const &position) {
   auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
-  if(voxlight.registry.all_of<VoxelComponent>(entity)) {
-    auto& voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
-    voxelComponent.lastPosition = transformComponent.position;
-    voxelComponent.needsUpdate = true;
-  }
+  TransformComponent oldTransform = transformComponent;
   transformComponent.position = position;
+
+  EntityEvent event(entity, transformComponent, oldTransform);
+  voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
 }
 
 void EntityApi::setScale(entt::entity entity, glm::vec3 const &scale) {
   voxlight.registry.get<TransformComponent>(entity).scale = scale;
-  if(voxlight.registry.all_of<VoxelComponent>(entity)) {
-    voxlight.registry.get<VoxelComponent>(entity).needsUpdate = true;
-  }
 }
 
 void EntityApi::setRotation(entt::entity entity, glm::quat const &rotation) {
   auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
-  if(voxlight.registry.all_of<VoxelComponent>(entity)) {
-    auto& voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
-    voxelComponent.lastRotation = transformComponent.rotation;
-    voxelComponent.needsUpdate = true;
-  }
+  TransformComponent oldTransform = transformComponent;
   transformComponent.rotation = rotation;
+
+  EntityEvent event(entity, transformComponent, oldTransform);
+  voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
 }
 
 void EntityApi::setTransform(entt::entity entity, TransformComponent const &transform) {
-  voxlight.registry.get<TransformComponent>(entity) = transform;
-  if(voxlight.registry.all_of<VoxelComponent>(entity)) {
-    voxlight.registry.get<VoxelComponent>(entity).needsUpdate = true;
-  }
+  auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
+  TransformComponent oldTransform = transformComponent;
+  transformComponent = transform;
+  
+  EntityEvent event(entity, transformComponent, oldTransform);
+  voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
+}
+
+void EntityApi::subscribe(EntityEventType eventType, EntityEventCallback listener) {
+  voxlight.entityEventManager.subscribe(eventType, listener);
 }

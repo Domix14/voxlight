@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entt.hpp>
+#include <entt/entity/registry.hpp>
 #include <vector>
 
 #include "api/voxlight_api.hpp"
@@ -44,6 +44,7 @@ private:
 
   // Event system
   EventManager<VoxelComponentEvent> voxelComponentEventManager;
+  EventManager<EntityEvent> entityEventManager;
   
 
   // Friend class declarations

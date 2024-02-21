@@ -11,18 +11,17 @@ VoxelComponentApi::VoxelComponentApi(Voxlight &voxlight) : voxlight(voxlight) {}
 void VoxelComponentApi::addComponent(entt::entity entity, VoxelData const &voxelData) {
   auto &voxelComponent = voxlight.registry.emplace<VoxelComponent>(entity);
   voxelComponent.voxelData = voxelData;
-  voxelComponent.textureId = CreateVoxelTexture(voxelComponent.voxelData.getData(), voxelComponent.voxelData.getDimensions());
   voxelComponent.needsUpdate = true;
   auto& transformComponent = voxlight.registry.get<TransformComponent>(entity);
   voxelComponent.lastPosition = transformComponent.position;
   voxelComponent.lastRotation = transformComponent.rotation;
 
-  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::AfterVoxelDataChange, {entity, voxelComponent});
+  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataCreation, {entity, voxelComponent, voxelComponent.voxelData});
 }
 
 void VoxelComponentApi::removeComponent(entt::entity entity) {
   auto voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
-  DeleteVoxelTexture(voxelComponent.textureId);
+  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataDestruction, {entity, voxelComponent, voxelComponent.voxelData});
   voxlight.registry.remove<VoxelComponent>(entity);
 }
 
@@ -32,9 +31,9 @@ bool VoxelComponentApi::hasComponent(entt::entity entity) const {
 
 void VoxelComponentApi::setVoxelData(entt::entity entity, VoxelData const &voxelData) {
   auto &voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
+  VoxelComponentEvent event(entity, voxelComponent, voxelData);
+  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataChange, event);
   voxelComponent.voxelData = voxelData;
-  DeleteVoxelTexture(voxelComponent.textureId);
-  voxelComponent.textureId = CreateVoxelTexture(voxelComponent.voxelData.getData(), voxelComponent.voxelData.getDimensions());
 }
 
 void VoxelComponentApi::subscribe(VoxelComponentEventType eventType, VoxelComponentEventCallback listener) {

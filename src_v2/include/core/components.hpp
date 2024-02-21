@@ -33,10 +33,20 @@ struct CameraComponent {
 
 /// Events
 
+struct EntityEvent : public Event<EntityEventType> {
+  EntityEvent(entt::entity entity, TransformComponent const& transformComponent, TransformComponent oldTransform)
+    : entity(entity), transformComponent(transformComponent), oldTransform(oldTransform) {}
+  
+  entt::entity entity;
+  TransformComponent const& transformComponent;
+  TransformComponent oldTransform;
+};
+
 struct VoxelComponentEvent : public Event<VoxelComponentEventType> {
-  VoxelComponentEvent(entt::entity entity, VoxelComponent const& voxelComponent)
-    : entity(entity), voxelComponent(voxelComponent) {}
+  VoxelComponentEvent(entt::entity entity, VoxelComponent const& voxelComponent, VoxelData const& newVoxelData)
+    : entity(entity), voxelComponent(voxelComponent), newVoxelData(newVoxelData) {}
   
   entt::entity entity;
   VoxelComponent const& voxelComponent;
+  VoxelData const& newVoxelData;
 };

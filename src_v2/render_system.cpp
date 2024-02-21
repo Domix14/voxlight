@@ -6,7 +6,7 @@
 // clang-format on
 #include <spdlog/spdlog.h>
 
-#include <entt/entt.hpp>
+#include <entt/entity/registry.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -182,6 +182,12 @@ void RenderSystem::init() {
   glGenerateMipmap(GL_TEXTURE_2D);
 
   voxelWorld.init(glm::ivec3(128));
+
+
+  VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::OnVoxelDataCreation, std::bind(&RenderSystem::onVoxelDataCreation, this, std::placeholders::_1, std::placeholders::_2));
+  VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::OnVoxelDataDestruction, std::bind(&RenderSystem::onVoxelDataDestruction, this, std::placeholders::_1, std::placeholders::_2));
+  VoxelComponentApi(voxlight).subscribe(VoxelComponentEventType::OnVoxelDataChange, std::bind(&RenderSystem::onVoxelDataModification, this, std::placeholders::_1, std::placeholders::_2));
+  EntityApi(voxlight).subscribe(EntityEventType::OnTransformChange, std::bind(&RenderSystem::onEntityTransformChange, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void RenderSystem::deinit() {}
@@ -335,16 +341,32 @@ void RenderSystem::update(float) {
   sunlightShader.refresh();
 }
 
-// void RenderSystem::createWorldTexture(std::vector<std::uint8_t> const &data,
-//                                       glm::ivec3 size) {
-//   if (0 != worldVoxelTexture) {
-//     glDeleteTextures(1, &worldVoxelTexture);
-//   }
-//   worldVoxelTextureSize = size;
-//   worldVoxelTexture = createVoxelTexture(data, size);
-// }
+void RenderSystem::onVoxelDataCreation(VoxelComponentEventType, VoxelComponentEvent const &event) {
+  auto texId = CreateVoxelTexture(event.newVoxelData.getData(), event.newVoxelData.getDimensions());
+  EngineApi(voxlight).getRegistry().get<VoxelComponent>(event.entity).textureId = texId;
+  auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.newVoxelData, false);
+}
 
-// void RenderSystem::updateWorldTexture(std::vector<std::uint8_t> const &,
-//                                       glm::ivec3, glm::ivec3) {
-//   // todo
-// }
+void RenderSystem::onVoxelDataDestruction(VoxelComponentEventType, VoxelComponentEvent const &event) {
+  DeleteVoxelTexture(event.voxelComponent.textureId);
+  auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.voxelComponent.voxelData, true);
+}
+
+void RenderSystem::onVoxelDataModification(VoxelComponentEventType, VoxelComponentEvent const &event) {
+  auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.voxelComponent.voxelData, true);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.newVoxelData, false);
+  DeleteVoxelTexture(event.voxelComponent.textureId);
+  auto texId = CreateVoxelTexture(event.newVoxelData.getData(), event.newVoxelData.getDimensions());
+  EngineApi(voxlight).getRegistry().get<VoxelComponent>(event.entity).textureId = texId;
+}
+
+void RenderSystem::onEntityTransformChange(EntityEventType, EntityEvent const &event) {
+  auto voxelComponent = EngineApi(voxlight).getRegistry().try_get<VoxelComponent>(event.entity);
+  if(voxelComponent) {
+    voxelWorld.rasterizeVoxelData(event.oldTransform.position, event.oldTransform.rotation, voxelComponent->voxelData, true);
+    voxelWorld.rasterizeVoxelData(event.transformComponent.position, event.transformComponent.rotation, voxelComponent->voxelData, false);
+  }
+}

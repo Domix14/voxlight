@@ -7,6 +7,7 @@
 #include "system.hpp"
 #include "voxel_world.hpp"
 #include "shader.hpp"
+#include <api/voxlight_api.hpp>
 
 class RenderSystem : public System {
 public:
@@ -16,6 +17,11 @@ public:
   void deinit();
 
 private:
+  void onVoxelDataCreation(VoxelComponentEventType eventType, VoxelComponentEvent const &event);
+  void onVoxelDataDestruction(VoxelComponentEventType eventType, VoxelComponentEvent const &event);
+  void onVoxelDataModification(VoxelComponentEventType eventType, VoxelComponentEvent const &event);
+  void onEntityTransformChange(EntityEventType eventType, EntityEvent const &event);
+
   // shaders
   Shader voxelShader;
   Shader sunlightShader;
