@@ -1,7 +1,8 @@
-#include <api/voxlight_api.hpp>
-#include <core/components.hpp>
 #include <spdlog/spdlog.h>
-#include <voxlight.hpp>
+
+#include <core/components.hpp>
+#include <core/voxlight.hpp>
+#include <voxlight_api.hpp>
 
 EntityApi::EntityApi(Voxlight &voxlight) : voxlight(voxlight) {}
 

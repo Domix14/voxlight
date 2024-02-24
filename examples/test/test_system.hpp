@@ -1,12 +1,12 @@
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
-#include <api/voxlight_api.hpp>
 #include <core/components.hpp>
+#include <core/voxlight.hpp>
 #include <cstdint>
 #include <glm/gtc/noise.hpp>
 #include <glm/gtc/random.hpp>
-#include <voxlight.hpp>
+#include <voxlight_api.hpp>
 
 class TestSystem : public System {
  public:
@@ -85,8 +85,8 @@ class TestSystem : public System {
 
     // create cube on plane
     // spawn 1000 cubes with random rotation, the should be placed in grid on the plane
-    for(size_t x = 0; x < 30; ++x) {
-      for(size_t z = 0; z < 30; ++z) {
+    for(size_t x = 0; x < 10; ++x) {
+      for(size_t z = 0; z < 10; ++z) {
         TransformComponent transform;
         transform.position = {x * 16 + 10, 5, z * 16 + 10};
         // transform.rotation = glm::sphericalRand(1.f);
@@ -169,7 +169,7 @@ class TestSystem : public System {
     if(cubePos.x > 12) {
       cubePos.x = 0;
     }
-    EntityApi(voxlight).setPosition(cubeEntity, cubePos);
+    // EntityApi(voxlight).setPosition(cubeEntity, cubePos);
 
     // rotate cube in 2 axes
     // glm::quat cubeRot = EntityApi(voxlight).getTransform(cubeEntity).rotation;

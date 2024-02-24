@@ -1,12 +1,10 @@
-#include "voxlight.hpp"
-
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
 #include <chrono>
+#include <core/components.hpp>
+#include <core/voxlight.hpp>
 #include <stdexcept>
-
-#include "core/components.hpp"
 
 void Voxlight::initGLFW() {
   if(!glfwInit()) {

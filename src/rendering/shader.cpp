@@ -1,10 +1,10 @@
-#include <rendering/shader.hpp>
+#include <glad/gl.h>
+#include <spdlog/spdlog.h>
 
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <glad/gl.h>
-#include <spdlog/spdlog.h>
+#include <rendering/shader.hpp>
 
 std::uint32_t Shader::compileShader(std::uint32_t shaderType, std::string_view shaderCode) const {
   auto shader = glCreateShader(shaderType);

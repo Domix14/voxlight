@@ -1,4 +1,4 @@
-#include "rendering/render_system.hpp"
+#include <rendering/render_system.hpp>
 
 // clang-format off
 #include <glad/gl.h>
@@ -9,20 +9,19 @@
 #include <imgui_impl_opengl3.h>
 #include <spdlog/spdlog.h>
 
+#include <core/components.hpp>
+#include <core/voxel_data.hpp>
+#include <core/voxlight.hpp>
 #include <entt/entity/registry.hpp>
+#include <generated/shaders.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <rendering/palette.hpp>
 #include <rendering/shader.hpp>
-
-#include "api/voxlight_api.hpp"
-#include "core/components.hpp"
-#include "core/voxel_data.hpp"
-#include "generated/shaders.hpp"
-#include "rendering/palette.hpp"
-#include "voxlight.hpp"
+#include <voxlight_api.hpp>
 
 static GLfloat const cubeVertexData[] = {
     0.0f, 0.0f, 0.0f,  // Vertex 0
@@ -267,7 +266,7 @@ void RenderSystem::update(float deltaTime) {
   sunlightShader.setInt("uDepthTexture", 2);
   sunlightShader.setInt("uNormalTexture", 3);
 
-  glm::vec3 sunPosition = {100000.f, 10000.f, 100000.f};
+  glm::vec3 sunPosition = {100000.f, 300000.f, 100000.f};
   auto mm = invViewProjectionMatrix;
   sunlightShader.setVec2("uInvResolution", 1.f / renderResolutionX, 1.f / renderResolutionY);
   sunlightShader.setMat4("uMagicMatrix", glm::value_ptr(mm));

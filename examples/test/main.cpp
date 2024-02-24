@@ -1,9 +1,9 @@
 #include <spdlog/spdlog.h>
 
-#include <api/voxlight_api.hpp>
 #include <core/components.hpp>
 #include <core/voxel_data.hpp>
-#include <voxlight.hpp>
+#include <core/voxlight.hpp>
+#include <voxlight_api.hpp>
 
 #include "core/voxel_data.hpp"
 #include "test_system.hpp"

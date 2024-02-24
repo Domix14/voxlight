@@ -1,8 +1,8 @@
 #include <spdlog/spdlog.h>
 
-#include <api/voxlight_api.hpp>
 #include <core/components.hpp>
-#include <voxlight.hpp>
+#include <core/voxlight.hpp>
+#include <voxlight_api.hpp>
 
 EngineApi::EngineApi(Voxlight &voxlight) : voxlight(voxlight) {}
 

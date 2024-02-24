@@ -1,12 +1,11 @@
 #pragma once
 
-#include <api/voxlight_api.hpp>
+#include <core/system.hpp>
 #include <cstdint>
+#include <rendering/shader.hpp>
+#include <rendering/voxel_world.hpp>
 #include <vector>
-
-#include "shader.hpp"
-#include "system.hpp"
-#include "voxel_world.hpp"
+#include <voxlight_api.hpp>
 
 class RenderSystem : public System {
  public:

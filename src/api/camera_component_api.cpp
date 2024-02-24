@@ -1,10 +1,9 @@
 #include <spdlog/spdlog.h>
 
+#include <core/components.hpp>
+#include <core/voxlight.hpp>
 #include <glm/glm.hpp>
-
-#include "api/voxlight_api.hpp"
-#include "core/components.hpp"
-#include "voxlight.hpp"
+#include <voxlight_api.hpp>
 
 CameraComponentApi::CameraComponentApi(Voxlight &voxlight) : voxlight(voxlight) {}
 

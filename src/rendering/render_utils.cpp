@@ -1,6 +1,6 @@
-#include "rendering/render_utils.hpp"
-
 #include <glad/gl.h>
+
+#include <rendering/render_utils.hpp>
 
 unsigned int CreateVoxelTexture(std::uint8_t const *data, glm::ivec3 size) {
   unsigned int texname;
