@@ -21,7 +21,6 @@
 #include "api/voxlight_api.hpp"
 #include "core/components.hpp"
 #include "core/voxel_data.hpp"
-#include "engine_config.hpp"
 #include "generated/shaders.hpp"
 #include "rendering/palette.hpp"
 #include "voxlight.hpp"
@@ -94,18 +93,14 @@ void RenderSystem::init() {
     throw std::runtime_error("Failed to initialize GLAD \n");
   }
 
-  // Pointer to GLFW window
-  auto glfwWindow = EngineApi(voxlight).getGLFWwindow();
-
   // voxelShader.create(VOXEL_VERTEX_SHADER_SRC, VOXEL_FRAGMENT_SHADER_SRC);
   voxelShader.loadAndCreate(VOXEL_VERTEX_SHADER_PATH, VOXEL_FRAGMENT_SHADER_PATH);
   sunlightShader.loadAndCreate(SUNLIGHT_VERTEX_SHADER_PATH, SUNLIGHT_FRAGMENT_SHADER_PATH);
 
-  // Set window resize callback
-  glViewport(0, 0, WindowWidth, WindowHeight);
-  glfwSetWindowUserPointer(glfwWindow, this);
-  auto framebufferSizeCallback = [](GLFWwindow *, int width, int height) { glViewport(0, 0, width, height); };
-  glfwSetFramebufferSizeCallback(glfwWindow, framebufferSizeCallback);
+  renderResolutionX = 1280;
+  renderResolutionY = 720;
+
+  glViewport(0, 0, renderResolutionX, renderResolutionY);
 
   // Set clear color
   glClearColor(0.529f, 0.8f, 0.92f, 0.f);
@@ -119,38 +114,8 @@ void RenderSystem::init() {
   glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexData), quadVertexData, GL_STATIC_DRAW);
 
-  // Create framebuffers
-  glGenFramebuffers(1, &mainFramebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
-
-  glGenTextures(1, &colorTexture);
-  glBindTexture(GL_TEXTURE_2D, colorTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0, GL_RGBA, GL_FLOAT, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glGenTextures(1, &normalTexture);
-  glBindTexture(GL_TEXTURE_2D, normalTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glGenTextures(1, &depthTexture);
-  glBindTexture(GL_TEXTURE_2D, depthTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, depthTexture, 0);
-  frameBufferCheck();
+  // Create framebuffer
+  createGBuffer();
 
   // Create palette texture
   glGenTextures(1, &paletteTexture);
@@ -175,6 +140,10 @@ void RenderSystem::init() {
   EntityApi(voxlight).subscribe(
       EntityEventType::OnTransformChange,
       std::bind(&RenderSystem::onEntityTransformChange, this, std::placeholders::_1, std::placeholders::_2));
+
+  EngineApi(voxlight).subscribe(
+      EngineEventType::OnWindowResize,
+      std::bind(&RenderSystem::onWindowResize, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void RenderSystem::deinit() {}
@@ -248,7 +217,7 @@ void RenderSystem::update(float) {
 
     voxelShader.setMat4("uModelMatrix", glm::value_ptr(modelMatrix));
     voxelShader.setMat4("uViewProjectionMatrix", glm::value_ptr(viewProjectionMatrix));
-    voxelShader.setVec2("uInvResolution", 1.f / 1280.f, 1.f / 720.f);
+    voxelShader.setVec2("uInvResolution", 1.f / renderResolutionX, 1.f / renderResolutionY);
     voxelShader.setVec3("uMinBox", minBox.x, minBox.y, minBox.z);
     voxelShader.setVec3("uMaxBox", maxBox.x, maxBox.y, maxBox.z);
     voxelShader.setVec3("uChunkSize", size.x, size.y, size.z);
@@ -300,7 +269,7 @@ void RenderSystem::update(float) {
 
   glm::vec3 sunPosition = {100000.f, 100000.f, 100000.f};
   auto mm = invViewProjectionMatrix;
-  sunlightShader.setVec2("uInvResolution", 1.f / 1280.f, 1.f / 720.f);
+  sunlightShader.setVec2("uInvResolution", 1.f / renderResolutionX, 1.f / renderResolutionY);
   sunlightShader.setMat4("uMagicMatrix", glm::value_ptr(mm));
   sunlightShader.setVec3("uSunPos", sunPosition.x, sunPosition.y, sunPosition.z);
   glm::vec3 worldDimensions = glm::vec3(voxelWorld.getDimensions());
@@ -320,8 +289,8 @@ void RenderSystem::update(float) {
 
   // glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebuffer);
   // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  // glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT,
-  // GL_LINEAR); glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+  // glBlitFramebuffer(0, 0, renderResolutionX, renderResolutionY, 0, 0, renderResolutionX, renderResolutionY,
+  // GL_COLOR_BUFFER_BIT, GL_LINEAR); glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
@@ -362,4 +331,54 @@ void RenderSystem::onEntityTransformChange(EntityEventType, EntityEvent const &e
     voxelWorld.rasterizeVoxelData(event.transformComponent.position, event.transformComponent.rotation,
                                   voxelComponent->voxelData, false);
   }
+}
+
+void RenderSystem::createGBuffer() {
+  glGenFramebuffers(1, &mainFramebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
+
+  glGenTextures(1, &colorTexture);
+  glBindTexture(GL_TEXTURE_2D, colorTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, renderResolutionX, renderResolutionY, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glGenTextures(1, &normalTexture);
+  glBindTexture(GL_TEXTURE_2D, normalTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, renderResolutionX, renderResolutionY, 0, GL_RGB, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glGenTextures(1, &depthTexture);
+  glBindTexture(GL_TEXTURE_2D, depthTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, renderResolutionX, renderResolutionY, 0, GL_RGB, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, depthTexture, 0);
+  frameBufferCheck();
+}
+
+void RenderSystem::onWindowResize(EngineEventType, EngineEvent const &event) {
+  renderResolutionX = event.windowWidth;
+  renderResolutionY = event.windowHeight;
+
+  glViewport(0, 0, renderResolutionX, renderResolutionY);
+
+  // delete old framebuffer
+  glDeleteTextures(1, &colorTexture);
+  glDeleteTextures(1, &normalTexture);
+  glDeleteTextures(1, &depthTexture);
+
+  glDeleteFramebuffers(1, &mainFramebuffer);
+
+  createGBuffer();
 }

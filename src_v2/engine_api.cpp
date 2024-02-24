@@ -1,6 +1,7 @@
 #include <spdlog/spdlog.h>
 
 #include <api/voxlight_api.hpp>
+#include <core/components.hpp>
 #include <voxlight.hpp>
 
 EngineApi::EngineApi(Voxlight &voxlight) : voxlight(voxlight) {}
@@ -31,3 +32,16 @@ void EngineApi::addSystemInternal(std::unique_ptr<System> newSystem) {
 GLFWwindow *EngineApi::getGLFWwindow() { return voxlight.glfwWindow; }
 
 entt::registry &EngineApi::getRegistry() { return voxlight.registry; }
+
+void EngineApi::subscribe(EngineEventType eventType, EngineEventCallback listener) {
+  voxlight.engineEventManager.subscribe(eventType, listener);
+}
+
+void EngineApi::setWindowResolution(int width, int height) {
+  spdlog::info("Window resized to {}x{}", width, height);
+
+  voxlight.windowWidth = width;
+  voxlight.windowHeight = height;
+  voxlight.engineEventManager.publish(EngineEventType::OnWindowResize,
+                                      EngineEvent(voxlight.windowWidth, voxlight.windowHeight));
+}

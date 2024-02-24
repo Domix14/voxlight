@@ -32,6 +32,13 @@ struct CameraComponent {
 
 /// Events
 
+struct EngineEvent : public Event<EngineEventType> {
+  EngineEvent(int windowWidth, int windowHeight) : windowWidth(windowWidth), windowHeight(windowHeight) {}
+
+  int windowWidth;
+  int windowHeight;
+};
+
 struct EntityEvent : public Event<EntityEventType> {
   EntityEvent(entt::entity entity, TransformComponent const& transformComponent, TransformComponent oldTransform)
       : entity(entity), transformComponent(transformComponent), oldTransform(oldTransform) {}

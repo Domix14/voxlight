@@ -7,33 +7,39 @@
 #include <stdexcept>
 
 #include "core/components.hpp"
-#include "engine_config.hpp"
 
-static GLFWwindow *initGLFW() {
+void Voxlight::initGLFW() {
   if(!glfwInit()) {
     throw std::runtime_error("Failed to initialize GLFW\n");
   }
 
+  // glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-  GLFWwindow *window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle, nullptr, nullptr);
-  if(!window) {
+  glfwWindow = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+  if(!glfwWindow) {
     glfwTerminate();
     throw std::runtime_error("Failed to create GLFW window\n");
   }
 
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(glfwWindow);
   glfwSwapInterval(1);
 
-  return window;
+  // Set window resize callback
+  glfwSetWindowUserPointer(glfwWindow, this);
+  auto framebufferSizeCallback = [](GLFWwindow *window, int width, int height) {
+    auto &voxlight = *static_cast<Voxlight *>(glfwGetWindowUserPointer(window));
+    EngineApi(voxlight).setWindowResolution(width, height);
+  };
+  glfwSetFramebufferSizeCallback(glfwWindow, framebufferSizeCallback);
 }
 
-Voxlight::Voxlight() : registry(), renderSystem(*this) {}
+Voxlight::Voxlight(int windowWidth, int windowHeight, std::string windowTitle)
+    : windowWidth(windowWidth), windowHeight(windowHeight), windowTitle(windowTitle), renderSystem(*this) {}
 
 void Voxlight::init() {
-  // Initialize GLFW window
-  glfwWindow = initGLFW();
+  initGLFW();
 
   // Initialize internal systems
   renderSystem.init();

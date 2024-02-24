@@ -10,7 +10,7 @@
 
 int main() {
   spdlog::set_level(spdlog::level::info);
-  Voxlight engine;
+  Voxlight engine(1280, 720, "Voxlight Test");
   EngineApi(engine).addSystem<TestSystem>();
 
   EngineApi(engine).start();

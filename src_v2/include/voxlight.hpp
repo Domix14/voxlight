@@ -12,7 +12,7 @@
 struct GLFWwindow;
 class Voxlight final {
  public:
-  Voxlight();
+  Voxlight(int windowWidth, int windowHeight, std::string windowTitle);
   ~Voxlight() = default;
 
  private:
@@ -23,9 +23,15 @@ class Voxlight final {
   entt::registry registry;
   void deinit();
 
-  bool isRunning = false;
+  void initGLFW();
 
-  GLFWwindow *glfwWindow;
+  // config
+  bool isRunning = false;
+  int windowWidth;
+  int windowHeight;
+  std::string windowTitle;
+
+  GLFWwindow *glfwWindow = nullptr;
 
   // Internal systems
   RenderSystem renderSystem;
@@ -37,6 +43,7 @@ class Voxlight final {
   entt::entity currentCamera = entt::null;
 
   // Event system
+  EventManager<EngineEvent> engineEventManager;
   EventManager<VoxelComponentEvent> voxelComponentEventManager;
   EventManager<EntityEvent> entityEventManager;
 

@@ -16,7 +16,13 @@ class VoxelData;
 struct VoxelComponent;
 struct VoxelComponentEvent;
 struct EntityEvent;
+struct EngineEvent;
 
+enum class EngineEventType : std::uint8_t {
+  OnWindowResize,
+};
+
+using EngineEventCallback = std::function<void(EngineEventType, EngineEvent const &)>;
 class EngineApi {
  public:
   void start();
@@ -25,10 +31,14 @@ class EngineApi {
   GLFWwindow *getGLFWwindow();
   entt::registry &getRegistry();
 
+  void setWindowResolution(int width, int height);
+
   template <std::derived_from<System> T>
   void addSystem() {
     addSystemInternal(std::make_unique<T>(voxlight));
   }
+
+  void subscribe(EngineEventType eventType, EngineEventCallback listener);
 
   EngineApi(Voxlight &voxlight);
 
