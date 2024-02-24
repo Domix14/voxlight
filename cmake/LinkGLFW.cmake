@@ -1,11 +1,7 @@
 include(FetchContent)
 
-macro(LinkGLFW TARGET ACCESS)
-    FetchContent_Declare(
-        glfw
-        GIT_REPOSITORY https://github.com/glfw/glfw
-        GIT_TAG 3.3.2
-    )
+macro (LinkGLFW TARGET ACCESS)
+    FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw GIT_TAG 3.3.2)
 
     FetchContent_GetProperties(glfw)
 
@@ -13,48 +9,44 @@ macro(LinkGLFW TARGET ACCESS)
         FetchContent_Populate(glfw)
 
         # Just configure GLFW only
-        set(GLFW_BUILD_EXAMPLES     OFF CACHE BOOL "Build Examples" FORCE)
-        set(GLFW_BUILD_TESTS        OFF CACHE BOOL "Build tests" FORCE)
-        set(GLFW_BUILD_DOCS         OFF CACHE BOOL "Build docs" FORCE)
-        set(GLFW_INSTALL            OFF CACHE BOOL "Configure an install" FORCE)
+        set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build Examples" FORCE)
+        set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build tests" FORCE)
+        set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build docs" FORCE)
+        set(GLFW_INSTALL OFF CACHE BOOL "Configure an install" FORCE)
 
-        # This excludes glfw from being rebuilt when ALL_BUILD is built
-        # it will only be built when a target is built that has a dependency on glfw
+        # This excludes glfw from being rebuilt when ALL_BUILD is built it will only be built when a
+        # target is built that has a dependency on glfw
         add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
 
         # Set the target's folders
         set_target_properties(glfw PROPERTIES FOLDER ${PROJECT_NAME}/thirdparty)
-    endif()
+    endif ()
 
     target_include_directories(${TARGET} ${ACCESS} ${glfw_SOURCE_DIR}/include)
     target_link_libraries(${TARGET} ${ACCESS} glfw)
 
-    FetchContent_Declare(
-        imgui
-        GIT_REPOSITORY https://github.com/ocornut/imgui/
-        GIT_TAG v1.89.7
-    )
+    FetchContent_Declare(imgui GIT_REPOSITORY https://github.com/ocornut/imgui/ GIT_TAG v1.89.7)
 
     FetchContent_GetProperties(imgui)
     FetchContent_Populate(imgui)
 
-    add_library(imgui_lib
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_demo.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-  
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
+    add_library(
+        imgui_lib
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+    )
 
     target_include_directories(imgui_lib PRIVATE ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_link_libraries(imgui_lib PRIVATE glfw)
     target_include_directories(${TARGET} ${ACCESS} ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_link_libraries(${TARGET} ${ACCESS} imgui_lib)
-    target_compile_options(${TARGET} ${ACCESS} -Wno-volatile)
 
     add_dependencies(${TARGET} imgui_lib)
 
     add_dependencies(${TARGET} glfw)
-endmacro()
+endmacro ()

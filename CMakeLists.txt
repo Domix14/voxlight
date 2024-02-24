@@ -24,9 +24,7 @@ set(OUT_SHADER_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/voxlight/rendering/gene
 add_custom_command(
     COMMAND "py" "${CMAKE_SOURCE_DIR}/tools/generate_shader.py"
             "${CMAKE_CURRENT_SOURCE_DIR}/shaders" ${OUT_SHADER_PATH}
-    OUTPUT "${OUT_SHADER_PATH}/shaders.hpp"
-    COMMENT "Generating shader header files."
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+    OUTPUT "${OUT_SHADER_PATH}/shaders.hpp" COMMENT "Generating shader header files."
 )
 add_library(generatedLib "${OUT_SHADER_PATH}/shaders.hpp")
 set_target_properties(generatedLib PROPERTIES LINKER_LANGUAGE CXX)

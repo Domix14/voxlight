@@ -33,9 +33,6 @@ linkglad(voxlight PUBLIC)
 include(${CMAKE_DIR}/LinkGLM.cmake)
 linkglm(voxlight PUBLIC)
 
-include(${CMAKE_DIR}/LinkSTB.cmake)
-linkstb(voxlight PUBLIC)
-
 include(${CMAKE_DIR}/LinkSPGLOG.cmake)
 linkspglog(voxlight PUBLIC)
 
