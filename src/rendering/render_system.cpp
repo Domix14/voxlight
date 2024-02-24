@@ -13,12 +13,12 @@
 #include <core/voxel_data.hpp>
 #include <core/voxlight.hpp>
 #include <entt/entity/registry.hpp>
-#include <generated/shaders.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <rendering/generated/shaders.hpp>
 #include <rendering/palette.hpp>
 #include <rendering/shader.hpp>
 #include <voxlight_api.hpp>

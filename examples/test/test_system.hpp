@@ -1,12 +1,12 @@
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
-#include <core/components.hpp>
-#include <core/voxlight.hpp>
 #include <cstdint>
 #include <glm/gtc/noise.hpp>
 #include <glm/gtc/random.hpp>
-#include <voxlight_api.hpp>
+#include <voxlight/core/components.hpp>
+#include <voxlight/core/voxlight.hpp>
+#include <voxlight/voxlight_api.hpp>
 
 class TestSystem : public System {
  public:

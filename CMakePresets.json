@@ -1,0 +1,38 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 26,
+        "patch": 0
+    },
+    "include": [],
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/build/${presetName}/install"
+        },
+        {
+            "name": "windows-gcc",
+            "displayName": "Windows (GCC)",
+            "description": "Configure for Windows (GCC)",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "toolchainFile": "${sourceDir}/cmake/toolchains/windows_gcc.cmake"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug build for Windows (GCC)",
+            "configurePreset": "windows-gcc",
+            "configuration": "Debug",
+            "targets": [
+                "voxlight"
+            ]
+        }
+    ]
+}

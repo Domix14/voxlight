@@ -1,19 +1,20 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <assert.h>
-#include <rendering/render_utils.hpp>
-#include <core/voxel_data.hpp>
+
+#include "../core/voxel_data.hpp"
+#include "render_utils.hpp"
 
 class VoxelWorld {
-public:
+ public:
   VoxelWorld() = default;
   ~VoxelWorld() = default;
 
@@ -21,7 +22,7 @@ public:
   void setVoxel(glm::ivec3 pos);
   void clearVoxel(glm::ivec3 pos);
 
-  std::uint8_t const *getData() const;
+  std::uint8_t const* getData() const;
   unsigned int getTexture() const;
   glm::ivec3 getDimensions() const;
 
@@ -29,7 +30,7 @@ public:
 
   void sync();
 
-private:
+ private:
   constexpr std::uint32_t idx(glm::ivec3 pos) {
     auto pos0 = pos >> 1;
     return pos0.x + pos0.y * halfdimensions.x + pos0.z * halfdimensions.x * halfdimensions.y;

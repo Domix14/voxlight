@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cinttypes>
-#include <core/system.hpp>
 #include <entt/fwd.hpp>
 #include <glm/fwd.hpp>
 #include <string_view>
+
+#include "core/system.hpp"
 
 // Forward declarations
 class Voxlight;

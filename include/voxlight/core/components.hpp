@@ -1,10 +1,11 @@
 #pragma once
 
-#include <core/event.hpp>
-#include <core/voxel_data.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <voxlight_api.hpp>
+
+#include "../voxlight_api.hpp"
+#include "event.hpp"
+#include "voxel_data.hpp"
 
 struct NameComponent {
   std::string name;

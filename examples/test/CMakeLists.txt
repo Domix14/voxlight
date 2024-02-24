@@ -7,4 +7,4 @@ target_include_directories(VoxlightExample PRIVATE .)
 
 target_compile_features(VoxlightExample PRIVATE cxx_std_20)
 
-target_link_libraries(VoxlightExample PRIVATE Voxlight)
+target_link_libraries(VoxlightExample PRIVATE voxlight)

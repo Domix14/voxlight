@@ -1,11 +1,10 @@
 #include <spdlog/spdlog.h>
 
-#include <core/components.hpp>
-#include <core/voxel_data.hpp>
-#include <core/voxlight.hpp>
-#include <voxlight_api.hpp>
+#include <voxlight/core/components.hpp>
+#include <voxlight/core/voxel_data.hpp>
+#include <voxlight/core/voxlight.hpp>
+#include <voxlight/voxlight_api.hpp>
 
-#include "core/voxel_data.hpp"
 #include "test_system.hpp"
 
 int main() {

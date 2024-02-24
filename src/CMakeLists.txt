@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.28)
 
 add_library(
-    Voxlight
+    voxlight
     # core
     api/camera_component_api.cpp
     api/engine_api.cpp
@@ -15,41 +15,41 @@ add_library(
     # api
     rendering/voxel_world.cpp
 )
-target_include_directories(Voxlight PUBLIC ${PROJECT_SOURCE_DIR}/include)
+
+target_include_directories(
+    voxlight PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/voxlight>
+)
 
 set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
 # Perform dependency linkage
 include(${CMAKE_DIR}/LinkGLFW.cmake)
-linkglfw(Voxlight PUBLIC)
+linkglfw(voxlight PUBLIC)
 
 include(${CMAKE_DIR}/LinkGLAD.cmake)
-linkglad(Voxlight PUBLIC)
+linkglad(voxlight PUBLIC)
 
 include(${CMAKE_DIR}/LinkGLM.cmake)
-linkglm(Voxlight PUBLIC)
+linkglm(voxlight PUBLIC)
 
 include(${CMAKE_DIR}/LinkSTB.cmake)
-linkstb(Voxlight PUBLIC)
+linkstb(voxlight PUBLIC)
 
 include(${CMAKE_DIR}/LinkSPGLOG.cmake)
-linkspglog(Voxlight PUBLIC)
+linkspglog(voxlight PUBLIC)
 
 include(${CMAKE_DIR}/LinkENTT.cmake)
-linkentt(Voxlight PUBLIC)
+linkentt(voxlight PUBLIC)
 
 # include(${CMAKE_DIR}/LinkIMGUI.cmake) LinkIMGUI(Voxlight PRIVATE)
 find_package(OpenGL REQUIRED)
 
 if (OpenGL_FOUND)
-    target_include_directories(Voxlight PRIVATE ${OPENGL_INCLDUE_DIRS})
-    target_link_libraries(Voxlight PRIVATE ${OPENGL_LIBRARIES})
+    target_include_directories(voxlight PRIVATE ${OPENGL_INCLDUE_DIRS})
+    target_link_libraries(voxlight PRIVATE ${OPENGL_LIBRARIES})
 else ()
     message(FATAL_ERROR "OpenGL was not found on the system")
 endif ()
 
-target_compile_features(Voxlight PRIVATE cxx_std_20)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-target_compile_options(Voxlight PRIVATE -Wall -Wextra)
+target_compile_features(voxlight PRIVATE cxx_std_20)

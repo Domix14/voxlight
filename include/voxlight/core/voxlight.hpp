@@ -1,12 +1,13 @@
 #pragma once
 
-#include <core/components.hpp>
-#include <core/event_manager.hpp>
-#include <core/system.hpp>
 #include <entt/entity/registry.hpp>
-#include <rendering/render_system.hpp>
 #include <vector>
-#include <voxlight_api.hpp>
+
+#include "../rendering/render_system.hpp"
+#include "../voxlight_api.hpp"
+#include "components.hpp"
+#include "event_manager.hpp"
+#include "system.hpp"
 
 struct GLFWwindow;
 class Voxlight final {
