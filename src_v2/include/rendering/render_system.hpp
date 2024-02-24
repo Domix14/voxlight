@@ -23,6 +23,8 @@ class RenderSystem : public System {
   void onWindowResize(EngineEventType eventType, EngineEvent const &event);
 
   void createGBuffer();
+  void initImgui();
+  void drawImgui(float deltaTime);
 
   int renderResolutionX;
   int renderResolutionY;

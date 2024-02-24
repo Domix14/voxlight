@@ -4,6 +4,9 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 // clang-format on
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <spdlog/spdlog.h>
 
 #include <entt/entity/registry.hpp>
@@ -12,10 +15,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 #include <rendering/shader.hpp>
 
 #include "api/voxlight_api.hpp"
@@ -126,7 +125,8 @@ void RenderSystem::init() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
   glGenerateMipmap(GL_TEXTURE_2D);
 
-  voxelWorld.init(glm::ivec3(128));
+  voxelWorld.init(glm::ivec3(512, 128, 512));
+  initImgui();
 
   VoxelComponentApi(voxlight).subscribe(
       VoxelComponentEventType::OnVoxelDataCreation,
@@ -148,7 +148,7 @@ void RenderSystem::init() {
 
 void RenderSystem::deinit() {}
 
-void RenderSystem::update(float) {
+void RenderSystem::update(float deltaTime) {
   glBindFramebuffer(GL_FRAMEBUFFER, mainFramebuffer);
   GLenum attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
   glDrawBuffers(3, attachments);
@@ -292,6 +292,8 @@ void RenderSystem::update(float) {
   // glBlitFramebuffer(0, 0, renderResolutionX, renderResolutionY, 0, 0, renderResolutionX, renderResolutionY,
   // GL_COLOR_BUFFER_BIT, GL_LINEAR); glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
+  drawImgui(deltaTime);
+
   glfwSwapBuffers(EngineApi(voxlight).getGLFWwindow());
   glfwPollEvents();
 
@@ -381,4 +383,31 @@ void RenderSystem::onWindowResize(EngineEventType, EngineEvent const &event) {
   glDeleteFramebuffers(1, &mainFramebuffer);
 
   createGBuffer();
+}
+
+void RenderSystem::initImgui() {
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  // Setup Platform/Renderer bindings
+  ImGui_ImplGlfw_InitForOpenGL(EngineApi(voxlight).getGLFWwindow(), true);
+  ImGui_ImplOpenGL3_Init("#version 460");
+  // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
+}
+
+void RenderSystem::drawImgui(float deltaTime) {
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  ImGui::Begin("FPS counter");
+  ImGui::SetWindowSize(ImVec2(180, 60), ImGuiCond_FirstUseEver);
+  ImGui::Text("FPS: %.2f", 1.f / deltaTime);
+  ImGui::End();
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

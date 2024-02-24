@@ -95,7 +95,7 @@ class TestSystem : public System {
         }
       }
     }
-    EntityApi(voxlight).setPosition(cubeEntity, {60, 5, 60});
+    EntityApi(voxlight).setPosition(cubeEntity, {1, 0.1, 5});
     VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
 
     // create sphere
@@ -113,7 +113,7 @@ class TestSystem : public System {
       }
     }
     EntityApi(voxlight).setPosition(sphereEntity, {96, 8, 96});
-    VoxelComponentApi(voxlight).addComponent(sphereEntity, sphereVoxelData);
+    // VoxelComponentApi(voxlight).addComponent(sphereEntity, sphereVoxelData);
 
     // spawn another cube
     auto cubeEntity2 = EntityApi(voxlight).createEntity("Cube2", TransformComponent());
@@ -190,8 +190,8 @@ class TestSystem : public System {
     // move cube from left to right
     glm::vec3 cubePos = EntityApi(voxlight).getTransform(cubeEntity).position;
     cubePos.x += 5.f * deltaTime;
-    if(cubePos.x > 80) {
-      cubePos.x = 10;
+    if(cubePos.x > 12) {
+      cubePos.x = 0;
     }
     EntityApi(voxlight).setPosition(cubeEntity, cubePos);
 

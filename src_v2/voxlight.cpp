@@ -24,7 +24,7 @@ void Voxlight::initGLFW() {
   }
 
   glfwMakeContextCurrent(glfwWindow);
-  glfwSwapInterval(1);
+  glfwSwapInterval(0);
 
   // Set window resize callback
   glfwSetWindowUserPointer(glfwWindow, this);
