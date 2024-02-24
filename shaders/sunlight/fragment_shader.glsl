@@ -35,7 +35,7 @@ bool raycastToTarget(vec3 ro, vec3 target) {
     tMax.y = tDelta.y * ((rd.y>0.0) ? (1.0 - fr.y) : fr.y);
     tMax.z = tDelta.z * ((rd.z>0.0) ? (1.0 - fr.z) : fr.z);
 
-    const int maxTrace = 60;
+    const int maxTrace = 100;
 
     for (int i = 0; i < maxTrace; i++) {
         if (isOccupied(ivec3(pos)) != 0U) {

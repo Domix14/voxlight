@@ -11,22 +11,9 @@ void VoxelWorld::init(glm::ivec3 dim) {
   worldTexture = CreateVoxelTexture(data.data(), halfdimensions);
 }
 
-void VoxelWorld::setVoxel(glm::ivec3 pos) {
-  if(pos.x < 0 || pos.y < 0 || pos.z < 0 || pos.x >= halfdimensions.x || pos.y >= halfdimensions.y ||
-     pos.z >= halfdimensions.z) {
-    return;
-  }
+void VoxelWorld::setVoxel(glm::ivec3 pos) { data.at(idx(pos)) |= bitMask(pos); }
 
-  data.at(idx(pos)) |= bitMask(pos);
-}
-
-void VoxelWorld::clearVoxel(glm::ivec3 pos) {
-  if(pos.x < 0 || pos.y < 0 || pos.z < 0 || pos.x >= halfdimensions.x || pos.y >= halfdimensions.y ||
-     pos.z >= halfdimensions.z) {
-    return;
-  }
-  data.at(idx(pos)) &= ~bitMask(pos);
-}
+void VoxelWorld::clearVoxel(glm::ivec3 pos) { data.at(idx(pos)) &= ~bitMask(pos); }
 
 std::uint8_t const *VoxelWorld::getData() const { return data.data(); }
 

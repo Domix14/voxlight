@@ -267,7 +267,7 @@ void RenderSystem::update(float deltaTime) {
   sunlightShader.setInt("uDepthTexture", 2);
   sunlightShader.setInt("uNormalTexture", 3);
 
-  glm::vec3 sunPosition = {100000.f, 100000.f, 100000.f};
+  glm::vec3 sunPosition = {100000.f, 10000.f, 100000.f};
   auto mm = invViewProjectionMatrix;
   sunlightShader.setVec2("uInvResolution", 1.f / renderResolutionX, 1.f / renderResolutionY);
   sunlightShader.setMat4("uMagicMatrix", glm::value_ptr(mm));

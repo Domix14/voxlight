@@ -75,59 +75,35 @@ class TestSystem : public System {
     transform.rotation = glm::quat(glm::vec3(0, 0, 0));
     auto planeEntity = EntityApi(voxlight).createEntity("Plane", transform);
     VoxelData planeVoxelData;
-    planeVoxelData.resize({128, 1, 128});
-    for(size_t x = 0; x < 128; ++x) {
-      for(size_t z = 0; z < 128; ++z) {
+    planeVoxelData.resize({512, 1, 512});
+    for(size_t x = 0; x < 512; ++x) {
+      for(size_t z = 0; z < 512; ++z) {
         planeVoxelData.setVoxel({x, 0, z}, 2);
       }
     }
     VoxelComponentApi(voxlight).addComponent(planeEntity, planeVoxelData);
 
     // create cube on plane
-
-    auto cubeEntity = EntityApi(voxlight).createEntity("Cube", TransformComponent());
-    VoxelData cubeVoxelData;
-    cubeVoxelData.resize({16, 16, 16});
-    for(size_t x = 0; x < 16; ++x) {
-      for(size_t y = 0; y < 16; ++y) {
-        for(size_t z = 0; z < 16; ++z) {
-          cubeVoxelData.setVoxel({x, y, z}, 70);
-        }
-      }
-    }
-    EntityApi(voxlight).setPosition(cubeEntity, {1, 0.1, 5});
-    VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
-
-    // create sphere
-    auto sphereEntity = EntityApi(voxlight).createEntity("Sphere", TransformComponent());
-    VoxelData sphereVoxelData;
-    sphereVoxelData.resize({16, 16, 16});
-    for(size_t x = 0; x < 16; ++x) {
-      for(size_t y = 0; y < 16; ++y) {
-        for(size_t z = 0; z < 16; ++z) {
-          glm::vec3 pos = glm::vec3(x, y, z) - glm::vec3(8, 8, 8);
-          if(glm::length(pos) < 8) {
-            sphereVoxelData.setVoxel({x, y, z}, 70);
+    // spawn 1000 cubes with random rotation, the should be placed in grid on the plane
+    for(size_t x = 0; x < 30; ++x) {
+      for(size_t z = 0; z < 30; ++z) {
+        TransformComponent transform;
+        transform.position = {x * 16 + 10, 5, z * 16 + 10};
+        // transform.rotation = glm::sphericalRand(1.f);
+        auto cubeEntity = EntityApi(voxlight).createEntity("Cube", transform);
+        VoxelData cubeVoxelData;
+        cubeVoxelData.resize({8, 8, 8});
+        int color = glm::linearRand(10, 240);
+        for(size_t x = 0; x < 8; ++x) {
+          for(size_t y = 0; y < 8; ++y) {
+            for(size_t z = 0; z < 8; ++z) {
+              cubeVoxelData.setVoxel({x, y, z}, color);
+            }
           }
         }
+        VoxelComponentApi(voxlight).addComponent(cubeEntity, cubeVoxelData);
       }
     }
-    EntityApi(voxlight).setPosition(sphereEntity, {96, 8, 96});
-    // VoxelComponentApi(voxlight).addComponent(sphereEntity, sphereVoxelData);
-
-    // spawn another cube
-    auto cubeEntity2 = EntityApi(voxlight).createEntity("Cube2", TransformComponent());
-    VoxelData cubeVoxelData2;
-    cubeVoxelData2.resize({16, 16, 16});
-    for(size_t x = 0; x < 16; ++x) {
-      for(size_t y = 0; y < 16; ++y) {
-        for(size_t z = 0; z < 16; ++z) {
-          cubeVoxelData2.setVoxel({x, y, z}, 70);
-        }
-      }
-    }
-    EntityApi(voxlight).setPosition(cubeEntity2, {30, 5, 30});
-    // VoxelComponentApi(voxlight).addComponent(cubeEntity2, cubeVoxelData2);
   }
 
   void update(float deltaTime) override {
@@ -206,7 +182,7 @@ class TestSystem : public System {
 
     // rotate in y axis
 
-    EntityApi(voxlight).setRotation(cubeEntity, glm::angleAxis(rotation, glm::vec3(0.f, 1.f, 0.f)));
+    // EntityApi(voxlight).setRotation(cubeEntity, glm::angleAxis(rotation, glm::vec3(0.f, 1.f, 0.f)));
     rotation += 0.1f * deltaTime;
 
     static bool pressed = false;
