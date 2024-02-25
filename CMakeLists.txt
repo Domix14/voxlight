@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.26)
 
 project(Voxlight VERSION 0.1.0)
 
+set(VOXLIGHT_BUILD_EXAMPLES ON CACHE BOOL "Build examples for Voxlight.")
+set(VOXLIGHT_BUILD_TESTS ON CACHE BOOL "Build tests for Voxlight.")
+
 add_compile_definitions(
     VOXEL_FRAGMENT_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/shaders/voxel/fragment_shader.glsl"
 )
@@ -16,8 +19,14 @@ add_compile_definitions(
 )
 
 add_subdirectory(src)
-add_subdirectory(examples/test)
-add_subdirectory(tests)
+
+if (VOXLIGHT_BUILD_EXAMPLES)
+    add_subdirectory(examples/test)
+endif ()
+
+if (VOXLIGHT_BUILD_TESTS)
+    add_subdirectory(tests)
+endif ()
 
 # Generate shader header files
 set(OUT_SHADER_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/voxlight/rendering/generated")
