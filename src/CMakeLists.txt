@@ -21,6 +21,8 @@ target_include_directories(
     PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/voxlight>
 )
 
+target_compile_features(voxlight PRIVATE cxx_std_20)
+
 set(CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
 # Perform dependency linkage
@@ -48,5 +50,3 @@ if (OpenGL_FOUND)
 else ()
     message(FATAL_ERROR "OpenGL was not found on the system")
 endif ()
-
-target_compile_features(voxlight PRIVATE cxx_std_20)
