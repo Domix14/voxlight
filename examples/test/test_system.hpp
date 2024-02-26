@@ -83,13 +83,12 @@ class TestSystem : public System {
     }
     VoxelComponentApi(voxlight).addComponent(planeEntity, planeVoxelData);
 
-    // create cube on plane
-    // spawn 1000 cubes with random rotation, the should be placed in grid on the plane
-    for(size_t x = 0; x < 10; ++x) {
-      for(size_t z = 0; z < 10; ++z) {
+    // create cubes on plane
+    for(size_t x = 0; x < 16; ++x) {
+      for(size_t z = 0; z < 16; ++z) {
         TransformComponent transform;
         transform.position = {x * 16 + 10, 5, z * 16 + 10};
-        // transform.rotation = glm::sphericalRand(1.f);
+        transform.rotation = glm::sphericalRand(1.f);
         auto cubeEntity = EntityApi(voxlight).createEntity("Cube", transform);
         VoxelData cubeVoxelData;
         cubeVoxelData.resize({8, 8, 8});
@@ -162,13 +161,13 @@ class TestSystem : public System {
       EntityApi(voxlight).setPosition(camera, position);
     }
 
-    auto cubeEntity = EntityApi(voxlight).getFirstWithName("Cube");
-    // move cube from left to right
-    glm::vec3 cubePos = EntityApi(voxlight).getTransform(cubeEntity).position;
-    cubePos.x += 5.f * deltaTime;
-    if(cubePos.x > 12) {
-      cubePos.x = 0;
-    }
+    // auto cubeEntity = EntityApi(voxlight).getFirstWithName("Cube");
+    // // move cube from left to right
+    // glm::vec3 cubePos = EntityApi(voxlight).getTransform(cubeEntity).position;
+    // cubePos.x += 5.f * deltaTime;
+    // if(cubePos.x > 12) {
+    //   cubePos.x = 0;
+    // }
     // EntityApi(voxlight).setPosition(cubeEntity, cubePos);
 
     // rotate cube in 2 axes
@@ -177,33 +176,33 @@ class TestSystem : public System {
     // cubeRot = glm::rotate(cubeRot, .5f, glm::vec3(0, 1, 0));
 
     // genrate random rotation quat
-    auto rot = EntityApi(voxlight).getTransform(cubeEntity).rotation;
-    static float rotation = 0;
+    // auto rot = EntityApi(voxlight).getTransform(cubeEntity).rotation;
+    // static float rotation = 0;
 
-    // rotate in y axis
+    // // rotate in y axis
 
-    // EntityApi(voxlight).setRotation(cubeEntity, glm::angleAxis(rotation, glm::vec3(0.f, 1.f, 0.f)));
-    rotation += 0.1f * deltaTime;
+    // // EntityApi(voxlight).setRotation(cubeEntity, glm::angleAxis(rotation, glm::vec3(0.f, 1.f, 0.f)));
+    // rotation += 0.1f * deltaTime;
 
-    static bool pressed = false;
-    if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-      if(!pressed) {
-        VoxelData voxelData;
-        voxelData.resize({16, 16, 16});
-        // generate random voxel data
-        for(size_t x = 0; x < 16; ++x) {
-          for(size_t y = 0; y < 16; ++y) {
-            for(size_t z = 0; z < 16; ++z) {
-              voxelData.setVoxel({x, y, z}, glm::linearRand(0, 100) > 90 ? 70 : 0);
-            }
-          }
-        }
-        VoxelComponentApi(voxlight).setVoxelData(cubeEntity, voxelData);
-        pressed = true;
-      }
-    } else {
-      pressed = false;
-    }
+    // static bool pressed = false;
+    // if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+    //   if(!pressed) {
+    //     VoxelData voxelData;
+    //     voxelData.resize({16, 16, 16});
+    //     // generate random voxel data
+    //     for(size_t x = 0; x < 16; ++x) {
+    //       for(size_t y = 0; y < 16; ++y) {
+    //         for(size_t z = 0; z < 16; ++z) {
+    //           voxelData.setVoxel({x, y, z}, glm::linearRand(0, 100) > 90 ? 70 : 0);
+    //         }
+    //       }
+    //     }
+    //     VoxelComponentApi(voxlight).setVoxelData(cubeEntity, voxelData);
+    //     pressed = true;
+    //   }
+    // } else {
+    //   pressed = false;
+    // }
   }
 
   void deinit() override { spdlog::info("TestSystem::deinit()"); }

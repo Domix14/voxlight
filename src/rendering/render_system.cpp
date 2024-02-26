@@ -211,7 +211,6 @@ void RenderSystem::update(float deltaTime) {
     auto scaleMatrix = glm::scale(glm::mat4(1.f), size);
     auto rotationMatrix = glm::toMat4(transformComponent.rotation);
     auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
-    auto mvp = viewProjectionMatrix * modelMatrix;
     auto magicMatrix = glm::inverse(viewProjectionMatrix * translateMatrix * rotationMatrix);
 
     voxelShader.setMat4("uModelMatrix", glm::value_ptr(modelMatrix));
@@ -224,9 +223,6 @@ void RenderSystem::update(float deltaTime) {
 
     glm::mat4 modelMatrix2 = translateMatrix * rotationMatrix;
     voxelShader.setMat4("uModelMatrix2", glm::value_ptr(modelMatrix2));
-
-    // glm::mat4 magicMatrix2 =  modelMatrix * glm::inverse(translateMatrix * scaleMatrix);
-    // voxelShader.setMat4("uMagicMatrix2", glm::value_ptr(magicMatrix2));
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, voxelComponent.textureId);

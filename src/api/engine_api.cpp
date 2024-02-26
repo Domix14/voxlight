@@ -38,8 +38,6 @@ void EngineApi::subscribe(EngineEventType eventType, EngineEventCallback listene
 }
 
 void EngineApi::setWindowResolution(int width, int height) {
-  spdlog::info("Window resized to {}x{}", width, height);
-
   voxlight.windowWidth = width;
   voxlight.windowHeight = height;
   voxlight.engineEventManager.publish(EngineEventType::OnWindowResize,

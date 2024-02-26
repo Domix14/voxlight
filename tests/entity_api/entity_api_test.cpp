@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
 #include <voxlight/core/components.hpp>
-#include <voxlight/core/voxlight_api.hpp>
-#include <voxlight/voxlight.hpp>
+#include <voxlight/core/voxlight.hpp>
+#include <voxlight/voxlight_api.hpp>
 
 // Demonstrate some basic assertions.
 TEST(EntityApiTest, BasicTest) {
-  Voxlight engine;
+  Voxlight engine(800, 600, "Test");
   auto firstEntity = EntityApi(engine).createEntity("FirstEntity", TransformComponent());
   auto secondEntity = EntityApi(engine).createEntity("SecondEntity", TransformComponent());
   auto thirdEntity = EntityApi(engine).createEntity("ThirdEntity", TransformComponent());

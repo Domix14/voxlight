@@ -1,4 +1,5 @@
 #include <glad/gl.h>
+#include <spdlog/spdlog.h>
 
 #include <glm/gtx/quaternion.hpp>
 #include <rendering/render_utils.hpp>
@@ -23,13 +24,16 @@ glm::ivec3 VoxelWorld::getDimensions() const { return dimensions; }
 
 void VoxelWorld::rasterizeVoxelData(glm::ivec3 const &pos, glm::quat const &rot, VoxelData const &voxelData,
                                     bool clear) {
-  // check if rotation is 0
-  for(int x = 1; x < voxelData.getDimensions().x - 1; ++x) {
-    for(int y = 1; y < voxelData.getDimensions().y - 1; ++y) {
-      for(int z = 1; z < voxelData.getDimensions().z - 1; ++z) {
+  for(int x = 0; x < voxelData.getDimensions().x; ++x) {
+    for(int y = 0; y < voxelData.getDimensions().y; ++y) {
+      for(int z = 0; z < voxelData.getDimensions().z; ++z) {
         auto voxel = voxelData.getVoxel({x, y, z});
         auto voxelPos = glm::ivec3(x, y, z);
         auto worldPos = glm::ivec3(glm::vec3(pos) + rot * glm::vec3(voxelPos));
+        if(worldPos.x < 0 || worldPos.y < 0 || worldPos.z < 0 || worldPos.x >= dimensions.x ||
+           worldPos.y >= dimensions.y || worldPos.z >= dimensions.z) {
+          continue;
+        }
         if(voxel != 0) {
           if(clear) {
             clearVoxel(worldPos);

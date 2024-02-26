@@ -117,7 +117,7 @@ void main(){
     float intensity = 0.0;
     float strenght = dot(norm, sunDir);
     if(strenght > 0.0f) {
-        vec3 startPos = target + sunDir*0.5 + norm*0.5;
+        vec3 startPos = target + sunDir*1.2 + norm*1.2;
         bool hit = raycastToTarget(startPos, uSunPos);
         if(!hit) {
             intensity += strenght * 1;
