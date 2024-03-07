@@ -9,9 +9,9 @@ uniform vec2 uInvResolution;
 uniform vec3 uMinBox;
 uniform vec3 uMaxBox;
 uniform vec3 uChunkSize;
-uniform mat4 uMagicMatrix;
+uniform mat4 uInvWorldMatrix;
 uniform mat4 uModelMatrix;
-uniform mat4 uModelMatrix2;
+
 
 layout(binding=0) uniform sampler3D uChunkTexture;
 layout(binding=1) uniform sampler2D uPaletteTexture;
@@ -20,14 +20,14 @@ layout(binding=2) uniform sampler2D uDepthTexture;
 vec3 computeFarVec(vec2 texCoord)
 {
 	vec4 aa = vec4(texCoord, 1.0f, 1.0f);
-	aa = uMagicMatrix * aa;
+	aa = uInvWorldMatrix * aa;
 	return aa.xyz / aa.w;
 }
 
 vec3 computeNearVec(vec2 texCoord)
 {
 	vec4 aa = vec4(texCoord, -1.0f, 1.0f);
-	aa = uMagicMatrix * aa;
+	aa = uInvWorldMatrix * aa;
 	return aa.xyz / aa.w;
 }
 
@@ -166,5 +166,5 @@ void main(){
     outColor = vec4(color.rgb, 1);
     outDepth = vec4(linearDepth, 0, 0, 0);
     norm = normalize(norm);
-    outNormal = vec3(uModelMatrix2*vec4(norm, 0.f));
+    outNormal = vec3(uModelMatrix*vec4(norm, 0.f));
 }

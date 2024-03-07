@@ -20,61 +20,9 @@
 #include <glm/gtx/quaternion.hpp>
 #include <rendering/generated/shaders.hpp>
 #include <rendering/palette.hpp>
+#include <rendering/render_data.hpp>
 #include <rendering/shader.hpp>
 #include <voxlight_api.hpp>
-
-static GLfloat const cubeVertexData[] = {
-    0.0f, 0.0f, 0.0f,  // Vertex 0
-    0.0f, 0.0f, 1.0f,  // Vertex 1
-    0.0f, 1.0f, 0.0f,  // Vertex 2
-
-    0.0f, 0.0f, 1.0f,  // Vertex 1
-    0.0f, 1.0f, 0.0f,  // Vertex 2
-    0.0f, 1.0f, 1.0f,  // Vertex 3
-
-    1.0f, 0.0f, 0.0f,  // Vertex 4
-    1.0f, 0.0f, 1.0f,  // Vertex 5
-    1.0f, 1.0f, 0.0f,  // Vertex 6
-
-    1.0f, 0.0f, 1.0f,  // Vertex 5
-    1.0f, 1.0f, 0.0f,  // Vertex 6
-    1.0f, 1.0f, 1.0f,  // Vertex 7
-
-    0.0f, 0.0f, 0.0f,  // Vertex 0
-    0.0f, 0.0f, 1.0f,  // Vertex 1
-    1.0f, 0.0f, 0.0f,  // Vertex 4
-
-    0.0f, 0.0f, 1.0f,  // Vertex 1
-    1.0f, 0.0f, 0.0f,  // Vertex 4
-    1.0f, 0.0f, 1.0f,  // Vertex 5
-
-    0.0f, 1.0f, 0.0f,  // Vertex 2
-    0.0f, 1.0f, 1.0f,  // Vertex 3
-    1.0f, 1.0f, 0.0f,  // Vertex 6
-
-    0.0f, 1.0f, 1.0f,  // Vertex 3
-    1.0f, 1.0f, 0.0f,  // Vertex 6
-    1.0f, 1.0f, 1.0f,  // Vertex 7
-
-    0.0f, 0.0f, 0.0f,  // Vertex 0
-    0.0f, 1.0f, 0.0f,  // Vertex 2
-    1.0f, 0.0f, 0.0f,  // Vertex 4
-
-    0.0f, 1.0f, 0.0f,  // Vertex 2
-    1.0f, 0.0f, 0.0f,  // Vertex 4
-    1.0f, 1.0f, 0.0f,  // Vertex 6
-
-    0.0f, 0.0f, 1.0f,  // Vertex 1
-    0.0f, 1.0f, 1.0f,  // Vertex 3
-    1.0f, 0.0f, 1.0f,  // Vertex 5
-
-    0.0f, 1.0f, 1.0f,  // Vertex 3
-    1.0f, 0.0f, 1.0f,  // Vertex 5
-    1.0f, 1.0f, 1.0f   // Vertex 7
-};
-
-static GLfloat const quadVertexData[] = {-1.f, -1.f, 0.f, 1.f, 1.f, 0.f, 1.f,  -1.f, 0.f,
-                                         -1.f, 1.f,  0.f, 1.f, 1.f, 0.f, -1.f, -1.f, 0.f};
 
 static void frameBufferCheck() {
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -211,7 +159,7 @@ void RenderSystem::update(float deltaTime) {
     auto scaleMatrix = glm::scale(glm::mat4(1.f), size);
     auto rotationMatrix = glm::toMat4(transformComponent.rotation);
     auto modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
-    auto magicMatrix = glm::inverse(viewProjectionMatrix * translateMatrix * rotationMatrix);
+    auto invWorldMatrix = glm::inverse(viewProjectionMatrix * translateMatrix * rotationMatrix);
 
     voxelShader.setMat4("uModelMatrix", glm::value_ptr(modelMatrix));
     voxelShader.setMat4("uViewProjectionMatrix", glm::value_ptr(viewProjectionMatrix));
@@ -219,10 +167,7 @@ void RenderSystem::update(float deltaTime) {
     voxelShader.setVec3("uMinBox", minBox.x, minBox.y, minBox.z);
     voxelShader.setVec3("uMaxBox", maxBox.x, maxBox.y, maxBox.z);
     voxelShader.setVec3("uChunkSize", size.x, size.y, size.z);
-    voxelShader.setMat4("uMagicMatrix", glm::value_ptr(magicMatrix));
-
-    glm::mat4 modelMatrix2 = translateMatrix * rotationMatrix;
-    voxelShader.setMat4("uModelMatrix2", glm::value_ptr(modelMatrix2));
+    voxelShader.setMat4("uInvWorldMatrix", glm::value_ptr(invWorldMatrix));
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, voxelComponent.textureId);
@@ -263,9 +208,8 @@ void RenderSystem::update(float deltaTime) {
   sunlightShader.setInt("uNormalTexture", 3);
 
   glm::vec3 sunPosition = {100000.f, 300000.f, 100000.f};
-  auto mm = invViewProjectionMatrix;
   sunlightShader.setVec2("uInvResolution", 1.f / renderResolutionX, 1.f / renderResolutionY);
-  sunlightShader.setMat4("uMagicMatrix", glm::value_ptr(mm));
+  sunlightShader.setMat4("uInvViewProjMatrix", glm::value_ptr(invViewProjectionMatrix));
   sunlightShader.setVec3("uSunPos", sunPosition.x, sunPosition.y, sunPosition.z);
   glm::vec3 worldDimensions = glm::vec3(voxelWorld.getDimensions());
   sunlightShader.setVec3("uWorldDimensions", worldDimensions.x, worldDimensions.y, worldDimensions.z);

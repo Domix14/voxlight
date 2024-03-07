@@ -4,7 +4,7 @@
 layout (location = 0) out vec4 outColor;
 
 uniform vec2 uInvResolution;
-uniform mat4 uMagicMatrix;
+uniform mat4 uInvViewProjMatrix;
 uniform vec3 uSunPos;
 uniform vec3 uWorldDimensions;
 
@@ -79,14 +79,14 @@ bool raycastToTarget(vec3 ro, vec3 target) {
 vec3 computeFarVec(vec2 texCoord)
 {
 	vec4 aa = vec4(texCoord, 1.0f, 1.0f);
-	aa = uMagicMatrix * aa;
+	aa = uInvViewProjMatrix * aa;
 	return aa.xyz / aa.w;
 }
 
 vec3 computeNearVec(vec2 texCoord)
 {
 	vec4 aa = vec4(texCoord, -1.0f, 1.0f);
-	aa = uMagicMatrix * aa;
+	aa = uInvViewProjMatrix * aa;
 	return aa.xyz / aa.w;
 }
 
@@ -117,7 +117,7 @@ void main(){
     float intensity = 0.0;
     float strenght = dot(norm, sunDir);
     if(strenght > 0.0f) {
-        vec3 startPos = target + sunDir*1.2 + norm*1.2;
+        vec3 startPos = target + norm*1.41;
         bool hit = raycastToTarget(startPos, uSunPos);
         if(!hit) {
             intensity += strenght * 1;
