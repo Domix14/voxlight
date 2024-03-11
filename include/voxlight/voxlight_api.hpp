@@ -23,7 +23,7 @@ struct EngineEvent;
 // Engine API
 //----------------------------------------------------------------------------//
 
-enum class EngineEventType : std::uint8_t {
+enum class EngineEventType {
   OnWindowResize,
 };
 
@@ -59,7 +59,7 @@ class EngineApi {
    * \param width The width of the window
    * \param height The height of the window
    */
-  void setWindowResolution(int width, int height);
+  void setWindowResolution(std::uint32_t width, std::uint32_t height);
 
   /**
    * \brief Adds a system to the engine
@@ -88,7 +88,7 @@ class EngineApi {
 // Entity API
 //----------------------------------------------------------------------------//
 
-enum EntityEventType : std::uint8_t {
+enum EntityEventType {
   OnTransformChange,
 };
 
@@ -138,21 +138,21 @@ class EntityApi {
    * \param entity The entity to set the position of
    * \return The position of the entity
    */
-  void setPosition(entt::entity entity, glm::vec3 const &position);
+  void setPosition(entt::entity entity, glm::vec3 position);
 
   /**
    * \brief Sets the scale of an entity
    * \param entity The entity to get the scale of
    * \return The scale of the entity
    */
-  void setScale(entt::entity entity, glm::vec3 const &scale);
+  void setScale(entt::entity entity, glm::vec3 scale);
 
   /**
    * \brief Sets the rotation of an entity
    * \param entity The entity to get the rotation of
    * \return The rotation of the entity
    */
-  void setRotation(entt::entity entity, glm::quat const &rotation);
+  void setRotation(entt::entity entity, glm::quat rotation);
 
   /**
    * \brief Sets the transform of an entity
@@ -178,7 +178,7 @@ class EntityApi {
 // Voxel Component API
 //----------------------------------------------------------------------------//
 
-enum VoxelComponentEventType : std::uint8_t {
+enum VoxelComponentEventType {
   OnVoxelDataCreation,
   OnVoxelDataDestruction,
   OnVoxelDataChange,

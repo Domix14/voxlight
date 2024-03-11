@@ -34,7 +34,7 @@ void Shader::create(std::string_view vertexSource, std::string_view fragmentSour
   // gather uniform locations
   GLint numUniforms;
   glGetProgramiv(programId, GL_ACTIVE_UNIFORMS, &numUniforms);
-  for(GLuint i = 0; i < numUniforms; i++) {
+  for(GLint i = 0; i < numUniforms; i++) {
     GLsizei length;
     GLint size;
     GLenum type;
