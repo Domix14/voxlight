@@ -11,9 +11,6 @@
 template <typename T>
 class EventManager {
  public:
-  EventManager() = default;
-  ~EventManager() = default;
-
   using EventType = T::EventType;
   using EventCallback = std::function<void(EventType eventType, T const&)>;
 

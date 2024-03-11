@@ -15,9 +15,6 @@
 
 class VoxelWorld {
  public:
-  VoxelWorld() = default;
-  ~VoxelWorld() = default;
-
   void init(glm::ivec3 dim);
   void setVoxel(glm::ivec3 pos);
   void clearVoxel(glm::ivec3 pos);

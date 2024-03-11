@@ -13,7 +13,6 @@ struct GLFWwindow;
 class Voxlight final {
  public:
   Voxlight(int windowWidth, int windowHeight, std::string windowTitle);
-  ~Voxlight() = default;
 
  private:
   void init();

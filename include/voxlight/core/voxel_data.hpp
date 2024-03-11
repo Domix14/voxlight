@@ -11,9 +11,6 @@
 
 class VoxelData {
  public:
-  VoxelData() = default;
-  ~VoxelData() = default;
-
   void setVoxel(glm::ivec3 pos, std::uint8_t voxel) { data.at(getIndex(pos)) = voxel; }
   std::uint8_t getVoxel(glm::ivec3 pos) const { return data.at(getIndex(pos)); }
 
