@@ -34,7 +34,7 @@ void Voxlight::initGLFW() {
   glfwSetFramebufferSizeCallback(glfwWindow, framebufferSizeCallback);
 }
 
-Voxlight::Voxlight(int windowWidth, int windowHeight, std::string windowTitle)
+Voxlight::Voxlight(std::uint32_t windowWidth, std::uint32_t windowHeight, std::string windowTitle)
     : windowWidth(windowWidth), windowHeight(windowHeight), windowTitle(windowTitle), renderSystem(*this) {}
 
 void Voxlight::init() {

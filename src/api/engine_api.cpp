@@ -40,6 +40,7 @@ void EngineApi::subscribe(EngineEventType eventType, EngineEventCallback listene
 void EngineApi::setWindowResolution(std::uint32_t width, std::uint32_t height) {
   voxlight.windowWidth = static_cast<std::uint32_t>(width);
   voxlight.windowHeight = static_cast<std::uint32_t>(height);
-  voxlight.engineEventManager.publish(EngineEventType::OnWindowResize,
-                                      EngineEvent(voxlight.windowWidth, voxlight.windowHeight));
+
+  WindowResizeEvent event = {voxlight.windowWidth, voxlight.windowHeight};
+  voxlight.engineEventManager.publish(EngineEventType::OnWindowResize, event);
 }

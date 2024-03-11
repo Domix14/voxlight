@@ -16,18 +16,18 @@ class RenderSystem : public System {
   void deinit();
 
  private:
-  void onVoxelDataCreation(VoxelComponentEventType eventType, VoxelComponentEvent const &event);
-  void onVoxelDataDestruction(VoxelComponentEventType eventType, VoxelComponentEvent const &event);
-  void onVoxelDataModification(VoxelComponentEventType eventType, VoxelComponentEvent const &event);
-  void onEntityTransformChange(EntityEventType eventType, EntityEvent const &event);
-  void onWindowResize(EngineEventType eventType, EngineEvent const &event);
+  void onVoxelDataCreation(VoxelComponentEventType eventType, VoxelComponentEvent event);
+  void onVoxelDataDestruction(VoxelComponentEventType eventType, VoxelComponentEvent event);
+  void onVoxelDataModification(VoxelComponentEventType eventType, VoxelComponentEvent event);
+  void onEntityTransformChange(EntityEventType eventType, EntityEvent event);
+  void onWindowResize(EngineEventType eventType, EngineEvent event);
 
   void createGBuffer();
   void initImgui();
   void drawImgui(float deltaTime);
 
-  int renderResolutionX;
-  int renderResolutionY;
+  std::uint32_t renderResolutionX;
+  std::uint32_t renderResolutionY;
 
   // shaders
   Shader voxelShader;

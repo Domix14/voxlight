@@ -12,7 +12,7 @@
 struct GLFWwindow;
 class Voxlight final {
  public:
-  Voxlight(int windowWidth, int windowHeight, std::string windowTitle);
+  Voxlight(std::uint32_t windowWidth, std::uint32_t windowHeight, std::string windowTitle);
 
  private:
   void init();
@@ -26,8 +26,8 @@ class Voxlight final {
 
   // config
   bool isRunning = false;
-  int windowWidth;
-  int windowHeight;
+  std::uint32_t windowWidth;
+  std::uint32_t windowHeight;
   std::string windowTitle;
 
   GLFWwindow *glfwWindow = nullptr;

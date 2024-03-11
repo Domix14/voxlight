@@ -17,14 +17,14 @@ void VoxelComponentApi::addComponent(entt::entity entity, VoxelData const &voxel
   voxelComponent.lastPosition = transformComponent.position;
   voxelComponent.lastRotation = transformComponent.rotation;
 
-  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataCreation,
-                                              {entity, voxelComponent, voxelComponent.voxelData});
+  VoxelComponentChangeEvent event(entity, voxelComponent, voxelComponent.voxelData);
+  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataCreation, event);
 }
 
 void VoxelComponentApi::removeComponent(entt::entity entity) {
   auto voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
-  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataDestruction,
-                                              {entity, voxelComponent, voxelComponent.voxelData});
+  VoxelComponentChangeEvent event(entity, voxelComponent, voxelComponent.voxelData);
+  voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataDestruction, event);
   voxlight.registry.remove<VoxelComponent>(entity);
 }
 
@@ -34,7 +34,7 @@ bool VoxelComponentApi::hasComponent(entt::entity entity) const {
 
 void VoxelComponentApi::setVoxelData(entt::entity entity, VoxelData const &voxelData) {
   auto &voxelComponent = voxlight.registry.get<VoxelComponent>(entity);
-  VoxelComponentEvent event(entity, voxelComponent, voxelData);
+  VoxelComponentChangeEvent event(entity, voxelComponent, voxelData);
   voxlight.voxelComponentEventManager.publish(VoxelComponentEventType::OnVoxelDataChange, event);
   voxelComponent.voxelData = voxelData;
 }

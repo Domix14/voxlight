@@ -40,8 +40,8 @@ void EntityApi::setPosition(entt::entity entity, glm::vec3 position) {
   TransformComponent oldTransform = transformComponent;
   transformComponent.position = position;
 
-  EntityEvent event(entity, transformComponent, oldTransform);
-  voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
+  // EntityEvent event(entity, transformComponent, oldTransform);
+  // voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
 }
 
 void EntityApi::setScale(entt::entity entity, glm::vec3 scale) {
@@ -53,8 +53,8 @@ void EntityApi::setRotation(entt::entity entity, glm::quat rotation) {
   TransformComponent oldTransform = transformComponent;
   transformComponent.rotation = rotation;
 
-  EntityEvent event(entity, transformComponent, oldTransform);
-  voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
+  // EntityEvent event(entity, transformComponent, oldTransform);
+  // voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
 }
 
 void EntityApi::setTransform(entt::entity entity, TransformComponent const &transform) {
@@ -62,8 +62,8 @@ void EntityApi::setTransform(entt::entity entity, TransformComponent const &tran
   TransformComponent oldTransform = transformComponent;
   transformComponent = transform;
 
-  EntityEvent event(entity, transformComponent, oldTransform);
-  voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
+  // EntityEvent event(entity, transformComponent, oldTransform);
+  // voxlight.entityEventManager.publish(EntityEventType::OnTransformChange, event);
 }
 
 void EntityApi::subscribe(EntityEventType eventType, EntityEventCallback listener) {

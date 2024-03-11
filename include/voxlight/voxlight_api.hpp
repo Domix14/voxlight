@@ -5,29 +5,18 @@
 #include <glm/fwd.hpp>
 #include <string_view>
 
+#include "core/components.hpp"
+#include "core/event_data.hpp"
 #include "core/system.hpp"
 
 /// Forward declarations
 class Voxlight;
 struct GLFWwindow;
-struct TransformComponent;
-struct CustomComponent;
-struct CameraComponent;
-class VoxelData;
-struct VoxelComponent;
-struct VoxelComponentEvent;
-struct EntityEvent;
-struct EngineEvent;
 
 //----------------------------------------------------------------------------//
 // Engine API
 //----------------------------------------------------------------------------//
 
-enum class EngineEventType {
-  OnWindowResize,
-};
-
-using EngineEventCallback = std::function<void(EngineEventType, EngineEvent const &)>;
 class EngineApi {
  public:
   /**
@@ -87,12 +76,6 @@ class EngineApi {
 //----------------------------------------------------------------------------//
 // Entity API
 //----------------------------------------------------------------------------//
-
-enum EntityEventType {
-  OnTransformChange,
-};
-
-using EntityEventCallback = std::function<void(EntityEventType, EntityEvent const &)>;
 
 class EntityApi {
  public:
@@ -177,14 +160,6 @@ class EntityApi {
 //----------------------------------------------------------------------------//
 // Voxel Component API
 //----------------------------------------------------------------------------//
-
-enum VoxelComponentEventType {
-  OnVoxelDataCreation,
-  OnVoxelDataDestruction,
-  OnVoxelDataChange,
-};
-
-using VoxelComponentEventCallback = std::function<void(VoxelComponentEventType, VoxelComponentEvent const &)>;
 
 class VoxelComponentApi {
  public:

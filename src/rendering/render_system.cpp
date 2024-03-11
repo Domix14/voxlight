@@ -240,36 +240,42 @@ void RenderSystem::update(float deltaTime) {
   sunlightShader.refresh();
 }
 
-void RenderSystem::onVoxelDataCreation(VoxelComponentEventType, VoxelComponentEvent const &event) {
-  auto texId = CreateVoxelTexture(event.newVoxelData.getData(), event.newVoxelData.getDimensions());
-  EngineApi(voxlight).getRegistry().get<VoxelComponent>(event.entity).textureId = texId;
-  auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
-  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.newVoxelData, false);
+void RenderSystem::onVoxelDataCreation(VoxelComponentEventType, VoxelComponentEvent event) {
+  auto voxelEvent = event.get<VoxelComponentChangeEvent>();
+  auto texId = CreateVoxelTexture(voxelEvent.newVoxelData.getData(), voxelEvent.newVoxelData.getDimensions());
+  EngineApi(voxlight).getRegistry().get<VoxelComponent>(voxelEvent.entity).textureId = texId;
+  auto transformComponent = EntityApi(voxlight).getTransform(voxelEvent.entity);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, voxelEvent.newVoxelData,
+                                false);
 }
 
-void RenderSystem::onVoxelDataDestruction(VoxelComponentEventType, VoxelComponentEvent const &event) {
-  DeleteVoxelTexture(event.voxelComponent.textureId);
-  auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
+void RenderSystem::onVoxelDataDestruction(VoxelComponentEventType, VoxelComponentEvent event) {
+  auto voxelEvent = event.get<VoxelComponentChangeEvent>();
+  DeleteVoxelTexture(voxelEvent.voxelComponent.textureId);
+  auto transformComponent = EntityApi(voxlight).getTransform(voxelEvent.entity);
   voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
-                                event.voxelComponent.voxelData, true);
+                                voxelEvent.voxelComponent.voxelData, true);
 }
 
-void RenderSystem::onVoxelDataModification(VoxelComponentEventType, VoxelComponentEvent const &event) {
-  auto transformComponent = EntityApi(voxlight).getTransform(event.entity);
+void RenderSystem::onVoxelDataModification(VoxelComponentEventType, VoxelComponentEvent event) {
+  auto voxelEvent = event.get<VoxelComponentChangeEvent>();
+  auto transformComponent = EntityApi(voxlight).getTransform(voxelEvent.entity);
   voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
-                                event.voxelComponent.voxelData, true);
-  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, event.newVoxelData, false);
-  DeleteVoxelTexture(event.voxelComponent.textureId);
-  auto texId = CreateVoxelTexture(event.newVoxelData.getData(), event.newVoxelData.getDimensions());
-  EngineApi(voxlight).getRegistry().get<VoxelComponent>(event.entity).textureId = texId;
+                                voxelEvent.voxelComponent.voxelData, true);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, voxelEvent.newVoxelData,
+                                false);
+  DeleteVoxelTexture(voxelEvent.voxelComponent.textureId);
+  auto texId = CreateVoxelTexture(voxelEvent.newVoxelData.getData(), voxelEvent.newVoxelData.getDimensions());
+  EngineApi(voxlight).getRegistry().get<VoxelComponent>(voxelEvent.entity).textureId = texId;
 }
 
-void RenderSystem::onEntityTransformChange(EntityEventType, EntityEvent const &event) {
-  auto voxelComponent = EngineApi(voxlight).getRegistry().try_get<VoxelComponent>(event.entity);
+void RenderSystem::onEntityTransformChange(EntityEventType, EntityEvent event) {
+  auto entityEvent = event.get<EntityTransformEvent>();
+  auto voxelComponent = EngineApi(voxlight).getRegistry().try_get<VoxelComponent>(entityEvent.entity);
   if(voxelComponent) {
-    voxelWorld.rasterizeVoxelData(event.oldTransform.position, event.oldTransform.rotation, voxelComponent->voxelData,
-                                  true);
-    voxelWorld.rasterizeVoxelData(event.transformComponent.position, event.transformComponent.rotation,
+    voxelWorld.rasterizeVoxelData(entityEvent.oldTransform.position, entityEvent.oldTransform.rotation,
+                                  voxelComponent->voxelData, true);
+    voxelWorld.rasterizeVoxelData(entityEvent.transformComponent.position, entityEvent.transformComponent.rotation,
                                   voxelComponent->voxelData, false);
   }
 }
@@ -280,7 +286,8 @@ void RenderSystem::createGBuffer() {
 
   glGenTextures(1, &colorTexture);
   glBindTexture(GL_TEXTURE_2D, colorTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, renderResolutionX, renderResolutionY, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(renderResolutionX),
+               static_cast<GLsizei>(renderResolutionY), 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -288,7 +295,8 @@ void RenderSystem::createGBuffer() {
 
   glGenTextures(1, &normalTexture);
   glBindTexture(GL_TEXTURE_2D, normalTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, renderResolutionX, renderResolutionY, 0, GL_RGB, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB_SNORM, static_cast<GLsizei>(renderResolutionX),
+               static_cast<GLsizei>(renderResolutionY), 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -296,7 +304,8 @@ void RenderSystem::createGBuffer() {
 
   glGenTextures(1, &depthTexture);
   glBindTexture(GL_TEXTURE_2D, depthTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, renderResolutionX, renderResolutionY, 0, GL_RGB, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, static_cast<GLsizei>(renderResolutionX),
+               static_cast<GLsizei>(renderResolutionY), 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -308,9 +317,10 @@ void RenderSystem::createGBuffer() {
   frameBufferCheck();
 }
 
-void RenderSystem::onWindowResize(EngineEventType, EngineEvent const &event) {
-  renderResolutionX = event.windowWidth;
-  renderResolutionY = event.windowHeight;
+void RenderSystem::onWindowResize(EngineEventType, EngineEvent event) {
+  auto resizeEvent = event.get<WindowResizeEvent>();
+  renderResolutionX = resizeEvent.windowWidth;
+  renderResolutionY = resizeEvent.windowHeight;
 
   glViewport(0, 0, renderResolutionX, renderResolutionY);
 
