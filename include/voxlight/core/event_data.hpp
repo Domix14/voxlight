@@ -50,11 +50,19 @@ enum VoxelComponentEventType {
   OnVoxelDataChange,
 };
 
-struct VoxelComponentChangeEvent {
+struct VoxelComponentCreateEvent {
   entt::entity entity;
   VoxelComponent const& voxelComponent;
-  VoxelData const& newVoxelData;
 };
 
-using VoxelComponentEvent = Event<VoxelComponentEventType, VoxelComponentChangeEvent>;
+using VoxelComponentDestroyEvent = VoxelComponentCreateEvent;
+
+struct VoxelComponentModifyEvent {
+  entt::entity entity;
+  VoxelComponent const& voxelComponent;
+  VoxelData const& voxelData;
+  glm::ivec3 offset;
+};
+
+using VoxelComponentEvent = Event<VoxelComponentEventType, VoxelComponentCreateEvent, VoxelComponentModifyEvent>;
 using VoxelComponentEventCallback = std::function<void(VoxelComponentEventType, VoxelComponentEvent)>;

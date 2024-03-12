@@ -241,16 +241,17 @@ void RenderSystem::update(float deltaTime) {
 }
 
 void RenderSystem::onVoxelDataCreation(VoxelComponentEventType, VoxelComponentEvent event) {
-  auto voxelEvent = event.get<VoxelComponentChangeEvent>();
-  auto texId = CreateVoxelTexture(voxelEvent.newVoxelData.getData(), voxelEvent.newVoxelData.getDimensions());
+  auto voxelEvent = event.get<VoxelComponentCreateEvent>();
+  auto texId = CreateVoxelTexture(voxelEvent.voxelComponent.voxelData.getData(),
+                                  voxelEvent.voxelComponent.voxelData.getDimensions());
   EngineApi(voxlight).getRegistry().get<VoxelComponent>(voxelEvent.entity).textureId = texId;
   auto transformComponent = EntityApi(voxlight).getTransform(voxelEvent.entity);
-  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, voxelEvent.newVoxelData,
-                                false);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
+                                voxelEvent.voxelComponent.voxelData, false);
 }
 
 void RenderSystem::onVoxelDataDestruction(VoxelComponentEventType, VoxelComponentEvent event) {
-  auto voxelEvent = event.get<VoxelComponentChangeEvent>();
+  auto voxelEvent = event.get<VoxelComponentDestroyEvent>();
   DeleteVoxelTexture(voxelEvent.voxelComponent.textureId);
   auto transformComponent = EntityApi(voxlight).getTransform(voxelEvent.entity);
   voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
@@ -258,15 +259,15 @@ void RenderSystem::onVoxelDataDestruction(VoxelComponentEventType, VoxelComponen
 }
 
 void RenderSystem::onVoxelDataModification(VoxelComponentEventType, VoxelComponentEvent event) {
-  auto voxelEvent = event.get<VoxelComponentChangeEvent>();
-  auto transformComponent = EntityApi(voxlight).getTransform(voxelEvent.entity);
+  auto modifyEvent = event.get<VoxelComponentModifyEvent>();
+  auto transformComponent = EntityApi(voxlight).getTransform(modifyEvent.entity);
   voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation,
-                                voxelEvent.voxelComponent.voxelData, true);
-  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, voxelEvent.newVoxelData,
-                                false);
-  DeleteVoxelTexture(voxelEvent.voxelComponent.textureId);
-  auto texId = CreateVoxelTexture(voxelEvent.newVoxelData.getData(), voxelEvent.newVoxelData.getDimensions());
-  EngineApi(voxlight).getRegistry().get<VoxelComponent>(voxelEvent.entity).textureId = texId;
+                                modifyEvent.voxelComponent.voxelData, true);
+  voxelWorld.rasterizeVoxelData(transformComponent.position, transformComponent.rotation, modifyEvent.voxelData, false);
+
+  DeleteVoxelTexture(modifyEvent.voxelComponent.textureId);
+  auto texId = CreateVoxelTexture(modifyEvent.voxelData.getData(), modifyEvent.voxelData.getDimensions());
+  EngineApi(voxlight).getRegistry().get<VoxelComponent>(modifyEvent.entity).textureId = texId;
 }
 
 void RenderSystem::onEntityTransformChange(EntityEventType, EntityEvent event) {

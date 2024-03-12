@@ -76,9 +76,7 @@ void Voxlight::run() {
 
 void Voxlight::deinit() {
   // Deinitialize internal systems
-  // worldSystem.deinit();
-  // renderSystem.deinit();
-  // controllerSystem.deinit();
+  renderSystem.deinit();
 
   // Deinitialize custom systems
   for(auto &system : customSystems) {
