@@ -14,6 +14,7 @@ void EngineApi::start() {
 
   voxlight.init();
   voxlight.run();
+  voxlight.deinit();
 }
 
 void EngineApi::stop() {
@@ -29,9 +30,9 @@ void EngineApi::addSystemInternal(std::unique_ptr<System> newSystem) {
   voxlight.customSystems.push_back(std::move(newSystem));
 }
 
-GLFWwindow *EngineApi::getGLFWwindow() { return voxlight.glfwWindow; }
+GLFWwindow *EngineApi::getGLFWwindow() const { return voxlight.glfwWindow; }
 
-entt::registry &EngineApi::getRegistry() { return voxlight.registry; }
+entt::registry &EngineApi::getRegistry() const { return voxlight.registry; }
 
 void EngineApi::subscribe(EngineEventType eventType, EngineEventCallback listener) {
   voxlight.engineEventManager.subscribe(eventType, listener);

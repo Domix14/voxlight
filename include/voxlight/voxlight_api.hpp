@@ -35,13 +35,13 @@ class EngineApi {
    * \brief Returns the GLFW window pointer
    * \return GLFW window pointer
    */
-  GLFWwindow *getGLFWwindow();
+  GLFWwindow *getGLFWwindow() const;
 
   /**
    * \brief Returns the entt registry
    * \return entt registry
    */
-  entt::registry &getRegistry();
+  entt::registry &getRegistry() const;
 
   /**
    * \brief Sets the window resolution
@@ -181,7 +181,7 @@ class VoxelComponentApi {
    * \param entity The entity to check
    * \return True if the entity has a voxel component, false otherwise
    */
-  bool hasComponent(entt::entity entity) const;
+  [[nodiscard]] bool hasComponent(entt::entity entity) const;
 
   /**
    * \brief Sets voxel data of voxel component
@@ -225,7 +225,7 @@ class CameraComponentApi {
    * \param entity The entity to check
    * \return True if the entity has a camera component, false otherwise
    */
-  bool hasComponent(entt::entity entity) const;
+  [[nodiscard]] bool hasComponent(entt::entity entity) const;
 
   /**
    * \brief Returns the camera component of an entity
