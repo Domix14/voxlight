@@ -158,6 +158,7 @@ void main(){
     vec3 worldFarVector = (uModelMatrix * vec4(fv, 1.f)).xyz;
     float worldDepthLength = length(worldFarVector - cameraWorldPos);
     float linearDepth = length(worldPos - cameraWorldPos)/worldDepthLength;
+    
 
 
     // float linearDepth = (dist)/depthLength;
@@ -165,6 +166,5 @@ void main(){
     
     outColor = vec4(color.rgb, 1);
     outDepth = vec4(linearDepth, 0, 0, 0);
-    norm = normalize(norm);
-    outNormal = vec3(uModelMatrix*vec4(norm, 0.f));
+    outNormal = normalize(vec3(uModelMatrix*vec4(norm, 0.f)));
 }

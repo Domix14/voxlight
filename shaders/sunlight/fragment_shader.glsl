@@ -120,10 +120,10 @@ void main(){
         vec3 startPos = target + norm*1.41;
         bool hit = raycastToTarget(startPos, uSunPos);
         if(!hit) {
-            intensity += strenght * 1;
+            intensity += strenght * 1.f;
         }
     }
     
-    outColor.rgb *= intensity;
+    outColor.rgb *= intensity*0.8f + 0.2f;
     // outColor = vec4(vec3(floor(target)/10), 1.0f);
 }
