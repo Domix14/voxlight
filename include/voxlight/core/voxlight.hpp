@@ -41,6 +41,9 @@ class Voxlight final {
   // Camera
   entt::entity currentCamera = entt::null;
 
+  // World
+  glm::ivec3 worldSize = {512, 256, 512};
+
   // Event system
   EventManager<EngineEvent> engineEventManager;
   EventManager<VoxelComponentEvent> voxelComponentEventManager;
@@ -51,4 +54,5 @@ class Voxlight final {
   friend class EntityApi;
   friend class VoxelComponentApi;
   friend class CameraComponentApi;
+  friend class WorldApi;
 };

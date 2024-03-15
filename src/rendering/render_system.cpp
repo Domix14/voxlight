@@ -72,7 +72,7 @@ void RenderSystem::init() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (sizeof(COLOR_PALETTE) / 4), 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, COLOR_PALETTE);
   glGenerateMipmap(GL_TEXTURE_2D);
 
-  voxelWorld.init(glm::ivec3(512, 128, 512));
+  voxelWorld.init(WorldApi(voxlight).getWorldSize());
   initImgui();
 
   VoxelComponentApi(voxlight).subscribe(

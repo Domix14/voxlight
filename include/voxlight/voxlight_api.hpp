@@ -285,6 +285,10 @@ class WorldApi {
 
   void saveWorldState(std::filesystem::path path);
 
+  glm::ivec3 getWorldSize() const;
+
+  void setWorldSize(glm::ivec3 size);
+
   WorldApi(Voxlight &voxlight);
 
  private:
