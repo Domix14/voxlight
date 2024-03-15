@@ -7,8 +7,10 @@ add_library(
     api/engine_api.cpp
     api/entity_api.cpp
     api/voxel_component_api.cpp
-    core/voxlight.cpp
+    api/world_api.cpp
+    core/voxel_data.cpp
     # rendering
+    core/voxlight.cpp
     rendering/render_system.cpp
     rendering/render_utils.cpp
     rendering/shader.cpp
@@ -40,6 +42,9 @@ linkspglog(voxlight PUBLIC)
 
 include(${CMAKE_DIR}/LinkENTT.cmake)
 linkentt(voxlight PUBLIC)
+
+include(${CMAKE_DIR}/LinkPUGIXML.cmake)
+linkpugixml(voxlight PRIVATE)
 
 # include(${CMAKE_DIR}/LinkIMGUI.cmake) LinkIMGUI(Voxlight PRIVATE)
 find_package(OpenGL REQUIRED)

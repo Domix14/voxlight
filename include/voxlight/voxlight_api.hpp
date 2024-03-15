@@ -274,3 +274,21 @@ class CameraComponentApi {
  private:
   Voxlight &voxlight;
 };
+
+//----------------------------------------------------------------------------//
+// World API
+//----------------------------------------------------------------------------//
+
+class WorldApi {
+ public:
+  void loadWorldState(std::filesystem::path path);
+
+  void saveWorldState(std::filesystem::path path);
+
+  WorldApi(Voxlight &voxlight);
+
+ private:
+  Voxlight &voxlight;
+};
+
+//----------------------------------------------------------------------------//
