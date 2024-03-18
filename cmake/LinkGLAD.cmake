@@ -1,7 +1,10 @@
 include(FetchContent)
 
 macro (LinkGLAD TARGET ACCESS)
-    FetchContent_Declare(glad GIT_REPOSITORY https://github.com/Dav1dde/glad GIT_TAG v2.0.4)
+    FetchContent_Declare(
+        glad GIT_REPOSITORY https://github.com/Dav1dde/glad GIT_TAG v2.0.4 EXCLUDE_FROM_ALL
+                                                                           FIND_PACKAGE_ARGS
+    )
 
     FetchContent_GetProperties(glad)
 

@@ -1,7 +1,10 @@
 include(FetchContent)
 
 macro (LinkGLFW TARGET ACCESS)
-    FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw GIT_TAG 3.3.2)
+    FetchContent_Declare(
+        glfw GIT_REPOSITORY https://github.com/glfw/glfw GIT_TAG 3.3.2 EXCLUDE_FROM_ALL
+                                                                       FIND_PACKAGE_ARGS
+    )
 
     FetchContent_GetProperties(glfw)
 
