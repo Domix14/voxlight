@@ -32,7 +32,7 @@ void CameraComponentApi::setProjectionMatrix(entt::entity entity, glm::mat4 cons
   voxlight.registry.get<CameraComponent>(entity).projectionMatrix = projectionMatrix;
 }
 
-void CameraComponentApi::setDirection(entt::entity entity, glm::vec3 const &direction) {
+void CameraComponentApi::setDirection(entt::entity entity, glm::vec3 direction) {
   voxlight.registry.get<CameraComponent>(entity).direction = direction;
 }
 

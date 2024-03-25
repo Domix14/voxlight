@@ -6,9 +6,9 @@
 
 EntityApi::EntityApi(Voxlight &voxlight) : voxlight(voxlight) {}
 
-entt::entity EntityApi::createEntity(std::string const &name, TransformComponent const &transformComponent) {
+entt::entity EntityApi::createEntity(std::string name, TransformComponent const &transformComponent) {
   auto newEntity = voxlight.registry.create();
-  voxlight.registry.emplace<NameComponent>(newEntity, name);
+  voxlight.registry.emplace<NameComponent>(newEntity, std::move(name));
   voxlight.registry.emplace<TransformComponent>(newEntity, transformComponent);
   return newEntity;
 }
@@ -31,8 +31,8 @@ std::string const &EntityApi::getName(entt::entity entity) const {
   return voxlight.registry.get<NameComponent>(entity).name;
 }
 
-void EntityApi::setName(entt::entity entity, std::string_view name) {
-  voxlight.registry.get<NameComponent>(entity).name = name;
+void EntityApi::setName(entt::entity entity, std::string name) {
+  voxlight.registry.get<NameComponent>(entity).name = std::move(name);
 }
 
 void EntityApi::setPosition(entt::entity entity, glm::vec3 position) {

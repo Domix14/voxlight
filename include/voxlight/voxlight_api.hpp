@@ -86,7 +86,7 @@ class EntityApi {
    * \param transformComponent The transform component of the entity
    * \return The created entity
    */
-  entt::entity createEntity(std::string const &name, TransformComponent const &transformComponent);
+  entt::entity createEntity(std::string name, TransformComponent const &transformComponent);
 
   /**
    * \brief Returns first entity with name
@@ -114,7 +114,7 @@ class EntityApi {
    * \param entity The entity to get the name of
    * \param name The name to set
    */
-  void setName(entt::entity entity, std::string_view name);
+  void setName(entt::entity entity, std::string name);
 
   /**
    * \brief Sets the position of an entity
@@ -246,7 +246,7 @@ class CameraComponentApi {
    * \param entity The entity to set the direction of
    * \param direction The direction to set
    */
-  void setDirection(entt::entity entity, glm::vec3 const &direction);
+  void setDirection(entt::entity entity, glm::vec3 direction);
 
   /**
    * \brief Returns current camera
